@@ -1,0 +1,90 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+    max-swallow-size: -1
+
+spring:
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/economic_zone?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+  application:
+    name: zone-system
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher # 提高与某些插件的兼容性
+  servlet:
+    multipart:
+      enabled: true                  # 启用文件上传
+      max-file-size: 100MB           # 单个文件最大大小
+      max-request-size: 200MB        # 单次请求总文件大小上限
+      file-size-threshold: 1MB       # 超过该大小的文件会写入磁盘
+      location: ${java.io.tmpdir}    # 临时文件存储位置
+
+  # 时间格式化
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+# MyBatis 配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.zone.entity
+  configuration:
+    map-underscore-to-camel-case: true             # 下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 日志实现
+    default-statement-timeout: 30                  # 默认超时时间
+    cache-enabled: true                            # 开启二级缓存
+
+# JWT 配置
+jwt:
+  # 密钥 (至少32位)
+  secret: zone-platform-2026-jwt-secret-key-abcdefghijk
+  # 过期时间 单位：毫秒 1天 = 86400000
+  expire: 86400000
+  # 请求头key
+  header: Authorization
+  # 前缀
+  tokenPrefix: Bearer
+
+# MinIO配置
+minio:
+  endpoint: http://192.168.5.229:9000
+  accessKey: admin
+  secretKey: Minio@123456
+  bucketName: myproject
+
+# Spring Doc配置 (适配 SpringDoc 2.x / OpenAPI 3.1)
+springdoc:
+  api-docs:
+    path: /v3/api-docs # 默认路径，建议保留
+  swagger-ui:
+    path: /doc.html # 访问地址：http://localhost:8080/doc.html
+    # 注意：SpringDoc 2.x 中部分参数名使用短横线分隔
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+    # 自动尝试匹配生成的接口，不需要手动指定 config-url 和 url
+    display-request-duration: true
+
+# 日志配置
+logging:
+  level:
+    com.sme: info
+    # MyBatis 3.0+ 适配 Spring Boot 3 的日志监听
+    com.sme.mapper: debug
+    org.springframework.web: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+
+# 分页插件配置 (适配 PageHelper 2.x)
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql

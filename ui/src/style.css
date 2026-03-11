@@ -1,0 +1,64 @@
+/* ==========================================
+   全局字体与基础样式重置 (style.css)
+========================================== */
+
+:root {
+  /* 现代后台管理系统推荐字体栈：
+     英文优先使用系统默认无衬线体 (Mac/Win)，中文优先使用苹方和微软雅黑 */
+  font-family: 'PingFang SC',  'Inter', -apple-system, BlinkMacSystemFont,'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* 字体渲染优化，让文字边缘更平滑清晰 */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================
+   关键修复：清除 Vite 默认限制，允许全屏铺满
+========================================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  /* 移除原有的 display: flex 和 place-items: center */
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  /* 移除了原有的 max-width: 1280px 和 text-align: center */
+}
+
+/* ==========================================
+   全局链接与无障碍样式
+========================================== */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ==========================================
+   全局滚动条美化 (适配现代感 UI)
+========================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: rgba(144, 147, 153, 0.3);
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 147, 153, 0.5);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
