@@ -1,36 +1,47 @@
 /* ==========================================
-   全局字体与基础样式重置 (style.css)
+   引入自定义字体
 ========================================== */
-
-:root {
-  /* 现代后台管理系统推荐字体栈：
-     英文优先使用系统默认无衬线体 (Mac/Win)，中文优先使用苹方和微软雅黑 */
-  font-family: 'PingFang SC',  'Inter', -apple-system, BlinkMacSystemFont,'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-
-  line-height: 1.5;
+@font-face {
+  font-family: 'PingFangSC';
+  /* 确保路径指向正确：./assets 是相对于 style.css 所在的根目录 */
+  src: url('./assets/fonts/PingFangSC-Regular.woff2') format('woff2');
   font-weight: 400;
-
-  /* 字体渲染优化，让文字边缘更平滑清晰 */
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* ==========================================
-   关键修复：清除 Vite 默认限制，允许全屏铺满
-========================================== */
-html, body {
+@font-face {
+  font-family: 'Fira Code';
+  src: url('./assets/fonts/FiraCode-Regular.woff2') format('woff2'),
+  url('./assets/fonts/FiraCode-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 强制所有元素（包括 Element Plus 组件）使用该字体 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #app {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
-  /* 移除原有的 display: flex 和 place-items: center */
+  /* 修正：font-family 名称必须加引号，且确保 PingFangSC 和上面声明的一致 */
+  font-family: 'PingFangSC', 'Fira Code', 'Inter', -apple-system, sans-serif !important;
 }
 
-#app {
-  width: 100%;
-  height: 100%;
-  /* 移除了原有的 max-width: 1280px 和 text-align: center */
+/* 关键修复：Element Plus 的输入框和按钮默认不继承 body 字体 */
+input,
+button,
+textarea,
+select,
+.el-button,
+.el-input__inner,
+.el-input__wrapper {
+  font-family: 'PingFangSC', 'Fira Code', 'Inter', -apple-system, sans-serif !important;
 }
 
 /* ==========================================
