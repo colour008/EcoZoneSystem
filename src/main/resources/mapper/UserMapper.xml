@@ -74,4 +74,9 @@
         ORDER BY id
     </select>
 
+    <insert id="insert">
+        insert into sys_user(username,password,avatar,real_name,phone,status,create_time,update_time)
+        values(#{username},#{password},#{avatar},#{realName},#{phone},#{status},NOW(),NOW())
+    </insert>
+
 </mapper>

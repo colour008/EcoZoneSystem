@@ -476,17 +476,25 @@ onUnmounted(() => onSliderEnd())
 
 :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 1px var(--input-focus) inset !important;
+  border: #637a9c 1px solid  !important;
 }
 
-:deep(.el-input__inner) {
-  background-color: transparent !important;
-  color: var(--text-main) !important;
-  font-size: 14px;
 
-  &:-webkit-autofill {
-    transition: background-color 5000s ease-in-out 0s !important;
-    -webkit-text-fill-color: #606266 !important;
-  }
+/* 1. 基础自动填充覆盖：利用内阴影覆盖背景色 */
+:deep(.el-input__inner:-webkit-autofill) {
+  /* 强制文本颜色，防止在暗色下文字变成黑色看不见 */
+  -webkit-text-fill-color: var(--text-main) !important;
+}
+
+/* 2. 针对暗色主题的特殊处理 */
+.dark-theme :deep(.el-input__inner:-webkit-autofill) {
+  /* 使用内阴影将背景色填满，颜色建议与输入框背景或容器背景一致 */
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
+}
+
+/* 3. 针对亮色主题的处理 */
+.light-theme :deep(.el-input__inner:-webkit-autofill) {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
 }
 
 :deep(.el-input__inner::placeholder) {

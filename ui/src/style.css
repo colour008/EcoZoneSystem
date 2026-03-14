@@ -73,3 +73,19 @@ a {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* 全局样式文件中不要写 :deep */
+.el-input__inner:-webkit-autofill,
+.el-input__inner:-webkit-autofill:hover,
+.el-input__inner:-webkit-autofill:focus,
+.el-input__inner:-webkit-autofill:active {
+  /* 使用内阴影覆盖浏览器默认的淡黄色背景，此处假设背景为透明或白色 */
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  /* 这里的颜色应与你的输入框背景色一致 */
+  -webkit-text-fill-color: #606266 !important;
+}
+
+/* 如果要保持透明感，只能配合过渡动画 */
+.el-input__inner:-webkit-autofill {
+  transition: background-color 50000s ease-in-out 0s !important;
+}

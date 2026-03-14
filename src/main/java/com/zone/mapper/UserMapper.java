@@ -25,4 +25,8 @@ public interface UserMapper {
 
 	// 分页查询用户列表
 	Page<User> getUserPage(UserPageQueryDTO dto);
+
+	// 添加用户
+	boolean insert(User user);
+
 }

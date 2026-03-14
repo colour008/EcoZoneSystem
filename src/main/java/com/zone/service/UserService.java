@@ -27,4 +27,11 @@ public interface UserService {
 	 * @return PageResult
 	 */
 	PageResult getUserPage(UserPageQueryDTO dto);
+
+	/**
+	 * 添加用户
+	 * @param user
+	 * @return boolean
+	 */
+	boolean addUser(User user);
 }
