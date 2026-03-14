@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/store/user'
 
 const routes = [
     {
@@ -53,7 +54,18 @@ const router = createRouter({
 
 // 全局路由守卫
 router.beforeEach((to, from) => {
-    // Vue Router 4 推荐直接返回 true 或不返回，而不是调用 next()
+    const userStore = useUserStore()
+
+    // 简单的登录拦截逻辑
+    if (to.path !== '/login' && !userStore.token) {
+        return '/login'
+    }
+
+    // 如果已登录还想去 login，直接弹回首页
+    if (to.path === '/login' && userStore.token) {
+        return '/index'
+    }
+
     return true
 })
 

@@ -3,11 +3,8 @@
     <header class="layout-header">
       <div class="header-left">
         <div class="logo-section" :style="{ width: isCollapse ? '64px' : '210px' }">
-<!--          <el-icon class="logo-icon" :size="25" color="#0960bd">-->
-<!--            <Platform/>-->
-<!--          </el-icon>-->
           <div class="logo">
-            <img src="/icon.png" alt="logo" >
+            <img src="/icon.png" alt="logo">
           </div>
           <span v-if="!isCollapse" class="logo-text">经济开发区管理平台</span>
         </div>
@@ -20,14 +17,15 @@
         </div>
 
         <div class="breadcrumb">
-          <span class="breadcrumb-item">首页</span>
-          <span class="separator">/</span>
-          <span class="breadcrumb-item active">
-    <el-icon v-if="route.meta.icon" style="vertical-align: middle; margin-right: 4px; margin-top: -2px;">
-      <component :is="route.meta.icon"/>
-    </el-icon>
-    {{ route.meta.title || route.name }}
-  </span>
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item :to="{ path: '/index' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-for="item in route.matched.filter(m => m.meta.title)" :key="item.path">
+              <el-icon v-if="item.meta.icon" style="vertical-align: middle; margin-right: 4px;">
+                <component :is="item.meta.icon"/>
+              </el-icon>
+              {{ item.meta.title }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
         </div>
       </div>
 
@@ -118,42 +116,10 @@
       </aside>
 
       <main class="layout-main">
-        <div class="tags-view-container">
-          <el-tabs
-              v-model="activeTab"
-              type="card"
-              @tab-remove="removeTab"
-              @tab-click="clickTab"
-          >
-            <el-tab-pane name="/index/dashboard" :closable="false">
-              <template #label>
-                <el-icon style="vertical-align: middle; margin-right: 4px;"><House /></el-icon>
-                <span>主控台</span>
-              </template>
-            </el-tab-pane>
-
-            <el-tab-pane
-                v-for="item in otherViews"
-                :key="item.path"
-                :name="item.path"
-                closable
-            >
-              <template #label>
-                <el-icon v-if="item.icon" style="vertical-align: middle; margin-right: 4px;">
-                  <component :is="item.icon" />
-                </el-icon>
-                <span>{{ item.title }}</span>
-              </template>
-            </el-tab-pane>
-          </el-tabs>
-        </div>
-
         <div class="app-content">
           <router-view v-slot="{ Component, route: currentRoute }">
             <transition name="fade-transform" mode="out-in">
-              <keep-alive>
-                <component :is="Component" :key="currentRoute.fullPath"/>
-              </keep-alive>
+              <component :is="Component" :key="currentRoute.fullPath"/>
             </transition>
           </router-view>
         </div>
@@ -163,9 +129,8 @@
 </template>
 
 <script setup>
-import {ref, watch, computed, onMounted} from 'vue'
+import {ref, watch, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {useTagsStore} from '@/store/tags'
 import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
@@ -175,62 +140,19 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const tagsStore = useTagsStore()
 const userStore = useUserStore()
 
 const isCollapse = ref(false)
 const activeMenu = ref(route.path)
-const activeTab = ref(route.path || '/index/dashboard')
 
-// 计算属性：过滤出非主控台的标签
-const otherViews = computed(() => {
-  return tagsStore.visitedViews.filter(v => v.path !== '/index/dashboard')
-})
-
-// 添加标签（仅处理非主控台标签）
-const addTags = () => {
-  const {name, path, meta} = route
-  if (name && path !== '/login' && path !== '/index/dashboard') {
-    tagsStore.addView({name, path, meta})
-  }
-}
-
-// 监听路由变化（修复重复触发问题）
+// 监听路由变化，仅用于更新侧边栏的高亮状态
 watch(
     () => route.path,
     (newPath) => {
-      addTags()
       activeMenu.value = newPath
-      activeTab.value = newPath
     },
-    {immediate: true, deep: true}
+    {immediate: true}
 )
-
-// 点击标签切换路由
-const clickTab = (tab) => {
-  if (tab.props.name) {
-    router.push(tab.props.name)
-  }
-}
-
-// 删除标签（修复跳转逻辑）
-const removeTab = (targetPath) => {
-  const dashboardPath = '/index/dashboard'
-  // 禁止删除主控台
-  if (targetPath === dashboardPath) return
-
-  let currentActivePath = activeTab.value
-  // 如果删除的是当前激活标签，跳转到上一个/主控台
-  if (currentActivePath === targetPath) {
-    const nextTab = otherViews.value.find(v => v.path !== targetPath) || {path: dashboardPath}
-    currentActivePath = nextTab.path
-  }
-
-  // 更新标签状态 + 跳转路由
-  tagsStore.delView(targetPath)
-  activeTab.value = currentActivePath
-  router.push(currentActivePath)
-}
 
 // 退出登录
 const handleLogout = () => {
@@ -245,7 +167,6 @@ const handleLogout = () => {
   )
       .then(() => {
         userStore.setToken('')
-        tagsStore.$reset() // 重置标签（保留主控台）
         ElMessage.success('已安全退出')
         router.push('/login')
       })
@@ -254,23 +175,7 @@ const handleLogout = () => {
 }
 
 onMounted(() => {
-  // 1. 强制纠正激活状态：直接从当前路由取值，不依赖 watch 的第一次触发
-  const currentPath = route.path
-  activeTab.value = currentPath
-  activeMenu.value = currentPath
-
-  // 2. 强制同步 Store：防止 HMR 导致当前页面在标签栏“消失”
-  const { name, meta } = route
-  if (name && currentPath !== '/login') {
-    // 即使 Store 里已有，也触发一次逻辑确保万无一失
-    tagsStore.addView({ name, path: currentPath, meta })
-  }
-
-  // 3. 兜底逻辑：如果因为某种意外路径为空，回退到主控台
-  if (!activeTab.value || activeTab.value === '/') {
-    activeTab.value = '/index/dashboard'
-    router.push('/index/dashboard')
-  }
+  activeMenu.value = route.path
 })
 </script>
 
@@ -316,7 +221,7 @@ onMounted(() => {
 .logo img {
   width: 20px;
   height: 20px;
-  display: block; /* 消除内联元素间隙 */
+  display: block;
 }
 
 .logo-text {
@@ -326,7 +231,6 @@ onMounted(() => {
   color: #000;
 }
 
-/* 折叠按钮包装器 */
 .collapse-btn-wrapper {
   display: flex;
   align-items: center;
@@ -346,7 +250,6 @@ onMounted(() => {
   color: #666;
 }
 
-/* 面包屑 */
 .breadcrumb {
   margin-left: 8px;
   font-size: 14px;
@@ -366,7 +269,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* 顶部右侧 */
 .header-right {
   display: flex;
   align-items: center;
@@ -435,115 +337,11 @@ onMounted(() => {
   border-right: none;
 }
 
-
-
 .layout-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-/* 标签页栏容器 */
-.tags-view-container {
-  height: 48px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  border-bottom: 1px solid #d8dce5;
-  border-top: 1px solid #d8dce5;
-}
-
-/* 重置 el-tabs 内部所有可能导致截断的容器 */
-:deep(.el-tabs--card) {
-  height: auto !important;
-  border: none !important;
-}
-
-/* 解除 Element Plus 内部 header 的高度和溢出限制 */
-:deep(.el-tabs) {
-  height: 32px !important;
-  border: none !important;
-  width: 100%;
-}
-
-:deep(.el-tabs__header) {
-  margin: 0 !important;
-  border: none !important;
-  height: 32px !important; /* 与上面保持一致 */
-  line-height: 32px !important;
-}
-
-:deep(.el-tabs__nav) {
-  border: none !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-:deep(.el-tabs__nav-wrap),
-:deep(.el-tabs__nav-scroll) {
-  overflow: visible !important;
-  height: 32px !important;
-}
-
-/* 标签项样式 */
-:deep(.el-tabs__item) {
-  height: 30px !important;       /* 稍微小于父级，防止触碰边界 */
-  line-height: 28px !important;  /* 内部文字居中 */
-  display: inline-flex !important;
-  align-items: center !important;
-  padding: 0 12px !important;
-  margin-right: 6px !important;
-  border: 1px solid #dcdfe6 !important;
-  border-radius: 4px !important;
-  background: #fff;
-  color: #515a6e;
-  font-size: 13px !important;
-  box-sizing: border-box !important;
-}
-
-:deep(.el-tabs__item.is-active) {
-  background-color: #0960bd !important;
-  color: #fff !important;
-  border-color: #0960bd !important;
-}
-
-
-/* 关闭按钮图标（居中并美化） */
-:deep(.el-tabs__item .is-icon-close) {
-  width: 14px !important;
-  height: 14px !important;
-  margin-right: -4px !important;
-  border-radius: 50%;
-  transition: all 0.3s;
-  margin-top: 0 !important; /* 重置之前可能的偏向 */
-  margin-left: 6px !important;
-}
-
-/* 鼠标悬停效果 */
-:deep(.el-tabs__item:hover) {
-  border-color: #0960bd !important;
-  color: #0960bd;
-}
-
-:deep(.el-tabs__item.is-active:hover) {
-  color: #fff;
-}
-
-/* 修复关闭按钮垂直居中 */
-:deep(.el-tabs__item .is-icon-close) {
-  margin-top: 1px;
-}
-
-:deep(.el-tabs__item .is-icon-close:hover) {
-  background-color: #b3d8ff !important;
-  color: #0960bd !important;
-}
-
-/* 主控台标签样式（置顶） */
-:deep(.el-tabs__item:first-child) {
-  order: -1;
 }
 
 .app-content {

@@ -171,19 +171,27 @@ const validateConfirmPassword = (rule, value, callback) => {
 const rules = computed(() => ({
   username: [
     {required: true, message: '用户名不能为空', trigger: 'blur'},
-    {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
+    {min: 3, max: 20, message: '长度在3到20个字符', trigger: 'blur'}
   ],
-  // 动态规则：新增时必填，编辑时选填
+  // 添加手机号校验
+  phone: [
+    { required: true, message: '手机号不能为空', trigger: 'blur' },
+    {
+      pattern: /^1[0-9]\d{9}$/,
+      message: '请输入正确的11位手机号',
+      trigger: 'blur'
+    }
+  ],
   password: [
     {required: !form.value.id, message: '密码不能为空', trigger: 'blur'},
-    {min: 6, message: '密码长度不能小于 6 位', trigger: 'blur'}
+    {min: 6, message: '密码长度不能小于6位', trigger: 'blur'}
   ],
   confirmPassword: [
     {
       required: !form.value.id,
       validator: (rule, value, callback) => {
         if (form.value.id && !value && !form.value.password) {
-          callback() // 编辑状态下，如果不改密码，两个都为空是允许的
+          callback()
         } else if (value !== form.value.password) {
           callback(new Error('两次输入密码不一致!'))
         } else {
@@ -197,7 +205,6 @@ const rules = computed(() => ({
     {required: true, message: '真实姓名不能为空', trigger: 'blur'}
   ]
 }))
-// 注意：上面的 rules 改为 computed 后，el-form 上的 :rules="rules" 会自动响应
 
 // 获取列表
 const getUserPageList = async () => {
