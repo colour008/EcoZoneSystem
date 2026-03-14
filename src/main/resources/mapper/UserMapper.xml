@@ -30,7 +30,8 @@
         from sys_user
         where username = #{username}
     </select>
-<!--    返回用户列表-->
+
+    <!--    返回用户列表-->
     <select id="getUserlist" resultMap="UserResultMap">
         select
             id,
@@ -44,7 +45,8 @@
             update_time
         from sys_user
     </select>
-<!--    分页查询用户列表-->
+
+    <!--    分页查询用户列表-->
     <select id="getUserPage" resultMap="UserResultMap">
         select
         id,
@@ -74,9 +76,48 @@
         ORDER BY id
     </select>
 
+    <!--    删除用户-->
+    <delete id="deleteByIds">
+        delete from sys_user
+        where id in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
     <insert id="insert">
         insert into sys_user(username,password,avatar,real_name,phone,status,create_time,update_time)
         values(#{username},#{password},#{avatar},#{realName},#{phone},#{status},NOW(),NOW())
     </insert>
 
+    <!--    修改用户-->
+    <update id="update">
+        update sys_user
+        <set>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="realName != null and realName != ''">
+                real_name = #{realName},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            update_time = NOW()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--    根据ID查询用户-->
+    <select id="selectById" resultMap="UserResultMap">
+        select id, username, real_name from sys_user where id = #{id}
+    </select>
 </mapper>

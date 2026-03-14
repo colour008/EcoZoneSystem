@@ -67,10 +67,12 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="180">
+        <el-table-column label="操作" align="center" min-width="200" fixed="right">
           <template #default="scope">
             <el-button type="primary" plain :icon="Edit" size="small" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button type="danger" plain :icon="Delete" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button type="warning" plain :icon="Warning" size="small" @click="handleReset(scope.row)">重置密码
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -133,9 +135,9 @@
 </template>
 
 <script setup>
-import {ref, onMounted, nextTick} from 'vue'
+import {ref, onMounted, nextTick, computed} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {Search, Refresh, Delete, Edit, Plus} from '@element-plus/icons-vue'
+import {Search, Refresh, Delete, Edit, Plus, Warning} from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
 
@@ -144,7 +146,7 @@ const submitLoading = ref(false)
 const userList = ref([])
 const total = ref(0)
 const multipleSelection = ref([])
-const userFormRef = ref(null) // 表单 DOM 引用
+const userFormRef = ref(null)
 
 const queryParams = ref({
   pageNum: 1, pageSize: 10, username: null, realName: null, status: null
@@ -166,33 +168,48 @@ const validateConfirmPassword = (rule, value, callback) => {
   }
 }
 
-const rules = {
+const rules = computed(() => ({
   username: [
     {required: true, message: '用户名不能为空', trigger: 'blur'},
     {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
   ],
+  // 动态规则：新增时必填，编辑时选填
   password: [
-    {required: true, message: '密码不能为空', trigger: 'blur'},
+    {required: !form.value.id, message: '密码不能为空', trigger: 'blur'},
     {min: 6, message: '密码长度不能小于 6 位', trigger: 'blur'}
   ],
   confirmPassword: [
-    {required: true, validator: validateConfirmPassword, trigger: 'blur'}
+    {
+      required: !form.value.id,
+      validator: (rule, value, callback) => {
+        if (form.value.id && !value && !form.value.password) {
+          callback() // 编辑状态下，如果不改密码，两个都为空是允许的
+        } else if (value !== form.value.password) {
+          callback(new Error('两次输入密码不一致!'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   realName: [
     {required: true, message: '真实姓名不能为空', trigger: 'blur'}
   ]
-}
+}))
+// 注意：上面的 rules 改为 computed 后，el-form 上的 :rules="rules" 会自动响应
 
 // 获取列表
 const getUserPageList = async () => {
   loading.value = true
   try {
-    // 使用 userApi.page
     const res = await userApi.page(queryParams.value)
+    // 拦截器保证了 res 存在且 code 为 200
     userList.value = res.data.records || []
     total.value = res.data.total || 0
   } catch (error) {
-    ElMessage.error('查询用户列表失败')
+    // 错误已由拦截器弹窗，这里只需要打印或处理 loading
+    console.error('获取列表失败', error)
   } finally {
     loading.value = false
   }
@@ -227,7 +244,7 @@ const handleEdit = (row) => {
   })
 }
 
-// 提交表单
+// 提交表单：简化判断逻辑
 const submitForm = async () => {
   if (!userFormRef.value) return
 
@@ -236,20 +253,25 @@ const submitForm = async () => {
       submitLoading.value = true
       try {
         if (!form.value.id) {
-          // 使用 userApi.add
+          // 新增
           const res = await userApi.add(form.value)
-          if (res.code === 200) {
-            ElMessage.success('新增成功')
-            drawerVisible.value = false
-            getUserPageList()
-          }
+          ElMessage.success(res.msg || '新增成功')
+          drawerVisible.value = false
+          getUserPageList()
         } else {
-          // 使用 userApi.update
-          await userApi.update(form.value)
-          ElMessage.success('编辑成功')
+          // 编辑
+          const {id, ...updateData} = form.value
+          if (!updateData.password) {
+            delete updateData.password
+            delete updateData.confirmPassword
+          }
+          const res = await userApi.update(id, updateData)
+          ElMessage.success(res.msg || '编辑成功')
           drawerVisible.value = false
           getUserPageList()
         }
+      } catch (error) {
+        console.error('提交失败', error)
       } finally {
         submitLoading.value = false
       }
@@ -275,6 +297,64 @@ const handleSelectionChange = (val) => {
 const resetQuery = () => {
   queryParams.value = {pageNum: 1, pageSize: 10};
   getUserPageList()
+}
+
+// --- 删除逻辑 ---
+const doDelete = (ids, message) => {
+  ElMessageBox.confirm(message, '系统提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    loading.value = true
+    try {
+      const res = await userApi.delete(ids)
+      ElMessage.success(res.msg || '操作成功')
+      if (userList.value.length === ids.length && queryParams.value.pageNum > 1) {
+        queryParams.value.pageNum--
+      }
+      getUserPageList()
+    } catch (error) {
+      console.error('删除失败', error)
+    } finally {
+      loading.value = false
+    }
+  }).catch(() => {
+  })
+}
+
+// --- 单个删除 ---
+const handleDelete = (row) => {
+  doDelete([row.id], `确定要删除用户 "${row.realName}" 吗？`)
+}
+
+// --- 批量删除 ---
+const handleBatchDelete = () => {
+  const ids = multipleSelection.value.map(item => item.id)
+  doDelete(ids, `确定要删除选中的 ${ids.length} 条数据吗？`)
+}
+
+// 重置密码
+const handleReset = (row) => {
+  ElMessageBox.confirm(
+      `确定要将用户 "${row.realName}" 的密码重置吗？`,
+      '安全警告',
+      {confirmButtonText: '确定重置', cancelButtonText: '取消', type: 'warning'}
+  ).then(async () => {
+    try {
+      const res = await userApi.resetPassword(row.id)
+      // 这里的 res.data 就是后端返回的 "密码已重置为: 123456"
+      ElMessage({
+        message: `${res.msg}。${res.data}`,
+        type: 'success',
+        duration: 0, // 不自动关闭，方便管理员查看新密码
+        showClose: true
+      })
+    } catch (error) {
+      console.error('重置失败', error)
+    }
+  }).catch(() => {
+  })
 }
 
 onMounted(() => {

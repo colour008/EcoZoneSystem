@@ -43,6 +43,11 @@ public class UserController {
 		return Result.sysError("获取用户列表失败");
 	}
 
+	/**
+	 * 分页查询用户列表
+	 * @param dto
+	 * @return PageResult
+	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询用户列表", description = "分页查询用户列表")
 	public Result<PageResult> getUserPage(UserPageQueryDTO dto) {
@@ -54,6 +59,11 @@ public class UserController {
 		return Result.sysError("分页查询用户列表失败");
 	}
 
+	/**
+	 * 添加用户
+	 * @param user
+	 * @return boolean
+	 */
 	@PostMapping("/add")
 	@Operation(summary = "添加用户", description = "添加用户")
 	public Result<String> addUser(@RequestBody User user) {
@@ -63,5 +73,46 @@ public class UserController {
 			return Result.success("添加用户成功");
 		}
 		return Result.sysError("添加用户失败");
+	}
+
+	/**
+	 * 删除用户
+	 * @param ids 支持单一删除和批量删除
+	 * @return boolean
+	 */
+	@DeleteMapping("/delete")
+	public Result<String> delete(@RequestBody List<Long> ids) {
+		boolean success = userService.deleteByIds(ids);
+		if (success) {
+			return Result.success("删除成功");
+		}
+		return Result.sysError("删除失败或数据不存在");
+	}
+
+	/**
+	 * 修改用户
+	 * @param id
+	 * @param user
+	 * @return boolean
+	 */
+	@PutMapping("/{id}")
+	public Result<String> update(@PathVariable Long id, @RequestBody User user) {
+		// 强制设置对象 ID，防止请求体里的 ID 和 URL 里的 ID 不一致
+		user.setId(id);
+
+		// 更新前检查该 ID 是否存在
+		if (id==null){
+			return Result.sysError("ID不能为空");
+		}
+		boolean success = userService.updateById(user);
+		return success ? Result.success() : Result.sysError("更新失败");
+	}
+
+	@PatchMapping("/{id}/password/reset")
+	public Result<String> resetPassword(@PathVariable Long id) {
+		// 假设初始密码为 123456，实际开发中建议配合加密工具类
+		String defaultPwd = "123456";
+		boolean success = userService.resetPassword(id, defaultPwd);
+		return success ? Result.success("密码已重置为: " + defaultPwd) : Result.sysError("重置失败");
 	}
 }

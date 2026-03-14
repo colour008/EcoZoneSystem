@@ -17,16 +17,51 @@ import java.util.List;
 public interface UserMapper {
 
 
-	// 根据用户名查询用户
+	/**
+	 * 根据用户名查询用户
+	 * @param username
+	 * @return User
+	 */
 	User selectByUsername(String username);
 
-	// 查询用户列表
+	/**
+	 * 获取用户列表
+	 * @return
+	 */
 	List<User> getUserlist();
 
-	// 分页查询用户列表
+	/**
+	 * 分页查询用户列表
+	 * @param dto
+	 * @return
+	 */
 	Page<User> getUserPage(UserPageQueryDTO dto);
 
-	// 添加用户
+	/**
+	 * 添加用户
+	 * @param user
+	 * @return
+	 */
 	boolean insert(User user);
 
+	/**
+	 * 删除用户
+	 * @param ids
+	 * @return
+	 */
+	int deleteByIds(List<Long> ids);
+
+	/**
+	 * 动态更新用户信息
+	 * @param user 用户实体
+	 * @return 影响行数
+	 */
+	int update(User user);
+
+	/**
+	 * 根据ID查询用户
+	 * @param id
+	 * @return
+	 */
+	User selectById(Long id);
 }

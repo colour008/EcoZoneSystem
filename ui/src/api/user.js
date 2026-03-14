@@ -40,10 +40,12 @@ const userApi = {
 
     /**
      * 更新用户
+     * @param {Long} id 用户ID
+     * @param {Object} data 更新的数据
      */
-    update(data) {
+    update(id, data) {
         return request({
-            url: '/user/update',
+            url: `/user/${id}`,
             method: 'put',
             data
         })
@@ -51,12 +53,24 @@ const userApi = {
 
     /**
      * 删除用户
+     * @param {Array} ids ID数组，例如 [1] 或 [1, 2, 3]
+     */
+    delete(ids) {
+        return request({
+            url: '/user/delete',
+            method: 'delete',
+            data: ids
+        })
+    },
+
+    /**
+     * 重置密码
      * @param {Long} id 用户ID
      */
-    delete(id) {
+    resetPassword(id) {
         return request({
-            url: `/user/delete/${id}`,
-            method: 'delete'
+            url: `/user/${id}/password/reset`,
+            method: 'patch'
         })
     }
 }

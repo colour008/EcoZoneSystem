@@ -102,11 +102,12 @@
 
           <div class="form-footer-actions">
             <el-checkbox v-model="rememberMe" class="custom-checkbox">记住账号</el-checkbox>
-            <el-link type="primary" :underline="false" class="forget-pwd">忘记密码？</el-link>
+            <el-link type="primary" underline="never" class="forget-pwd">忘记密码？</el-link>
           </div>
 
           <el-form-item class="submit-item">
-            <el-button type="primary" @click="handleLogin" class="submit-btn" :disabled="!isPassed">
+            <el-button type="primary" @click="handleLogin" class="submit-btn" :disabled="!isPassed"
+                       :loading="loginLoading">
               登 录
             </el-button>
           </el-form-item>
@@ -153,7 +154,7 @@
 
             <div class="register-link">
               还没有账号？
-              <el-link type="primary" :underline="false" @click="goToRegister">创建账号</el-link>
+              <el-link type="primary" underline="never" @click="goToRegister">创建账号</el-link>
             </div>
           </div>
         </el-form>
@@ -186,6 +187,7 @@ const router = useRouter()
 const isPassed = ref(false)
 const sliderWidth = ref(0)
 const sliderTrack = ref(null)
+const loginLoading = ref(false) // 定义 loading 状态
 let isDragging = false
 let startX = 0
 
@@ -226,21 +228,33 @@ const onSliderEnd = () => {
 
 // --- 业务逻辑 ---
 const handleLogin = async () => {
-  if (!isPassed.value) return
-  const res = await loginApi({
-    username: username.value,
-    password: password.value,
-    mode: loginMode.value
-  })
+  // 防御性判断：滑块没过或者正在登录中，直接返回
+  if (!isPassed.value || loginLoading.value) return
 
-  if (res.bizCode === 0) {
+  loginLoading.value = true // 开启按钮加载动画
+  try {
+    const res = await loginApi({
+      username: username.value,
+      password: password.value,
+      mode: loginMode.value
+    })
+
+    // 拦截器已过滤 code=200 & bizCode=0，此处直接写成功逻辑
     userStore.setToken(res.data.token)
-    ElMessage.success('登录成功')
-    router.push('/index')
-  } else {
-    ElMessage.error(res.msg)
+    ElMessage.success(res.msg || '登录成功')
+
+    // 延迟一小会儿跳转，体验更好
+    setTimeout(() => {
+      router.push('/index')
+    }, 200)
+
+  } catch (error) {
+    // 登录失败：重置滑块，让用户重新操作
     isPassed.value = false
     sliderWidth.value = 0
+    console.error('登录异常:', error)
+  } finally {
+    loginLoading.value = false // 关闭加载动画
   }
 }
 
@@ -323,7 +337,7 @@ onUnmounted(() => onSliderEnd())
   gap: 12px;
 }
 
-.logo-icon {
+.logo-section img {
   width: 32px;
   height: 32px;
   background: #1677ff;
@@ -476,7 +490,7 @@ onUnmounted(() => onSliderEnd())
 
 :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 1px var(--input-focus) inset !important;
-  border: #637a9c 1px solid  !important;
+  border: #637a9c 1px solid !important;
 }
 
 

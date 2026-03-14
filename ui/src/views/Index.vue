@@ -3,9 +3,12 @@
     <header class="layout-header">
       <div class="header-left">
         <div class="logo-section" :style="{ width: isCollapse ? '64px' : '210px' }">
-          <el-icon class="logo-icon" :size="25" color="#0960bd">
-            <Platform/>
-          </el-icon>
+<!--          <el-icon class="logo-icon" :size="25" color="#0960bd">-->
+<!--            <Platform/>-->
+<!--          </el-icon>-->
+          <div class="logo">
+            <img src="/icon.png" alt="logo" >
+          </div>
           <span v-if="!isCollapse" class="logo-text">经济开发区管理平台</span>
         </div>
 
@@ -148,7 +151,7 @@
         <div class="app-content">
           <router-view v-slot="{ Component, route: currentRoute }">
             <transition name="fade-transform" mode="out-in">
-              <keep-alive v-if="Component">
+              <keep-alive>
                 <component :is="Component" :key="currentRoute.fullPath"/>
               </keep-alive>
             </transition>
@@ -251,9 +254,22 @@ const handleLogout = () => {
 }
 
 onMounted(() => {
-  // 初始化激活主控台标签
-  if (!activeTab.value) {
+  // 1. 强制纠正激活状态：直接从当前路由取值，不依赖 watch 的第一次触发
+  const currentPath = route.path
+  activeTab.value = currentPath
+  activeMenu.value = currentPath
+
+  // 2. 强制同步 Store：防止 HMR 导致当前页面在标签栏“消失”
+  const { name, meta } = route
+  if (name && currentPath !== '/login') {
+    // 即使 Store 里已有，也触发一次逻辑确保万无一失
+    tagsStore.addView({ name, path: currentPath, meta })
+  }
+
+  // 3. 兜底逻辑：如果因为某种意外路径为空，回退到主控台
+  if (!activeTab.value || activeTab.value === '/') {
     activeTab.value = '/index/dashboard'
+    router.push('/index/dashboard')
   }
 })
 </script>
@@ -296,9 +312,16 @@ onMounted(() => {
   border-right: 1px solid #f0f0f0;
 }
 
+.logo,
+.logo img {
+  width: 20px;
+  height: 20px;
+  display: block; /* 消除内联元素间隙 */
+}
+
 .logo-text {
   margin-left: 10px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #000;
 }

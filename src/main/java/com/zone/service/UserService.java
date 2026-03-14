@@ -34,4 +34,26 @@ public interface UserService {
 	 * @return boolean
 	 */
 	boolean addUser(User user);
+
+	/**
+	 * 删除用户
+	 * @param ids
+	 * @return boolean
+	 */
+	boolean deleteByIds(List<Long> ids);
+
+	/**
+	 * 修改用户
+	 * @param user
+	 * @return boolean
+	 */
+	boolean updateById(User user);
+
+	/**
+	 * 重置密码
+	 * @param id
+	 * @param defaultPwd
+	 * @return boolean
+	 */
+	boolean resetPassword(Long id, String defaultPwd);
 }
