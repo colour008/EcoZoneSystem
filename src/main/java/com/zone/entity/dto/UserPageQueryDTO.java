@@ -1,19 +1,16 @@
-package com.zone.entity.sys;
+package com.zone.entity.dto;
 
-import com.zone.entity.base.BaseEntity;
+import com.zone.entity.base.PageQuery;
 import lombok.Data;
 
 /**
  * @Author: JamHoo
- * @Description: 用户实体类
- * @Date: 2026/3/8 15:20
+ * @Description: 分页查询DTO
+ * @Date: 2026/3/13 20:35
  * @Version: 1.0
  */
 @Data
-public class User extends BaseEntity {
-
-	private static final long serialVersionUID = 1L;
-
+public class UserPageQueryDTO extends PageQuery {
 	/**
 	 * 用户名
 	 */

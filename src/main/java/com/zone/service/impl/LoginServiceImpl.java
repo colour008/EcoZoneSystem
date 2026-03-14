@@ -7,18 +7,25 @@ import com.zone.entity.sys.User;
 import com.zone.mapper.UserMapper;
 import com.zone.service.LoginService;
 import com.zone.util.JwtUtil;
-import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class LoginServiceImpl implements LoginService {
 
-	@Resource
+	@Autowired
 	private JwtUtil jwtUtil;
 
-	@Resource
+	@Autowired
 	private UserMapper userMapper;
 
+	/**
+	 * 登录
+	 *
+	 * @param username 用户名
+	 * @param password 密码
+	 * @return TOKEN
+	 */
 	@Override
 	public String login(String username, String password) {
 		// 1. 根据用户名查库

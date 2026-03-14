@@ -1,6 +1,8 @@
 package com.zone.entity.base;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -24,10 +26,14 @@ public class BaseEntity implements Serializable {
 	/**
 	 * 创建时间
 	 */
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
 	private Date createTime;
 
 	/**
 	 * 更新时间
 	 */
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
 	private Date updateTime;
 }

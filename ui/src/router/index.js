@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
@@ -14,23 +13,27 @@ const routes = [
     {
         path: '/index',
         name: 'Layout',
-        component: () => import('@/views/Index.vue'), // 这是我们的母版页面
+        component: () => import('@/views/Index.vue'), // 母版页面
         redirect: '/index/dashboard', // 默认展示主控台
         children: [
-            // 下面这些子路由会渲染在 Index.vue 的 <router-view> 中
             {
                 path: 'dashboard',
                 name: 'Dashboard',
-                meta: { title: '主控台' },
-                component: () => import('@/views/dashboard/Index.vue') // 你需要新建这个空文件占位
+                meta: { title: '主控台', icon: 'House' },
+                component: () => import('@/views/dashboard/Index.vue')
+            },
+            {
+                path: 'user/list',
+                name: 'UserList',
+                meta: { title: '用户列表' , icon: 'User'},
+                component: () => import('@/views/user/List.vue')
             },
             {
                 path: 'access/list',
                 name: 'AccessList',
-                meta: { title: '权限管理' },
-                component: () => import('@/views/access/List.vue') // 你需要新建这个空文件占位
+                meta: { title: '权限列表', icon: 'Key' },
+                component: () => import('@/views/access/List.vue')
             }
-            // 后续阶段 3 的动态路由会通过 router.addRoute 挂载到这里
         ]
     },
     {
@@ -46,6 +49,12 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+// 全局路由守卫
+router.beforeEach((to, from) => {
+    // Vue Router 4 推荐直接返回 true 或不返回，而不是调用 next()
+    return true
 })
 
 export default router

@@ -19,7 +19,12 @@
         <div class="breadcrumb">
           <span class="breadcrumb-item">首页</span>
           <span class="separator">/</span>
-          <span class="breadcrumb-item active">{{ route.meta.title || route.name }}</span>
+          <span class="breadcrumb-item active">
+    <el-icon v-if="route.meta.icon" style="vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+      <component :is="route.meta.icon"/>
+    </el-icon>
+    {{ route.meta.title || route.name }}
+  </span>
         </div>
       </div>
 
@@ -91,8 +96,14 @@
               <el-icon>
                 <Setting/>
               </el-icon>
-              <span>权限管理</span>
+              <span>系统管理</span>
             </template>
+            <el-menu-item index="/index/user/list">
+              <el-icon>
+                <User/>
+              </el-icon>
+              <span>用户列表</span>
+            </el-menu-item>
             <el-menu-item index="/index/access/list">
               <el-icon>
                 <Key/>
@@ -108,24 +119,37 @@
           <el-tabs
               v-model="activeTab"
               type="card"
-              closable
               @tab-remove="removeTab"
               @tab-click="clickTab"
           >
+            <el-tab-pane name="/index/dashboard" :closable="false">
+              <template #label>
+                <el-icon style="vertical-align: middle; margin-right: 4px;"><House /></el-icon>
+                <span>主控台</span>
+              </template>
+            </el-tab-pane>
+
             <el-tab-pane
-                v-for="item in tagsStore.visitedViews"
+                v-for="item in otherViews"
                 :key="item.path"
-                :label="item.title"
                 :name="item.path"
-            ></el-tab-pane>
+                closable
+            >
+              <template #label>
+                <el-icon v-if="item.icon" style="vertical-align: middle; margin-right: 4px;">
+                  <component :is="item.icon" />
+                </el-icon>
+                <span>{{ item.title }}</span>
+              </template>
+            </el-tab-pane>
           </el-tabs>
         </div>
 
         <div class="app-content">
-          <router-view v-slot="{ Component }">
+          <router-view v-slot="{ Component, route: currentRoute }">
             <transition name="fade-transform" mode="out-in">
-              <keep-alive>
-                <component :is="Component" :key="route.path"/>
+              <keep-alive v-if="Component">
+                <component :is="Component" :key="currentRoute.fullPath"/>
               </keep-alive>
             </transition>
           </router-view>
@@ -136,14 +160,14 @@
 </template>
 
 <script setup>
-import {ref, watch, onMounted} from 'vue'
+import {ref, watch, computed, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useTagsStore} from '@/store/tags'
 import {useUserStore} from '@/store/user'
-import {ElMessage, ElMessageBox} from 'element-plus' // 引入 ElMessageBox 进行弹窗
+import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Platform, Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
-  Search, FullScreen, Bell, User, SwitchButton // 引入 User 和 SwitchButton 图标
+  Search, FullScreen, Bell, User, SwitchButton
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -153,55 +177,59 @@ const userStore = useUserStore()
 
 const isCollapse = ref(false)
 const activeMenu = ref(route.path)
-const activeTab = ref(route.path)
+const activeTab = ref(route.path || '/index/dashboard')
 
-watch(
-    () => route.path,
-    () => {
-      addTags()
-      activeMenu.value = route.path
-      activeTab.value = route.path
-    }
-)
+// 计算属性：过滤出非主控台的标签
+const otherViews = computed(() => {
+  return tagsStore.visitedViews.filter(v => v.path !== '/index/dashboard')
+})
 
+// 添加标签（仅处理非主控台标签）
 const addTags = () => {
   const {name, path, meta} = route
-  if (name && path !== '/login') {
-    tagsStore.addView({
-      name,
-      path,
-      title: meta.title || name
-    })
+  if (name && path !== '/login' && path !== '/index/dashboard') {
+    tagsStore.addView({name, path, meta})
   }
 }
 
+// 监听路由变化（修复重复触发问题）
+watch(
+    () => route.path,
+    (newPath) => {
+      addTags()
+      activeMenu.value = newPath
+      activeTab.value = newPath
+    },
+    {immediate: true, deep: true}
+)
+
+// 点击标签切换路由
 const clickTab = (tab) => {
-  router.push(tab.props.name)
+  if (tab.props.name) {
+    router.push(tab.props.name)
+  }
 }
 
+// 删除标签（修复跳转逻辑）
 const removeTab = (targetPath) => {
-  const views = tagsStore.visitedViews
-  let currentActivePath = activeTab.value
+  const dashboardPath = '/index/dashboard'
+  // 禁止删除主控台
+  if (targetPath === dashboardPath) return
 
+  let currentActivePath = activeTab.value
+  // 如果删除的是当前激活标签，跳转到上一个/主控台
   if (currentActivePath === targetPath) {
-    views.forEach((tab, index) => {
-      if (tab.path === targetPath) {
-        const nextTab = views[index + 1] || views[index - 1]
-        if (nextTab) {
-          currentActivePath = nextTab.path
-        } else {
-          currentActivePath = '/index/dashboard'
-        }
-      }
-    })
+    const nextTab = otherViews.value.find(v => v.path !== targetPath) || {path: dashboardPath}
+    currentActivePath = nextTab.path
   }
 
-  activeTab.value = currentActivePath
+  // 更新标签状态 + 跳转路由
   tagsStore.delView(targetPath)
+  activeTab.value = currentActivePath
   router.push(currentActivePath)
 }
 
-// 修改后的退出登录逻辑：增加了二次确认弹窗
+// 退出登录
 const handleLogout = () => {
   ElMessageBox.confirm(
       '确认退出登录吗？',
@@ -214,16 +242,19 @@ const handleLogout = () => {
   )
       .then(() => {
         userStore.setToken('')
+        tagsStore.$reset() // 重置标签（保留主控台）
         ElMessage.success('已安全退出')
         router.push('/login')
       })
       .catch(() => {
-        // 点击取消，无需操作
       })
 }
 
 onMounted(() => {
-  addTags()
+  // 初始化激活主控台标签
+  if (!activeTab.value) {
+    activeTab.value = '/index/dashboard'
+  }
 })
 </script>
 
@@ -381,11 +412,7 @@ onMounted(() => {
   border-right: none;
 }
 
-:deep(.el-menu-item.is-active) {
-  background-color: #e6f7ff !important;
-  color: #0960bd !important;
-  border-right: 3px solid #0960bd;
-}
+
 
 .layout-main {
   flex: 1;
@@ -394,42 +421,106 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* 标签页栏 */
+/* 标签页栏容器 */
 .tags-view-container {
-  height: 40px;
+  height: 48px;
   background: #fff;
   display: flex;
   align-items: center;
-  padding: 5px 10px;
+  padding: 0 10px;
   border-bottom: 1px solid #d8dce5;
   border-top: 1px solid #d8dce5;
 }
 
+/* 重置 el-tabs 内部所有可能导致截断的容器 */
+:deep(.el-tabs--card) {
+  height: auto !important;
+  border: none !important;
+}
+
+/* 解除 Element Plus 内部 header 的高度和溢出限制 */
+:deep(.el-tabs) {
+  height: 32px !important;
+  border: none !important;
+  width: 100%;
+}
+
 :deep(.el-tabs__header) {
   margin: 0 !important;
-  border-bottom: none !important;
+  border: none !important;
+  height: 32px !important; /* 与上面保持一致 */
+  line-height: 32px !important;
 }
 
 :deep(.el-tabs__nav) {
   border: none !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
+:deep(.el-tabs__nav-wrap),
+:deep(.el-tabs__nav-scroll) {
+  overflow: visible !important;
+  height: 32px !important;
+}
+
+/* 标签项样式 */
 :deep(.el-tabs__item) {
-  height: 26px !important;
-  line-height: 24px !important;
-  font-size: 12px !important;
-  border: 1px solid #d9d9d9 !important;
-  margin-right: 4px;
-  border-radius: 2px !important;
+  height: 30px !important;       /* 稍微小于父级，防止触碰边界 */
+  line-height: 28px !important;  /* 内部文字居中 */
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 12px !important;
+  margin-right: 6px !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px !important;
   background: #fff;
   color: #515a6e;
-  padding: 0 10px !important;
+  font-size: 13px !important;
+  box-sizing: border-box !important;
 }
 
 :deep(.el-tabs__item.is-active) {
   background-color: #0960bd !important;
   color: #fff !important;
   border-color: #0960bd !important;
+}
+
+
+/* 关闭按钮图标（居中并美化） */
+:deep(.el-tabs__item .is-icon-close) {
+  width: 14px !important;
+  height: 14px !important;
+  margin-right: -4px !important;
+  border-radius: 50%;
+  transition: all 0.3s;
+  margin-top: 0 !important; /* 重置之前可能的偏向 */
+  margin-left: 6px !important;
+}
+
+/* 鼠标悬停效果 */
+:deep(.el-tabs__item:hover) {
+  border-color: #0960bd !important;
+  color: #0960bd;
+}
+
+:deep(.el-tabs__item.is-active:hover) {
+  color: #fff;
+}
+
+/* 修复关闭按钮垂直居中 */
+:deep(.el-tabs__item .is-icon-close) {
+  margin-top: 1px;
+}
+
+:deep(.el-tabs__item .is-icon-close:hover) {
+  background-color: #b3d8ff !important;
+  color: #0960bd !important;
+}
+
+/* 主控台标签样式（置顶） */
+:deep(.el-tabs__item:first-child) {
+  order: -1;
 }
 
 .app-content {
