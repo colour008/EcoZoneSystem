@@ -145,4 +145,31 @@ public class UserServiceImpl implements UserService {
 		}
 		return rows > 0;
 	}
+
+	/**
+	 * 修改用户状态
+	 *
+	 * @param id
+	 * @param status
+	 * @return boolean
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean updateStatus(Long id, Integer status) {
+		// 1. 检查用户是否存在（防御性编程）
+		User user = userMapper.selectById(id);
+		if (user == null) {
+			throw new BusinessException("用户不存在");
+		}
+		// 2. 构造瘦身后的更新对象，减少数据库压力
+		User updateInfo = new User();
+		updateInfo.setId(id);
+		updateInfo.setStatus(status);
+		// 3. 执行更新（复用你现有的 update 方法）
+		int rows = userMapper.update(updateInfo);
+		if (rows > 0) {
+			log.info("用户 [ID: {}] 状态已变更为: {}", id, status == 1 ? "正常" : "停用");
+		}
+		return rows > 0;
+	}
 }

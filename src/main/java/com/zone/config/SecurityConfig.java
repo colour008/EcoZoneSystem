@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * @Author: JamHoo
- * @Description: TODO
+ * @Description: Spring Security 配置
  * @Date: 2026/3/14 11:50
  * @Version: 1.0
  */
@@ -36,9 +36,7 @@ public class SecurityConfig {
 				// 6. 授权规则
 				.authorizeHttpRequests(auth -> auth
 						// 放行登录接口
-						.requestMatchers("/admin/auth/login").permitAll()
-
-
+						.requestMatchers("/auth/login").permitAll()
 						// 放行 Swagger 文档接口（如果需要）
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**" ).permitAll()
 						// 其他所有请求都允许（实际认证由 JWT 拦截器处理）

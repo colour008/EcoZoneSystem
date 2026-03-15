@@ -72,6 +72,31 @@ const userApi = {
             url: `/user/${id}/password/reset`,
             method: 'patch'
         })
+    },
+
+    /**
+     * 修改用户状态
+     * @param {Long} id 用户ID
+     * @param {Number} status 状态 (0-停用, 1-正常)
+     */
+    changeStatus(id, status) {
+        return request({
+            url: `/user/${id}/status/${status}`,
+            method: 'patch'
+        })
+    },
+
+    /**
+     * 修改个人资料
+     * @param data
+     * @returns {*}
+     */
+    updateProfile(data) {
+        return request({
+            url: '/user/profile',
+            method: 'patch',
+            data
+        })
     }
 }
 

@@ -56,22 +56,42 @@
         <el-table-column label="手机号" prop="phone" min-width="130" align="center"/>
         <el-table-column label="头像" align="center" width="100">
           <template #default="scope">
-            <el-avatar :size="40" :src="scope.row.avatar"
+            <el-avatar :size="35" :src="scope.row.avatar || '/DefaultUser.svg'"
                        style="border: rgba(100,155,185,0.8) 1px solid;background: #ffffff"/>
           </template>
         </el-table-column>
         <el-table-column label="状态" align="center" min-width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '正常' : '停用' }}
-            </el-tag>
+            <el-tooltip content="不可禁用当前登录账号" placement="top" :disabled="scope.row.id !== currentUserId">
+              <el-switch
+                  v-model="scope.row.status"
+                  :active-value="1"
+                  :inactive-value="0"
+                  active-text="正常"
+                  inactive-text="停用"
+                  inline-prompt
+                  :disabled="scope.row.id === currentUserId"
+                  :loading="scope.row.statusLoading"
+                  @change="(val) => handleStatusChange(scope.row, val)"
+              />
+            </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="200" fixed="right">
+        <el-table-column label="操作" align="center" min-width="250" fixed="right">
           <template #default="scope">
-            <el-button type="primary" plain :icon="Edit" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="danger" plain :icon="Delete" size="small" @click="handleDelete(scope.row)">删除</el-button>
-            <el-button type="warning" plain :icon="Warning" size="small" @click="handleReset(scope.row)">重置密码
+            <el-button type="primary" plain :icon="Edit" size="small" :disabled="scope.row.id === currentUserId"
+                       @click="handleEdit(scope.row)">
+              编辑
+            </el-button>
+
+            <el-button type="danger" plain :icon="Delete" size="small" :disabled="scope.row.id === currentUserId"
+                       @click="handleDelete(scope.row)">
+              删除
+            </el-button>
+
+            <el-button type="warning" plain :icon="Warning" size="small" :disabled="scope.row.id === currentUserId"
+                       @click="handleReset(scope.row)">
+              重置密码
             </el-button>
           </template>
         </el-table-column>
@@ -140,6 +160,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {Search, Refresh, Delete, Edit, Plus, Warning} from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
+import {useUserStore} from '@/store/user'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -147,6 +168,7 @@ const userList = ref([])
 const total = ref(0)
 const multipleSelection = ref([])
 const userFormRef = ref(null)
+const userStore = useUserStore()
 
 const queryParams = ref({
   pageNum: 1, pageSize: 10, username: null, realName: null, status: null
@@ -156,6 +178,9 @@ const drawerVisible = ref(false)
 const form = ref({
   id: null, username: '', realName: '', phone: '', avatar: '', status: 0, password: '', confirmPassword: ''
 })
+
+// 获取当前登录人的 ID
+const currentUserId = computed(() => userStore.userInfo?.id || userStore.id)
 
 // --- 表单校验规则 ---
 const validateConfirmPassword = (rule, value, callback) => {
@@ -175,7 +200,7 @@ const rules = computed(() => ({
   ],
   // 添加手机号校验
   phone: [
-    { required: true, message: '手机号不能为空', trigger: 'blur' },
+    {required: true, message: '手机号不能为空', trigger: 'blur'},
     {
       pattern: /^1[0-9]\d{9}$/,
       message: '请输入正确的11位手机号',
@@ -337,8 +362,15 @@ const handleDelete = (row) => {
 
 // --- 批量删除 ---
 const handleBatchDelete = () => {
-  const ids = multipleSelection.value.map(item => item.id)
-  doDelete(ids, `确定要删除选中的 ${ids.length} 条数据吗？`)
+  const ids = multipleSelection.value
+      .map(item => item.id)
+      .filter(id => id !== currentUserId.value) // 过滤掉自己
+
+  if (ids.length === 0) {
+    return ElMessage.warning('选中的数据中包含当前登录账号，无法删除')
+  }
+
+  doDelete(ids, `确定要删除选中的 ${ids.length} 条数据吗？(已自动排除当前登录账号)`)
 }
 
 // 重置密码
@@ -361,6 +393,37 @@ const handleReset = (row) => {
       console.error('重置失败', error)
     }
   }).catch(() => {
+  })
+}
+
+// 修改状态处理
+const handleStatusChange = (row, val) => {
+  const statusName = val === 1 ? '启用' : '停用'
+
+  ElMessageBox.confirm(
+      `确定要${statusName}用户 "${row.realName}" 吗？`,
+      '系统提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+  ).then(async () => {
+    // 开启当前行的 loading 状态
+    row.statusLoading = true
+    try {
+      await userApi.changeStatus(row.id, val)
+      ElMessage.success(`${statusName}成功`)
+    } catch (error) {
+      // 接口报错，恢复原状
+      row.status = val === 1 ? 0 : 1
+      console.error('状态修改失败', error)
+    } finally {
+      row.statusLoading = false
+    }
+  }).catch(() => {
+    // 点击取消，恢复原状
+    row.status = val === 1 ? 0 : 1
   })
 }
 

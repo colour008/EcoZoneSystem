@@ -34,8 +34,9 @@
           <el-icon title="搜索">
             <Search/>
           </el-icon>
-          <el-icon title="全屏">
-            <FullScreen/>
+          <el-icon title="全屏" @click="toggleFullScreen">
+            <FullScreen v-if="!isFullscreen"/>
+            <Aim v-else/>
           </el-icon>
           <el-icon title="通知">
             <Bell/>
@@ -43,14 +44,15 @@
         </div>
 
         <el-dropdown trigger="click">
-          <span class="user-info">
-            <el-avatar :size="28" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"/>
-            <span class="username">Admin</span>
-            <el-icon><ArrowDown/></el-icon>
-          </span>
+         <span class="user-info">
+    <el-avatar :size="30"
+               :src="userInfo.avatar || '/DefaultUser.svg'" style="background: #ffffff;border: 1px solid #ec8800"/>
+    <span class="username">{{ userInfo.realName || '未知用户' }}</span>
+    <el-icon><ArrowDown/></el-icon>
+  </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>
+              <el-dropdown-item @click="openProfile">
                 <el-icon>
                   <User/>
                 </el-icon>
@@ -66,6 +68,58 @@
           </template>
         </el-dropdown>
       </div>
+      <el-dialog
+          v-model="profileVisible"
+          title="个人资料修改"
+          width="500px"
+          destroy-on-close
+      >
+        <el-form
+            ref="profileFormRef"
+            :model="profileForm"
+            :rules="profileRules"
+            label-width="100px"
+            style="padding: 10px 20px"
+        >
+          <el-form-item label="用户名">
+            <el-input v-model="profileForm.username" disabled/>
+            <div style="font-size: 12px; color: #999">账号名不可修改</div>
+          </el-form-item>
+          <el-form-item label="姓名" prop="realName">
+            <el-input v-model="profileForm.realName" placeholder="请输入姓名"/>
+          </el-form-item>
+          <el-divider content-position="center" class="my-divider">修改密码（不改请留空）
+          </el-divider>
+          <el-form-item label="新密码" prop="password">
+            <el-input v-model="profileForm.password" type="password" show-password placeholder="请输入新密码"/>
+          </el-form-item>
+          <el-form-item label="确认密码" prop="confirmPassword">
+            <el-input v-model="profileForm.confirmPassword" type="password" show-password
+                      placeholder="请再次输入新密码"/>
+          </el-form-item>
+          <el-form-item label="手机号" prop="phone">
+            <el-input v-model="profileForm.phone" placeholder="请输入手机号"/>
+          </el-form-item>
+          <el-form-item label="头像">
+            <el-upload
+                class="avatar-uploader"
+                action="#"
+                :show-file-list="false"
+                :http-request="handleProfileAvatarUpload"
+            >
+              <img v-if="profileForm.avatar" :src="profileForm.avatar" class="profile-avatar" alt="头像"/>
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus/>
+              </el-icon>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="profileVisible = false">取消</el-button>
+          <el-button type="primary" :loading="profileLoading" @click="submitProfile">保存修改</el-button>
+        </template>
+      </el-dialog>
+
     </header>
 
     <div class="layout-body">
@@ -129,14 +183,16 @@
 </template>
 
 <script setup>
-import {ref, watch, onMounted} from 'vue'
+import {ref, watch, onMounted, computed} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
-  Platform, Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
-  Search, FullScreen, Bell, User, SwitchButton
+  Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
+  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus
 } from '@element-plus/icons-vue'
+import userApi from '@/api/user'
+import {uploadFile} from '@/utils/upload'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +200,97 @@ const userStore = useUserStore()
 
 const isCollapse = ref(false)
 const activeMenu = ref(route.path)
+const isFullscreen = ref(false)
+const profileVisible = ref(false)
+const profileLoading = ref(false)
+const profileFormRef = ref(null)
+
+// 获取用户信息
+const userInfo = computed(() => userStore.userInfo)
+
+// 初始表单数据
+const profileForm = ref({
+  id: null,
+  username: '',
+  realName: '',
+  phone: '',
+  avatar: '',
+  password: '',
+  confirmPassword: ''
+})
+
+// 表单校验规则
+const profileRules = {
+  realName: [{required: true, message: '姓名不能为空', trigger: 'blur'}],
+  phone: [
+    {pattern: /^1[0-9]\d{9}$/, message: '请输入正确的11位手机号', trigger: 'blur'}
+  ],
+  password: [{min: 6, message: '密码长度至少为6位', trigger: 'blur'}],
+  confirmPassword: [
+    {
+      validator: (rule, value, callback) => {
+        if (profileForm.value.password && value !== profileForm.value.password) {
+          callback(new Error('两次输入密码不一致!'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
+// 打开个人中心并回显数据
+const openProfile = () => {
+  const {id, username, realName, phone, avatar} = userStore.userInfo
+  profileForm.value = {
+    id, username, realName, phone, avatar,
+    password: '', confirmPassword: ''
+  }
+  profileVisible.value = true
+}
+
+// 处理头像上传
+const handleProfileAvatarUpload = async (options) => {
+  const url = await uploadFile(options.file)
+  profileForm.value.avatar = url
+}
+
+// 提交修改
+const submitProfile = async () => {
+  if (!profileFormRef.value) return
+
+  await profileFormRef.value.validate(async (valid) => {
+    if (valid) {
+      profileLoading.value = true
+      try {
+        const updateData = {...profileForm.value}
+        // 如果没填密码，移除密码字段，防止后端误修改
+        if (!updateData.password) {
+          delete updateData.password
+          delete updateData.confirmPassword
+        }
+
+        await userApi.updateProfile(updateData)
+        ElMessage.success('资料更新成功')
+
+        // 重要：同步更新 Pinia 中的数据，Header 才会实时变化
+        userStore.setUserInfo({
+          ...userStore.userInfo,
+          realName: updateData.realName,
+          phone: updateData.phone,
+          avatar: updateData.avatar
+        })
+
+        profileVisible.value = false
+      } catch (error) {
+        console.error('更新个人资料失败', error)
+      } finally {
+        profileLoading.value = false
+      }
+    }
+  })
+}
 
 // 监听路由变化，仅用于更新侧边栏的高亮状态
 watch(
@@ -154,24 +301,28 @@ watch(
     {immediate: true}
 )
 
+
 // 退出登录
 const handleLogout = () => {
-  ElMessageBox.confirm(
-      '确认退出登录吗？',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-  )
+  ElMessageBox.confirm('确认退出登录吗？', '提示', {type: 'warning'})
       .then(() => {
-        userStore.setToken('')
+        userStore.logout() // 使用 store 里的 logout 清理本地存储
         ElMessage.success('已安全退出')
         router.push('/login')
       })
-      .catch(() => {
-      })
+}
+
+// 全屏
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen()
+    isFullscreen.value = true
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+      isFullscreen.value = false
+    }
+  }
 }
 
 onMounted(() => {
@@ -191,7 +342,7 @@ onMounted(() => {
 
 /* 顶部导航栏 */
 .layout-header {
-  height: 48px;
+  height: 55px;
   background: #ffffff;
   display: flex;
   justify-content: space-between;
@@ -281,7 +432,7 @@ onMounted(() => {
   gap: 16px;
   margin-right: 16px;
   color: #666;
-  font-size: 25px;
+  font-size: 30px;
 }
 
 .header-action-icons i {
@@ -365,5 +516,32 @@ onMounted(() => {
 .fade-transform-leave-to {
   opacity: 0;
   transform: translateX(15px);
+}
+
+/* 修改个人资料对话框 */
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+  object-fit: cover;
+  border: #c8c8c8 1px dashed;
+  border-radius: 6px;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+  line-height: 100px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+}
+
+
+.my-divider :deep(.el-divider__text) {
+  font-size: 13px;
+  color: #d54f4f;
 }
 </style>

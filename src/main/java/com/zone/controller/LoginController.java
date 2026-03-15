@@ -2,6 +2,7 @@ package com.zone.controller;
 
 import com.zone.common.response.Result;
 import com.zone.entity.dto.UserLoginDTO;
+import com.zone.entity.vo.LoginResultVO;
 import com.zone.service.LoginService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,9 +26,9 @@ public class LoginController {
 
 	@PostMapping("/login")
 	@Operation(summary = "登录")
-	public Result<Map<String, String>> login(@RequestBody UserLoginDTO dto) {
-		log.info("登录参数：{}", dto);
-		String token = loginService.login(dto.getUsername(), dto.getPassword());
-		return Result.success(Map.of("token", token));
+	public Result<LoginResultVO> login(@RequestBody UserLoginDTO dto) {
+		log.info("用户 {} 尝试登录", dto.getUsername());
+		LoginResultVO loginResult = loginService.login(dto.getUsername(), dto.getPassword());
+		return Result.success(loginResult);
 	}
 }

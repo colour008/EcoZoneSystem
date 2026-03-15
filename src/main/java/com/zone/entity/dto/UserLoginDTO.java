@@ -5,7 +5,7 @@ import lombok.Data;
 
 /**
  * @Author: JamHoo
- * @Description: TODO
+ * @Description: 用户登录参数
  * @Date: 2026/3/8 15:23
  * @Version: 1.0
  */

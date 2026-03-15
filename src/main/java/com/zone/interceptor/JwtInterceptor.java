@@ -34,9 +34,12 @@ public class JwtInterceptor implements HandlerInterceptor {
 		// 4. 校验并获取用户名
 		String username = jwtUtil.getUsername(token);
 
-		// 5. 存入 request，给 controller 使用
-		request.setAttribute("username", username);
+		// 5. 获取用户 ID
+		Long userId = jwtUtil.getUserId(token);
 
+		// 6. 存入 request，给 controller 使用
+		request.setAttribute("username", username);
+		request.setAttribute("userId", userId);
 		return true;
 	}
 }

@@ -226,12 +226,11 @@ const onSliderEnd = () => {
   window.removeEventListener('touchend', onSliderEnd)
 }
 
-// --- 业务逻辑 ---
+// --- 登录业务逻辑 ---
 const handleLogin = async () => {
-  // 防御性判断：滑块没过或者正在登录中，直接返回
   if (!isPassed.value || loginLoading.value) return
 
-  loginLoading.value = true // 开启按钮加载动画
+  loginLoading.value = true
   try {
     const res = await loginApi({
       username: username.value,
@@ -239,22 +238,26 @@ const handleLogin = async () => {
       mode: loginMode.value
     })
 
-    // 拦截器已过滤 code=200 & bizCode=0，此处直接写成功逻辑
+    // 1. 存储 Token
     userStore.setToken(res.data.token)
+
+    // 2. 存储用户信息（将 res.data.user 存入 pinia）
+    if (res.data.user) {
+      userStore.setUserInfo(res.data.user)
+    }
+
     ElMessage.success(res.msg || '登录成功')
 
-    // 延迟一小会儿跳转，体验更好
     setTimeout(() => {
       router.push('/index')
     }, 200)
 
   } catch (error) {
-    // 登录失败：重置滑块，让用户重新操作
     isPassed.value = false
     sliderWidth.value = 0
     console.error('登录异常:', error)
   } finally {
-    loginLoading.value = false // 关闭加载动画
+    loginLoading.value = false
   }
 }
 

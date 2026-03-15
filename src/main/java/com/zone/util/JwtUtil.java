@@ -21,8 +21,9 @@ public class JwtUtil {
 	/**
 	 * 生成 Token (最新写法)
 	 */
-	public String generateToken(String username) {
+	public String generateToken(Long userId,String username) {
 		return Jwts.builder()
+				.claim("userId", userId)
 				.setSubject(username)
 				.setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpire()))
@@ -30,8 +31,18 @@ public class JwtUtil {
 				.compact();
 	}
 
+	// 解析 Token 获取用户ID
+	public Long getUserId(String token) {
+		Claims claims = Jwts.parserBuilder()
+				.setSigningKey(Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8)))
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		return claims.get("userId", Long.class);
+	}
+
 	/**
-	 * 解析 Token 获取用户名 (最新写法 parserBuilder)
+	 * 解析 Token 获取用户名
 	 */
 	public String getUsername(String token) {
 		try {

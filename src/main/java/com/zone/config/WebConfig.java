@@ -17,9 +17,9 @@ public class WebConfig implements WebMvcConfigurer {
 	 * 放行白名单
 	 */
 	private static final String[] WHITE_LIST = {
-			"/api/auth/login",
-			"/api/auth/register",
-			"/api/common/**",
+			"/auth/login",
+			"/auth/register",
+			"/common/**",
 			"/doc.html",
 			"/swagger-ui/**",
 			"/v3/api-docs/**"
@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(jwtInterceptor)
-				.addPathPatterns("/api/**")
+				.addPathPatterns("/**")
 				.excludePathPatterns(WHITE_LIST);
 	}
 
@@ -40,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
 		registry.addMapping("/**")
 				.allowCredentials(true)
 				.allowedOriginPatterns("*")
-				.allowedMethods("GET", "POST", "PUT", "DELETE")
+				.allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
 				.allowedHeaders("*")
 				.maxAge(3600);
 	}

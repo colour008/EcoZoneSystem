@@ -9,12 +9,13 @@ import { ElMessage } from 'element-plus'
 export const uploadFile = async (file) => {
     const formData = new FormData()
     formData.append('file', file)
-
+    const token = localStorage.getItem('token') // 获取 token
     try {
         // 根据你的项目环境，这里可能需要根据实际情况修改 baseURL 或从 process.env 获取
         const res = await axios.post('/api/upload', formData, {
             headers: {
-                'Content-Type': 'multipart/form-data'
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`
             }
         })
 

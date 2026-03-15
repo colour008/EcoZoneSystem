@@ -1,5 +1,7 @@
 package com.zone.service;
 
+import com.zone.entity.vo.LoginResultVO;
+
 public interface LoginService {
 	/**
 	 * 登录
@@ -7,5 +9,5 @@ public interface LoginService {
 	 * @param password 密码
 	 * @return String
 	 */
-	String login(String username, String password);
+	LoginResultVO login(String username, String password);
 }

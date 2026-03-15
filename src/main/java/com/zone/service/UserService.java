@@ -56,4 +56,12 @@ public interface UserService {
 	 * @return boolean
 	 */
 	boolean resetPassword(Long id, String defaultPwd);
+
+	/**
+	 * 修改用户状态
+	 * @param id
+	 * @param status
+	 * @return boolean
+	 */
+	boolean updateStatus(Long id, Integer status);
 }
