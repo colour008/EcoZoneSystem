@@ -34,6 +34,16 @@
           </div>
         </div>
       </div>
+
+      <div class="responsive-title">
+        <div class="logo-icon">
+          <el-icon :size="20">
+            <OfficeBuilding/>
+          </el-icon>
+        </div>
+        <span class="brand-name">经济开发区管理平台</span>
+      </div>
+
       <div class="form-wrapper">
         <div class="welcome-text">
           <h2>创建新账户 🚀</h2>
@@ -534,7 +544,6 @@ const goToLogin = () => {
   display: none;
   align-items: center;
   gap: 10px;
-  margin-bottom: 30px;
   width: 100%;
   max-width: 360px;
 }

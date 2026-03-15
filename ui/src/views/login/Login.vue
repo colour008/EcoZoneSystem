@@ -693,7 +693,6 @@ onUnmounted(() => onSliderEnd())
   display: none;
   align-items: center;
   gap: 10px;
-  margin-bottom: 30px;
   width: 100%;
   max-width: 360px;
 }

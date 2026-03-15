@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -71,22 +73,21 @@ public class LoginServiceImpl implements LoginService {
 	 */
 	@Override
 	@Transactional
-	public void register(UserRegisterDTO dto) {
+	public void register(@Validated @RequestBody UserRegisterDTO dto) {
+
 		// 1. 用户名唯一性校验
 		if (userMapper.checkUsernameExists(dto.getUsername()) > 0) {
 			throw new BusinessException("用户已存在，请更换后再试");
 		}
 
-		// 2. 使用 Spring Security 方法加密密码
-		String encodedPassword = passwordEncoder.encode(dto.getPassword());
-
-		// 3. 构造对象并插入
+		// 2. 拷贝属性
 		User user = new User();
-		user.setUsername(dto.getUsername());
-		user.setPassword(encodedPassword); // 存入加密后的密文
-		user.setRealName(dto.getRealName());
-		user.setPhone(dto.getPhone());
-		user.setStatus(1); // 1正常/0停用
+		BeanUtils.copyProperties(dto, user);
+
+		// 3. 加密覆盖
+		user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+		// 4. 执行插入
 		userMapper.insert(user);
 	}
 }
