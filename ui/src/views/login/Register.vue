@@ -45,7 +45,11 @@
             <span class="floating-label">设置用户名 (4-20位)</span>
             <el-form-item prop="username" class="custom-input-item">
               <el-input v-model="regForm.username">
-                <template #prefix><el-icon><User /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <User/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </div>
@@ -54,7 +58,11 @@
             <span class="floating-label">设置密码</span>
             <el-form-item prop="password" class="custom-input-item">
               <el-input v-model="regForm.password" type="password" show-password>
-                <template #prefix><el-icon><Lock /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <Lock/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </div>
@@ -63,7 +71,11 @@
             <span class="floating-label">确认密码</span>
             <el-form-item prop="confirmPassword" class="custom-input-item">
               <el-input v-model="regForm.confirmPassword" type="password" show-password>
-                <template #prefix><el-icon><CircleCheck /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <CircleCheck/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </div>
@@ -72,7 +84,11 @@
             <span class="floating-label">您的姓名</span>
             <el-form-item prop="realName" class="custom-input-item">
               <el-input v-model="regForm.realName">
-                <template #prefix><el-icon><Postcard /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <Postcard/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </div>
@@ -81,13 +97,18 @@
             <span class="floating-label">手机号码</span>
             <el-form-item prop="phone" class="custom-input-item">
               <el-input v-model="regForm.phone">
-                <template #prefix><el-icon><Iphone /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <Iphone/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </div>
 
           <el-form-item class="submit-item">
-            <el-button type="primary" :loading="loading" @click="handleRegister" class="submit-btn">
+            <el-button type="primary" :loading="loading" :disabled="!isFormValid" @click="handleRegister"
+                       class="submit-btn">
               注 册
             </el-button>
           </el-form-item>
@@ -106,7 +127,7 @@
 </template>
 
 <script setup>
-import {ref, reactive} from 'vue'
+import {ref, reactive, computed} from 'vue'
 import {useRouter} from 'vue-router'
 import {registerApi} from '@/api/login'
 import {ElMessage} from 'element-plus'
@@ -125,7 +146,8 @@ const regForm = reactive({
   phone: ''
 })
 
-// 严谨的表单校验
+
+// 表单校验
 const regRules = {
   username: [{required: true, message: '请输入用户名', trigger: 'blur'}, {
     min: 4,
@@ -150,6 +172,18 @@ const regRules = {
   ],
   phone: [{pattern: /^1[0-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}]
 }
+
+// 判断所有字段是否都已经填写且符合基本规则
+const isFormValid = computed(() => {
+  return (
+      regForm.username.length >= 4 &&
+      regForm.username.length <= 20 &&
+      regForm.realName.trim() !== '' &&
+      regForm.password.length >= 6 &&
+      regForm.confirmPassword === regForm.password &&
+      /^1[0-9]\d{9}$/.test(regForm.phone)
+  )
+})
 
 // 注册逻辑
 const handleRegister = async () => {
@@ -446,7 +480,7 @@ const goToLogin = () => {
 /* 当输入框获得焦点，或者里面有内容时，标签上浮 */
 .floating-group:focus-within .floating-label,
 .floating-group.is-floating .floating-label {
-  top: -12px;
+  top: -10px;
   left: 8px;
   font-size: 12px;
   color: var(--text-sub); /* 激活时的颜色 */
@@ -463,9 +497,8 @@ const goToLogin = () => {
 :deep(.el-form-item__error) {
   position: absolute;
   top: 100%;
-  left: 80%;
   padding-top: 4px; /* 增加一点与输入框的距离 */
-  line-height: 1;  /* 压缩行高，防止占用太多垂直空间 */
+  line-height: 1; /* 压缩行高，防止占用太多垂直空间 */
 }
 
 .custom-input-item {
@@ -478,11 +511,22 @@ const goToLogin = () => {
   color: var(--text-sub);
 }
 
+/* 页脚 */
 .footer-copyright {
   position: absolute;
   bottom: 20px;
   font-size: 12px;
   color: var(--text-sub);
+}
+
+/* 注册按钮 */
+.submit-btn {
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.3s;
 }
 
 /* ================== 响应式小屏幕适配 ================== */

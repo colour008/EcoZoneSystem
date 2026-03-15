@@ -74,7 +74,7 @@ public class LoginServiceImpl implements LoginService {
 	public void register(UserRegisterDTO dto) {
 		// 1. 用户名唯一性校验
 		if (userMapper.checkUsernameExists(dto.getUsername()) > 0) {
-			throw new BusinessException("该用户名已被占用，请更换后再试");
+			throw new BusinessException("用户已存在，请更换后再试");
 		}
 
 		// 2. 使用 Spring Security 方法加密密码
