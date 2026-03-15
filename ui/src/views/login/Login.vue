@@ -21,9 +21,6 @@
     <div class="login-right">
       <div class="top-actions">
         <div class="action-pill">
-          <!--          <div class="action-icon"><i class="app-icon"></i></div>-->
-          <!--          <div class="action-icon"><i class="layout-icon"></i></div>-->
-          <!--          <div class="action-icon"><i class="lang-icon"></i></div>-->
           <div class="action-icon" @click="isDark = !isDark">
             <el-icon :size="16">
               <Sunny v-if="!isDark"/>
@@ -52,15 +49,17 @@
           <template v-if="loginMode === 'account'">
             <el-form-item class="custom-input-item">
               <el-input v-model="username" placeholder="请输入账号">
-                <template #suffix>
-                  <el-icon class="suffix-icon">
-                    <ArrowDown/>
+                <template #prefix>
+                  <el-icon>
+                    <User/>
                   </el-icon>
                 </template>
               </el-input>
             </el-form-item>
             <el-form-item class="custom-input-item">
-              <el-input v-model="password" type="password" placeholder="请输入密码" show-password></el-input>
+              <el-input v-model="password" type="password" placeholder="请输入密码" show-password>
+                <template #prefix><el-icon><Lock /></el-icon></template>
+              </el-input>
             </el-form-item>
           </template>
 
@@ -113,8 +112,8 @@
           </el-form-item>
 
           <div class="alt-login-buttons">
-            <el-button class="alt-btn" @click="loginMode = 'mobile'">手机号登录</el-button>
             <el-button class="alt-btn" @click="loginMode = 'account'">账号登录</el-button>
+            <el-button class="alt-btn" @click="loginMode = 'mobile'">手机号登录</el-button>
           </div>
 
           <div class="third-party-login">
@@ -154,14 +153,14 @@
 
             <div class="register-link">
               还没有账号？
-              <el-link type="primary" underline="never" @click="goToRegister">创建账号</el-link>
+              <el-link type="primary" underline="never" @click="goToRegister">注册账号</el-link>
             </div>
           </div>
         </el-form>
       </div>
 
       <div class="footer-copyright">
-        Copyright © 2024 Vben
+        Copyright © 2026 JamHoo
       </div>
     </div>
   </div>
@@ -173,13 +172,22 @@ import {useUserStore} from '@/store/user.js'
 import {loginApi} from '@/api/login.js'
 import {ElMessage} from 'element-plus'
 import {useRouter} from 'vue-router'
-import {DArrowRight, CircleCheckFilled, OfficeBuilding, Sunny, Moon, ArrowDown} from '@element-plus/icons-vue'
+import {
+  DArrowRight,
+  CircleCheckFilled,
+  OfficeBuilding,
+  Sunny,
+  Moon,
+  ArrowDown,
+  User,
+  Lock
+} from '@element-plus/icons-vue'
 
 const loginMode = ref('account')
 const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
-const isDark = ref(false) // 根据截图默认采用暗色模式
+const isDark = ref(false) // 默认采用亮色模式
 const userStore = useUserStore()
 const router = useRouter()
 
@@ -261,7 +269,9 @@ const handleLogin = async () => {
   }
 }
 
-const goToRegister = () => ElMessage.info('跳转至注册页面')
+const goToRegister = () => {
+  router.push('/register')
+}
 
 onUnmounted(() => onSliderEnd())
 </script>
@@ -321,7 +331,7 @@ onUnmounted(() => onSliderEnd())
 }
 
 .login-right {
-  width: 800px;
+  width: 700px;
   background-color: var(--bg-right);
   display: flex;
   flex-direction: column;
@@ -429,27 +439,6 @@ onUnmounted(() => onSliderEnd())
   color: var(--text-main);
 }
 
-/* 占位小图标模拟工具栏 */
-.app-icon, .layout-icon, .lang-icon {
-  width: 14px;
-  height: 14px;
-  background-color: currentColor;
-  mask-size: cover;
-  -webkit-mask-size: cover;
-}
-
-.app-icon {
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path d="M426.666667 426.666667H128V128h298.666667v298.666667zM896 426.666667H597.333333V128h298.666667v298.666667zM426.666667 896H128V597.333333h298.666667v298.666667zM896 896H597.333333V597.333333h298.666667v298.666667z"/></svg>');
-}
-
-.layout-icon {
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path d="M853.333333 128H170.666667c-47.146667 0-85.333333 38.186667-85.333334 85.333333v597.333334c0 47.146667 38.186667 85.333333 85.333334 85.333333h682.666666c47.146667 0 85.333333-38.186667 85.333334-85.333333V213.333333c0-47.146667-38.186667-85.333333-85.333334-85.333333zM341.333333 810.666667H170.666667V341.333333h170.666666v469.333334z m512 0H426.666667V341.333333h426.666666v469.333334z"/></svg>');
-}
-
-.lang-icon {
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path d="M608 672h-74.666667l-26.666666-85.333333h-192L288 672H213.333333L362.666667 213.333333h74.666666L608 672z m-122.666667-154.666667L400 234.666667 314.666667 517.333333h170.666666z m314.666667 0h-53.333333v-128c0-34.133333 24.533333-64 64-64h64v53.333334h-64c-8.533333 0-10.666667 5.333333-10.666667 10.666666v128z m-10.666667 154.666667h53.333334v-106.666667h-53.333334v106.666667z"/></svg>');
-}
-
 .form-wrapper {
   flex: 1;
   width: 100%;
@@ -518,9 +507,6 @@ onUnmounted(() => onSliderEnd())
   color: var(--text-sub);
 }
 
-.suffix-icon {
-  color: var(--text-sub);
-}
 
 :deep(.el-input-group__append) {
   background-color: var(--input-bg) !important;
@@ -692,7 +678,7 @@ onUnmounted(() => onSliderEnd())
 
 .register-link {
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-sub);
 }
 

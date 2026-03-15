@@ -9,3 +9,12 @@ export function loginApi(data) {
         data
     })
 }
+
+// 注册接口
+export const registerApi = (data) => {
+    return request({
+        url: '/auth/register',
+        method: 'post',
+        data
+    })
+}

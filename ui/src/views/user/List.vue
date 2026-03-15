@@ -8,6 +8,9 @@
         <el-form-item label="姓名">
           <el-input v-model="queryParams.realName" placeholder="请输入姓名" clearable @keyup.enter="getUserPageList"/>
         </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="queryParams.phone" placeholder="请输入手机号" clearable @keyup.enter="getUserPageList"/>
+        </el-form-item>
         <el-form-item label="账号状态">
           <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 120px">
             <el-option label="正常" :value="1"/>
@@ -171,7 +174,7 @@ const userFormRef = ref(null)
 const userStore = useUserStore()
 
 const queryParams = ref({
-  pageNum: 1, pageSize: 10, username: null, realName: null, status: null
+  pageNum: 1, pageSize: 10, username: null, realName: null, status: null, phone:null
 })
 
 const drawerVisible = ref(false)

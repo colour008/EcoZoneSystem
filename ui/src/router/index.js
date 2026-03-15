@@ -1,11 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/store/user'
+import {createRouter, createWebHistory} from 'vue-router'
+import {useUserStore} from '@/store/user'
 
 const routes = [
     {
         path: '/login',
         name: 'Login',
         component: () => import('@/views/login/Login.vue')
+    },
+    {
+        path: '/register', // 添加注册路由
+        name: 'Register',
+        component: () => import('@/views/login/Register.vue')
     },
     {
         path: '/',
@@ -20,19 +25,19 @@ const routes = [
             {
                 path: 'dashboard',
                 name: 'Dashboard',
-                meta: { title: '主控台', icon: 'House' },
+                meta: {title: '主控台', icon: 'House'},
                 component: () => import('@/views/dashboard/Index.vue')
             },
             {
                 path: 'user/list',
                 name: 'UserList',
-                meta: { title: '用户列表' , icon: 'User'},
+                meta: {title: '用户列表', icon: 'User'},
                 component: () => import('@/views/user/List.vue')
             },
             {
                 path: 'access/list',
                 name: 'AccessList',
-                meta: { title: '权限列表', icon: 'Key' },
+                meta: {title: '权限列表', icon: 'Key'},
                 component: () => import('@/views/access/List.vue')
             }
         ]
@@ -56,14 +61,12 @@ const router = createRouter({
 router.beforeEach((to, from) => {
     const userStore = useUserStore()
 
-    // 简单的登录拦截逻辑
-    if (to.path !== '/login' && !userStore.token) {
-        return '/login'
-    }
+    // 白名单
+    const whiteList = ['/login', '/register', '/404']
 
-    // 如果已登录还想去 login，直接弹回首页
-    if (to.path === '/login' && userStore.token) {
-        return '/index'
+    // 登录、注册、404页面拦截逻辑
+    if (!whiteList.includes(to.path) && !userStore.token) {
+        return '/login'
     }
 
     return true

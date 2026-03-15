@@ -3,7 +3,10 @@ package com.zone.mapper;
 import com.github.pagehelper.Page;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -64,4 +67,11 @@ public interface UserMapper {
 	 * @return
 	 */
 	User selectById(Long id);
+
+	/**
+	 * 检查用户名是否存在
+	 * @param username
+	 * @return
+	 */
+	int checkUsernameExists(@Param("username") String username);
 }

@@ -1,6 +1,7 @@
 package com.zone.service.impl;
 
 import com.zone.common.exception.BusinessException;
+import com.zone.entity.dto.UserRegisterDTO;
 import com.zone.entity.sys.User;
 import com.zone.entity.vo.LoginResultVO;
 import com.zone.entity.vo.UserVO;
@@ -11,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -60,5 +62,31 @@ public class LoginServiceImpl implements LoginService {
 				.token(token)
 				.user(userVO)
 				.build();
+	}
+
+	/**
+	 * 注册
+	 *
+	 * @param dto 注册参数
+	 */
+	@Override
+	@Transactional
+	public void register(UserRegisterDTO dto) {
+		// 1. 用户名唯一性校验
+		if (userMapper.checkUsernameExists(dto.getUsername()) > 0) {
+			throw new BusinessException("该用户名已被占用，请更换后再试");
+		}
+
+		// 2. 使用 Spring Security 方法加密密码
+		String encodedPassword = passwordEncoder.encode(dto.getPassword());
+
+		// 3. 构造对象并插入
+		User user = new User();
+		user.setUsername(dto.getUsername());
+		user.setPassword(encodedPassword); // 存入加密后的密文
+		user.setRealName(dto.getRealName());
+		user.setPhone(dto.getPhone());
+		user.setStatus(1); // 1正常/0停用
+		userMapper.insert(user);
 	}
 }

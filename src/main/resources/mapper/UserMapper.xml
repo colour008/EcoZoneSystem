@@ -120,4 +120,9 @@
     <select id="selectById" resultMap="UserResultMap">
         select id, username, real_name from sys_user where id = #{id}
     </select>
+
+    <!--    检查用户名是否存在-->
+    <select id="checkUsernameExists" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM sys_user WHERE username = #{username}
+    </select>
 </mapper>

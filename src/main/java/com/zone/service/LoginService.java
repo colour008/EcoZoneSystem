@@ -1,5 +1,6 @@
 package com.zone.service;
 
+import com.zone.entity.dto.UserRegisterDTO;
 import com.zone.entity.vo.LoginResultVO;
 
 public interface LoginService {
@@ -10,4 +11,10 @@ public interface LoginService {
 	 * @return String
 	 */
 	LoginResultVO login(String username, String password);
+
+	/**
+	 * 注册
+	 * @param dto 注册参数
+	 */
+	void register(UserRegisterDTO dto);
 }
