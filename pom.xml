@@ -39,7 +39,7 @@
         <logback.version>1.5.25</logback.version>
         <lombok.version>1.18.34</lombok.version>
         <hibernate.version>8.0.1.Final</hibernate.version>
-
+        <beanutils.version>1.9.4</beanutils.version>
     </properties>
     <dependencies>
         <!-- SpringBoot Web -->
@@ -47,7 +47,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-<!--        SpringBoot Security-->
+        <!--        SpringBoot Security-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -56,6 +56,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!--        BeanUtils-->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${beanutils.version}</version>
+        </dependency>
+
         <!-- MyBatis -->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>

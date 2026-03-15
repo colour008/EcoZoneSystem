@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.apache.commons.beanutils.PropertyUtils;
 
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -58,8 +59,11 @@ public class LoginServiceImpl implements LoginService {
 
 		// 5. 封装返回信息
 		UserVO userVO = new UserVO();
-		BeanUtils.copyProperties(user, userVO); // 使用 Spring 的工具类拷贝属性
-
+		try {
+			PropertyUtils.copyProperties(userVO, user);
+		} catch (Exception e) {
+			throw new BusinessException("用户信息转换失败: " + e.getMessage());
+		}
 		return LoginResultVO.builder()
 				.token(token)
 				.user(userVO)
@@ -82,7 +86,13 @@ public class LoginServiceImpl implements LoginService {
 
 		// 2. 拷贝属性
 		User user = new User();
-		BeanUtils.copyProperties(dto, user);
+		try {
+			// 注意：PropertyUtils.copyProperties(dest, orig)
+			// 如果字段名一致但类型不同（如 String 转 Integer），这里会直接报错
+			PropertyUtils.copyProperties(user, dto);
+		} catch (Exception e) {
+			throw new BusinessException("注册数据处理异常: " + e.getMessage());
+		}
 
 		// 3. 加密覆盖
 		user.setPassword(passwordEncoder.encode(dto.getPassword()));
