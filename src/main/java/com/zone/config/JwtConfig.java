@@ -3,7 +3,6 @@ package com.zone.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 /**
  * @Author: JamHoo
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
  * @Version: 1.0
  */
 @Data
-@Component
 @Configuration
 @ConfigurationProperties(prefix = "jwt")
 public class JwtConfig {
@@ -30,10 +28,10 @@ public class JwtConfig {
 	/**
 	 * 请求头
 	 */
-	private String header;
+	private String header = "Authorization";
 
 	/**
 	 * 令牌前缀
 	 */
-	private String tokenPrefix;
+	private String tokenPrefix = "Bearer ";
 }

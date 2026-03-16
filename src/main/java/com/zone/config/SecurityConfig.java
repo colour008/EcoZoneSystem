@@ -1,5 +1,6 @@
 package com.zone.config;
 
+import com.zone.common.constant.AuthConstant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * @Author: JamHoo
  * @Description: Spring Security 配置
- * @Date: 2026/3/14 11:50
+ * @Date: 2026/3/14 09:05
  * @Version: 1.0
  */
 @Configuration
@@ -23,34 +24,27 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				// 1. 禁用 CSRF（API 场景下无需 CSRF）
+				// 1. 禁用不需要的默认功能
 				.csrf(AbstractHttpConfigurer::disable)
-				// 2. 禁用 HTTP Basic 认证
 				.httpBasic(AbstractHttpConfigurer::disable)
-				// 3. 禁用表单登录
 				.formLogin(AbstractHttpConfigurer::disable)
-				// 4. 禁用注销功能
 				.logout(AbstractHttpConfigurer::disable)
-				// 5. 配置会话策略为无状态（REST API 最佳实践）
+
+				// 2. 强制前后端分离的无状态会话管理
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				// 6. 授权规则
+
+				// 3. 权限控制
 				.authorizeHttpRequests(auth -> auth
-						// 放行登录接口
-						.requestMatchers("/auth/login").permitAll()
-						// 放行 Swagger 文档接口（如果需要）
-						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**" ).permitAll()
-						// 其他所有请求都允许（实际认证由 JWT 拦截器处理）
-						.anyRequest().permitAll()
+						.requestMatchers(AuthConstant.WHITE_LIST).permitAll()
+						.anyRequest().permitAll() // 允许所有请求通过 Security 层，由拦截器去验票
 				);
 
 		return http.build();
 	}
 
-	/**
-	 * 密码编码器 Bean
-	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {
+		// 生产环境必须使用强哈希加密
 		return new BCryptPasswordEncoder();
 	}
 }
