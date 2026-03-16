@@ -1,5 +1,6 @@
 package com.zone.service.impl;
 
+import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
 import com.zone.entity.dto.UserRegisterDTO;
 import com.zone.entity.sys.User;
@@ -15,6 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.apache.commons.beanutils.PropertyUtils;
+
+/**
+ * @Author: JamHoo
+ * @Description: 登录服务实现类
+ * @Date: 2026/3/13 18:37
+ * @Version: 1.0
+ */
 
 @Service
 public class LoginServiceImpl implements LoginService {
@@ -40,17 +48,17 @@ public class LoginServiceImpl implements LoginService {
 		// 1. 根据用户名查询用户
 		User user = userMapper.selectByUsername(username);
 		if (user == null) {
-			throw new BusinessException("用户不存在");
+			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
 
 		// 2. 校验密码 (使用你之前配置的 passwordEncoder)
 		if (!passwordEncoder.matches(password, user.getPassword())) {
-			throw new BusinessException("密码错误");
+			throw new BusinessException(ResponseCodeEnum.USER_PASSWORD_ERROR);
 		}
 
 		// 3. 校验状态
 		if (user.getStatus() == 0) {
-			throw new BusinessException("账号已停用，请联系管理员");
+			throw new BusinessException(ResponseCodeEnum.USER_STATUS_DISABLED);
 		}
 
 		// 4. 生成 Token (传入 userId 和 username)
@@ -80,7 +88,7 @@ public class LoginServiceImpl implements LoginService {
 
 		// 1. 用户名唯一性校验
 		if (userMapper.checkUsernameExists(dto.getUsername()) > 0) {
-			throw new BusinessException("用户已存在，请更换后再试");
+			throw new BusinessException(ResponseCodeEnum.USER_NAME_DUPLICATE);
 		}
 
 		// 2. 拷贝属性

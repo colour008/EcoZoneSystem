@@ -10,8 +10,10 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.Collections;
 
 /**
- * 企业级全局跨域配置
- * 兼容 SpringBoot 2/3，支持 JWT、自定义请求头
+ * @Author: JamHoo
+ * @Description: 跨域配置
+ * @Date: 2026/3/14 09:01
+ * @Version: 1.0
  */
 @Configuration
 public class CorsConfig {

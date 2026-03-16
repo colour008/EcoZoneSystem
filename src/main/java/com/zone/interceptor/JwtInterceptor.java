@@ -11,6 +11,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * @Author: JamHoo
+ * @Description: JWT 拦截器
+ * @Date: 2026/3/14 09:05
+ * @Version: 1.0
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtInterceptor implements HandlerInterceptor {

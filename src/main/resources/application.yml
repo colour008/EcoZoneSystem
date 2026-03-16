@@ -45,7 +45,7 @@ mybatis:
 jwt:
   # 密钥 (至少32位)
   secret: zone-platform-2026-jwt-secret-key-abcdefghijk
-  # 过期时间 单位：毫秒 1天 = 86400000
+  # 过期时间 单位：毫秒 86400000 = 24小时 3600000 = 1小时 604800000 = 7天
   expire: 86400000
   # 请求头key
   header: Authorization

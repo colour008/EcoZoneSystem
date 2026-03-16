@@ -157,6 +157,12 @@ public class UserController {
 		return success ? Result.success() : Result.sysError("状态修改失败");
 	}
 
+	/**
+	 * 修改用户资料
+	 *
+	 * @param user
+	 * @return boolean
+	 */
 	@PatchMapping("/profile")
 	public Result<String> updateProfile(@RequestBody User user,
 	                                    //从 Request 属性中获取拦截器解析好的 ID

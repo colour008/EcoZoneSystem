@@ -2,6 +2,7 @@ package com.zone.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
 import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.UserPageQueryDTO;
@@ -130,7 +131,7 @@ public class UserServiceImpl implements UserService {
 		// 1. 先根据 ID 查询用户信息（用于获取用户名）
 		User user = userMapper.selectById(id);
 		if (user == null) {
-			throw new BusinessException("操作失败：用户不存在");
+			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
 		// 2. 准备更新对象
 		User updateUserInfo = new User();
@@ -159,7 +160,7 @@ public class UserServiceImpl implements UserService {
 		// 1. 检查用户是否存在（防御性编程）
 		User user = userMapper.selectById(id);
 		if (user == null) {
-			throw new BusinessException("用户不存在");
+			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
 		// 2. 构造瘦身后的更新对象，减少数据库压力
 		User updateInfo = new User();

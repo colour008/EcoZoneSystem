@@ -6,6 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * @Author: JamHoo
+ * @Description: Minio 配置
+ * @Date: 2026/3/14 09:05
+ * @Version: 1.0
+ */
 @Configuration
 @RequiredArgsConstructor
 public class MinioConfig {

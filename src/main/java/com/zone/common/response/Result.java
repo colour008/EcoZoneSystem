@@ -5,8 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 统一接口返回格式（增强版，含业务状态码）
+ * @Author: JamHoo
+ * @Description: 统一响应结果
+ * @Date: 2026/3/8 15:20
+ * @Version: 1.0
  */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

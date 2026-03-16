@@ -26,7 +26,7 @@ public enum ResponseCodeEnum {
 	USER_NOT_EXIST(4001, "用户不存在"),
 	USER_STATUS_DISABLED(4002, "用户已被停用"),
 	USER_PASSWORD_ERROR(4003, "账号或密码错误"),
-	USER_NAME_DUPLICATE(4004, "登录账号已存在"),
+	USER_NAME_DUPLICATE(4004, "账号已存在"),
 	USER_PHONE_DUPLICATE(4005, "手机号已绑定其他账户"),
 	USER_NOT_LOGIN(4006, "用户未登录，请先登录"),
 	TOKEN_EXPIRED(4007, "登录已过期，请重新登录"),

@@ -13,6 +13,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * @Author: JamHoo
+ * @Description: 文件上传接口
+ * @Date: 2026/3/14 17:05
+ * @Version: 1.0
+ */
+
 @Slf4j
 @RestController
 @RequestMapping("/upload")
