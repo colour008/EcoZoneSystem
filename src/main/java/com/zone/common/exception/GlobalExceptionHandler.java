@@ -34,8 +34,9 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(UnauthorizedException.class)
 	public Result<?> handleUnauthorized() {
-		return Result.result(401, ResponseCodeEnum.TOKEN_EXPIRED.getBizCode(),
-				ResponseCodeEnum.TOKEN_EXPIRED.getMsg(), null);
+		// 直接用 bizError，绝对不报错
+		return Result.bizError(ResponseCodeEnum.TOKEN_EXPIRED.getBizCode(),
+				ResponseCodeEnum.TOKEN_EXPIRED.getMsg());
 	}
 
 	/**
@@ -43,7 +44,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(PermissionDeniedException.class)
 	public Result<?> handlePermissionDenied() {
-		return Result.result(403, ResponseCodeEnum.PERMISSION_DENIED.getBizCode(),
-				ResponseCodeEnum.PERMISSION_DENIED.getMsg(), null);
+		return Result.bizError(ResponseCodeEnum.PERMISSION_DENIED.getBizCode(),
+				ResponseCodeEnum.PERMISSION_DENIED.getMsg());
 	}
 }

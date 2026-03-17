@@ -1,6 +1,7 @@
 package com.zone.service;
 
 import com.zone.entity.base.PageResult;
+import com.zone.entity.dto.UserDTO;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
 
@@ -30,10 +31,10 @@ public interface UserService {
 
 	/**
 	 * 添加用户
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
-	boolean addUser(User user);
+	boolean addUser(UserDTO userDTO);
 
 	/**
 	 * 删除用户
@@ -44,10 +45,10 @@ public interface UserService {
 
 	/**
 	 * 修改用户
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
-	boolean updateById(User user);
+	boolean updateById(UserDTO userDTO);
 
 	/**
 	 * 重置密码

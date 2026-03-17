@@ -2,6 +2,7 @@ package com.zone.entity.dto;
 
 import com.zone.entity.base.PageQuery;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @Author: JamHoo
@@ -9,6 +10,7 @@ import lombok.Data;
  * @Date: 2026/3/13 20:35
  * @Version: 1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class UserPageQueryDTO extends PageQuery {
 	/**

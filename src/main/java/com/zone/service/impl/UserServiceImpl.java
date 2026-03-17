@@ -5,17 +5,21 @@ import com.github.pagehelper.PageHelper;
 import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
 import com.zone.entity.base.PageResult;
+import com.zone.entity.dto.UserDTO;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
+import com.zone.entity.vo.UserVO;
 import com.zone.mapper.UserMapper;
 import com.zone.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: JamHoo
@@ -49,29 +53,45 @@ public class UserServiceImpl implements UserService {
 	 * @return PageResult
 	 */
 	@Override
-	public PageResult getUserPage(UserPageQueryDTO dto) {
+	public PageResult<UserVO> getUserPage(UserPageQueryDTO dto) {
 		PageHelper.startPage(dto.getPageNum(), dto.getPageSize());
 		Page<User> page = userMapper.getUserPage(dto);
-		return new PageResult(page.getTotal(), page.getResult());
+
+		List<UserVO> voList = page.getResult().stream().map(user -> {
+			UserVO vo = new UserVO();
+			BeanUtils.copyProperties(user,vo);
+			return vo;
+		}).collect(Collectors.toList());
+
+		return new PageResult<>(page.getTotal(), voList);
 	}
 
 	/**
 	 * 添加用户
 	 *
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
 	@Override
-	public boolean addUser(User user) {
+	public boolean addUser(UserDTO userDTO) {
+		if (userMapper.checkUsernameExists(userDTO.getUsername()) > 0) {
+			throw new BusinessException(ResponseCodeEnum.USER_NAME_DUPLICATE);
+		}
 		try {
-			if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-				user.setPassword(passwordEncoder.encode(user.getPassword()));
-				log.info("用户{}密码加密完成", user.getUsername());
+			if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+				userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+				log.info("用户{}密码加密完成", userDTO.getUsername());
 			} else {
 				throw new BusinessException("密码不能为空");
 			}
+			User user = new User();
+			try {
+				BeanUtils.copyProperties(userDTO,user);
+			} catch (Exception e) {
+				throw new BusinessException("用户信息转换失败: " + e.getMessage());
+			}
 			boolean result = userMapper.insert(user);
-			log.info("新增用户{}成功，ID：{}", user.getUsername(), user.getId());
+			log.info("新增用户{}成功，ID：{}", userDTO.getUsername(), user.getId());
 			return result;
 		} catch (Exception e) {
 			log.error("新增用户失败：{}", e.getMessage(), e);
@@ -99,18 +119,24 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * 修改用户
 	 *
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean updateById(User user) {
-		if (user.getId() == null) {
-			throw new BusinessException("用户ID不能为空");
+	public boolean updateById(UserDTO userDTO) {
+		Long id = userDTO.getId();
+		User existUser = userMapper.selectById(id);
+		if (existUser == null) {
+			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
 
-		// 1. 可以在这里做一些业务校验，例如手机号重复检查等
-
+		User user = new User();
+		try {
+			BeanUtils.copyProperties(userDTO,user);
+		} catch (Exception e) {
+			throw new BusinessException("用户信息转换失败: " + e.getMessage());
+		}
 		// 2. 执行更新
 		int rows = userMapper.update(user);
 

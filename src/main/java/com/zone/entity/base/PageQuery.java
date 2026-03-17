@@ -1,6 +1,7 @@
 package com.zone.entity.base;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @Author: JamHoo
@@ -8,6 +9,7 @@ import lombok.Data;
  * @Date: 2026/3/13 20:32
  * @Version: 1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class PageQuery extends BaseEntity{
 	/**

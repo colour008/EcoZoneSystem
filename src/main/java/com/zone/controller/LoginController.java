@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "登录接口", description = "登录接口")
+@Tag(name = "登录和注册接口", description = "实现登录和注册业务")
 @Slf4j
 public class LoginController {
 

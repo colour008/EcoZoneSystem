@@ -63,6 +63,8 @@
                        style="border: rgba(100,155,185,0.8) 1px solid;background: #ffffff"/>
           </template>
         </el-table-column>
+        <el-table-column label="创建时间" prop="createTime" min-width="180" align="center"/>
+        <el-table-column label="更新时间" prop="updateTime" min-width="180" align="center"/>
         <el-table-column label="状态" align="center" min-width="100">
           <template #default="scope">
             <el-tooltip content="不可禁用当前登录账号" placement="top" :disabled="scope.row.id !== currentUserId">
@@ -174,7 +176,7 @@ const userFormRef = ref(null)
 const userStore = useUserStore()
 
 const queryParams = ref({
-  pageNum: 1, pageSize: 10, username: null, realName: null, status: null, phone:null
+  pageNum: 1, pageSize: 10, username: null, realName: null, status: null, phone: null
 })
 
 const drawerVisible = ref(false)
@@ -295,11 +297,13 @@ const submitForm = async () => {
           getUserPageList()
         } else {
           // 编辑
-          const {id, ...updateData} = form.value
+          const updateData = {...form.value}
           if (!updateData.password) {
             delete updateData.password
             delete updateData.confirmPassword
           }
+          // 确保 ID 一定存在
+          const id = form.value.id
           const res = await userApi.update(id, updateData)
           ElMessage.success(res.msg || '编辑成功')
           drawerVisible.value = false

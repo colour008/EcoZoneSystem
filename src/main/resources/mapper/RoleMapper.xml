@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zone.mapper.RoleMapper">
+
+    <!--    数据库字段列表-->
+    <sql id="Base_Column_List">
+        id, role_name, role_code, create_time, update_time
+    </sql>
+
+    <!-- ResultMap -->
+    <resultMap id="RoleResultMap" type="com.zone.entity.sys.Role">
+        <id column="id" property="id"/>
+        <result column="role_name" property="roleName"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!--    添加角色-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_role(role_name, role_code, create_time, update_time) values(#{roleName}, #{roleCode}, NOW(),
+        NOW())
+    </insert>
+
+    <!--    查询角色编码-->
+    <select id="selectByRoleCode" resultMap="RoleResultMap">
+        select * from sys_role where role_code = #{roleCode}
+    </select>
+
+    <!--    分页查询角色-->
+    <select id="getRolePage" resultMap="RoleResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name like concat('%', #{roleName}, '%')
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND role_code like concat('%', #{roleCode}, '%')
+            </if>
+        </where>
+        ORDER BY id
+    </select>
+
+    <!--    修改角色-->
+    <update id="update">
+        update sys_role
+        <set>
+            <if test="roleName != null">
+                role_name = #{roleName},
+            </if>
+            <if test="roleCode != null">
+                role_code = #{roleCode},
+            </if>
+            update_time = NOW()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--    根据ID查询角色-->
+    <select id="selectById" resultMap="RoleResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_role
+        where id = #{id}
+    </select>
+
+    <!-- 修改时：查询角色编码是否被其他角色占用 -->
+    <select id="selectByRoleCodeExcludeId" resultMap="RoleResultMap">
+        select <include refid="Base_Column_List"/>
+        from sys_role
+        where role_code = #{roleCode}
+        and id != #{id}  <!-- 关键：排除自身ID -->
+    </select>
+</mapper>

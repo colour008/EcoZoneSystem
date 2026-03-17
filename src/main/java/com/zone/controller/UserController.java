@@ -2,10 +2,11 @@ package com.zone.controller;
 
 import com.zone.common.response.Result;
 import com.zone.entity.base.PageResult;
+import com.zone.entity.dto.UserDTO;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
+import com.zone.entity.vo.UserVO;
 import com.zone.service.UserService;
-import com.zone.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -58,30 +59,27 @@ public class UserController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询用户列表", description = "分页查询用户列表")
-	public Result<PageResult> getUserPage(UserPageQueryDTO dto) {
+	public Result<PageResult<UserVO>> getUserPage(UserPageQueryDTO dto) {
 		log.info("分页查询用户列表");
-		PageResult pageResult = userService.getUserPage(dto);
-		if (pageResult != null) {
-			return Result.success(pageResult);
-		}
-		return Result.sysError("分页查询用户列表失败");
+		PageResult<UserVO> pageResult = userService.getUserPage(dto);
+		return Result.success(pageResult);
 	}
 
 	/**
-	 * 添加用户
+	 * 新增用户
 	 *
-	 * @param user
-	 * @return boolean
+	 * @param userDTO
+	 * @return Result<String>
 	 */
 	@PostMapping("/add")
-	@Operation(summary = "添加用户", description = "添加用户")
-	public Result<String> addUser(@RequestBody User user) {
-		log.info("添加用户");
-		boolean flag = userService.addUser(user);
+	@Operation(summary = "新增用户", description = "新增用户")
+	public Result<String> addUser(@RequestBody UserDTO userDTO) {
+		log.info("新增用户");
+		boolean flag = userService.addUser(userDTO);
 		if (flag) {
-			return Result.success("添加用户成功");
+			return Result.success("新增用户成功");
 		}
-		return Result.sysError("添加用户失败");
+		return Result.sysError("新增用户失败");
 	}
 
 	/**
@@ -91,6 +89,7 @@ public class UserController {
 	 * @return boolean
 	 */
 	@DeleteMapping("/delete")
+	@Operation(summary = "删除用户", description = "删除用户")
 	public Result<String> delete(@RequestBody List<Long> ids) {
 		boolean success = userService.deleteByIds(ids);
 		if (success) {
@@ -103,18 +102,17 @@ public class UserController {
 	 * 修改用户
 	 *
 	 * @param id
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
 	@PutMapping("/{id}")
-	public Result<String> update(@PathVariable Long id, @RequestBody User user) {
-		// 强制设置对象 ID，防止请求体里的 ID 和 URL 里的 ID 不一致
-		user.setId(id);
-		// 更新前检查该 ID 是否存在
-		if (id == null) {
-			return Result.sysError("ID不能为空");
+	@Operation(summary = "修改用户", description = "修改用户")
+	public Result<?> update(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+		log.info("修改用户");
+		if (!id.equals(userDTO.getId())) {
+			return Result.bizError(400, "路径ID与请求体ID不一致");
 		}
-		boolean success = userService.updateById(user);
+		boolean success = userService.updateById(userDTO);
 		return success ? Result.success() : Result.sysError("更新失败");
 	}
 
@@ -125,6 +123,7 @@ public class UserController {
 	 * @return boolean
 	 */
 	@PatchMapping("/{id}/password/reset")
+	@Operation(summary = "重置密码", description = "重置密码")
 	public Result<String> resetPassword(@PathVariable Long id) {
 		// 初始密码为 123456
 		String defaultPwd = "123456";
@@ -140,6 +139,7 @@ public class UserController {
 	 * @return boolean
 	 */
 	@PatchMapping("/{id}/status/{status}")
+	@Operation(summary = "修改用户状态", description = "修改用户状态")
 	public Result<Void> changeStatus(
 			@PathVariable Long id,
 			@PathVariable Integer status,
@@ -160,24 +160,23 @@ public class UserController {
 	/**
 	 * 修改用户资料
 	 *
-	 * @param user
+	 * @param userDTO
 	 * @return boolean
 	 */
 	@PatchMapping("/profile")
-	public Result<String> updateProfile(@RequestBody User user,
+	@Operation(summary = "修改用户资料", description = "修改用户资料")
+	public Result<String> updateProfile(@RequestBody UserDTO userDTO,
 	                                    //从 Request 属性中获取拦截器解析好的 ID
 	                                    @RequestAttribute("userId") Long currentId
 	) {
 		if (currentId == null) {
 			return Result.sysError("未登录或登录已失效");
 		}
-		// 强制将 ID 设为当前登录人的 ID，防止越权修改
-		user.setId(currentId);
 		// 如果修改了密码，需要重新加密
-		if (StringUtils.hasText(user.getPassword())) {
-			user.setPassword(passwordEncoder.encode(user.getPassword()));
+		if (StringUtils.hasText(userDTO.getPassword())) {
+			userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 		}
-		boolean success = userService.updateById(user);
+		boolean success = userService.updateById(userDTO);
 		return success ? Result.success("资料更新成功") : Result.sysError("更新失败");
 	}
 }

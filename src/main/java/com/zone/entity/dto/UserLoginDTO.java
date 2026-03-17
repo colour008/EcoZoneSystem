@@ -1,6 +1,5 @@
 package com.zone.entity.dto;
 
-import com.zone.entity.base.BaseEntity;
 import lombok.Data;
 
 /**
@@ -10,7 +9,7 @@ import lombok.Data;
  * @Version: 1.0
  */
 @Data
-public class UserLoginDTO extends BaseEntity {
+public class UserLoginDTO {
 	/**
 	 * 用户名
 	 */

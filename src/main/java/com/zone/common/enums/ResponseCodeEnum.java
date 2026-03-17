@@ -33,6 +33,7 @@ public enum ResponseCodeEnum {
 	TOKEN_INVALID(4008, "令牌无效，请重新登录"),
 	PERMISSION_DENIED(4009, "权限不足，无法操作"),
 
+
 	// ===================== 企业档案相关（4101-4199） =====================
 	ENTERPRISE_NOT_EXIST(4101, "企业档案不存在"),
 	ENTERPRISE_NAME_DUPLICATE(4102, "企业名称已存在"),
@@ -62,13 +63,17 @@ public enum ResponseCodeEnum {
 	MENU_NOT_EXIST(4404, "菜单权限不存在"),
 	MENU_PARENT_ERROR(4405, "上级菜单不存在"),
 	MENU_USED_CANNOT_DELETE(4406, "菜单已分配角色，无法删除"),
+	ROLE_ADD_FAILED(4407, "角色添加失败" ),
+	ROLE_DELETE_FAILED(4408, "角色删除失败"),
+	ROLE_UPDATE_FAILED(4409, "角色更新失败"),
+	ROLE_CODE_EXIST(4410,"角色编码已存在" ),
 
 	// ===================== 参数校验相关（4801-4899） =====================
 	PARAM_EMPTY(4801, "必填参数不能为空"),
 	PARAM_PHONE_ERROR(4802, "手机号格式错误"),
 	PARAM_DATE_ERROR(4803, "日期格式错误"),
 	PARAM_ID_ERROR(4804, "ID参数格式错误"),
-	PARAM_LENGTH_ERROR(4805, "参数长度超出限制");
+	PARAM_LENGTH_ERROR(4805, "参数长度超出限制"), ;
 
 	private final int bizCode;
 	private final String msg;

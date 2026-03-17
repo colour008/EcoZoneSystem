@@ -55,6 +55,23 @@ const roleApi = {
      */
     saveRoleMenus(roleId, menuIds) {
         return request({url: `/role/${roleId}/menus`, method: 'post', data: menuIds})
+    },
+
+    /**
+     * 获取所有角色列表(不分页，用于下拉选择)
+     * @returns {*}
+     */
+    listAll() {
+        return request({url: '/role/listAll', method: 'get'})
+    },
+
+    /**
+     * 根据ID获取角色详情
+     * @param id
+     * @returns {*}
+     */
+    getById(id) {
+        return request({url: `/role/${id}`, method: 'get'})
     }
 }
 export default roleApi

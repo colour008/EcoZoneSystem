@@ -2,6 +2,9 @@ package com.zone.entity.sys;
 
 import com.zone.entity.base.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
 
 /**
  * @Author: JamHoo
@@ -9,9 +12,11 @@ import lombok.Data;
  * @Date: 2026/3/8 15:20
  * @Version: 1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class User extends BaseEntity {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
