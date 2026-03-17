@@ -97,6 +97,18 @@ const userApi = {
             method: 'patch',
             data
         })
+    },
+
+    /**
+     * 根据 ID 获取用户详情
+     * @param id
+     * @returns {*}
+     */
+    getById(id) {
+        return request({
+            url: `/user/${id}`,
+            method: 'get'
+        })
     }
 }
 

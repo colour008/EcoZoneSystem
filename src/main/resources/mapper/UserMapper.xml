@@ -22,38 +22,48 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <resultMap id="UserPageResultMap" type="com.zone.entity.sys.User" extends="UserResultMap">
+        <result column="role_names" property="roleName"/>
+    </resultMap>
+
     <!-- 根据用户名查询用户 -->
     <select id="selectByUsername" resultMap="UserResultMap">
-        select <include refid="Base_Column_List" />
+        select
+        <include refid="Base_Column_List"/>
         from sys_user
         where username = #{username}
     </select>
 
     <!--    返回用户列表-->
     <select id="getUserlist" resultMap="UserResultMap">
-        select <include refid="Base_Column_List" />
+        select
+        <include refid="Base_Column_List"/>
         from sys_user
     </select>
 
     <!--    分页查询用户列表-->
-    <select id="getUserPage" resultMap="UserResultMap">
-        select <include refid="Base_Column_List" />
-        from sys_user
+    <select id="getUserPage" resultMap="UserPageResultMap">
+        SELECT
+        u.*, GROUP_CONCAT(r.role_name SEPARATOR ',') AS role_names
+        FROM sys_user u
+        LEFT JOIN sys_user_role ur ON u.id = ur.user_id
+        LEFT JOIN sys_role r ON ur.role_id = r.id
         <where>
             <if test="username != null and username != ''">
-                AND username like concat('%', #{username}, '%')
+                AND u.username LIKE CONCAT('%', #{username}, '%')
             </if>
             <if test="realName != null and realName != ''">
-                AND real_name like concat('%', #{realName}, '%')
+                AND u.real_name LIKE CONCAT('%', #{realName}, '%')
             </if>
             <if test="phone != null and phone != ''">
-                AND phone like concat('%', #{phone}, '%')
+                AND u.phone LIKE CONCAT('%', #{phone}, '%')
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND u.status = #{status}
             </if>
         </where>
-        ORDER BY id
+        GROUP BY u.id
+        ORDER BY u.id
     </select>
 
     <!--    删除用户-->
@@ -88,7 +98,8 @@
 
     <!--    根据ID查询用户-->
     <select id="selectById" resultMap="UserResultMap">
-        select <include refid="Base_Column_List" />
+        select
+        <include refid="Base_Column_List"/>
         from sys_user
         where id = #{id}
     </select>

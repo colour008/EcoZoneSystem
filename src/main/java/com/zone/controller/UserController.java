@@ -1,5 +1,7 @@
 package com.zone.controller;
 
+import com.zone.common.enums.ResponseCodeEnum;
+import com.zone.common.exception.BusinessException;
 import com.zone.common.response.Result;
 import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.UserDTO;
@@ -7,9 +9,11 @@ import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
 import com.zone.entity.vo.UserVO;
 import com.zone.service.UserService;
+import com.zone.service.userRoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
@@ -31,6 +35,9 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private userRoleService userRoleService;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -92,10 +99,7 @@ public class UserController {
 	@Operation(summary = "删除用户", description = "删除用户")
 	public Result<String> delete(@RequestBody List<Long> ids) {
 		boolean success = userService.deleteByIds(ids);
-		if (success) {
-			return Result.success("删除成功");
-		}
-		return Result.sysError("删除失败或数据不存在");
+		return success ? Result.success("删除成功") : Result.sysError("删除失败或数据不存在");
 	}
 
 	/**
@@ -178,5 +182,31 @@ public class UserController {
 		}
 		boolean success = userService.updateById(userDTO);
 		return success ? Result.success("资料更新成功") : Result.sysError("更新失败");
+	}
+
+	/**
+	 * 查询用户详情
+	 *
+	 * @param id
+	 * @return UserDTO
+	 */
+	@GetMapping("/{id}")
+	@Operation(summary = "查询用户详情")
+	public Result<UserDTO> getById(@PathVariable Long id) {
+		// 1. 查基础信息
+		User user = userService.getById(id);
+		if (user == null) {
+			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
+		}
+
+		// 2. 查角色ID列表
+		List<Long> roleIds = userRoleService.getRoleIdsByUserId(id);
+
+		// 3. 封装
+		UserDTO dto = new UserDTO();
+		BeanUtils.copyProperties(user, dto);
+		dto.setRoleIds(roleIds);
+
+		return Result.success(dto);
 	}
 }

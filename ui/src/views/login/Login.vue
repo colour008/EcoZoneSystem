@@ -245,12 +245,16 @@ const handleLogin = async () => {
       mode: loginMode.value
     })
 
-    // 1. 存储 Token
-    userStore.setToken(res.data.token)
+    const { token, user, roles, permissions } = res.data
 
-    // 2. 存储用户信息（将 res.data.user 存入 pinia）
-    if (res.data.user) {
-      userStore.setUserInfo(res.data.user)
+    // 1. 存储 Token
+    userStore.setToken(token)
+
+    // 2. 存储用户信息
+    if (user) {
+      userStore.setUserInfo(user)
+      userStore.setRoles(roles)
+      userStore.setPermissions(permissions)
     }
 
     ElMessage.success(res.msg || '登录成功')

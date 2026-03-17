@@ -57,6 +57,14 @@
         <el-table-column label="用户名" prop="username" min-width="120" align="center"/>
         <el-table-column label="姓名" prop="realName" min-width="120" align="center"/>
         <el-table-column label="手机号" prop="phone" min-width="130" align="center"/>
+        <el-table-column label="所属角色" align="center" min-width="150">
+          <template #default="scope">
+            <el-tag v-if="scope.row.roleName" size="small" effect="plain">
+              {{ scope.row.roleName }}
+            </el-tag>
+            <span v-else style="color: #999; font-size: 12px">暂无角色</span>
+          </template>
+        </el-table-column>
         <el-table-column label="头像" align="center" width="100">
           <template #default="scope">
             <el-avatar :size="35" :src="scope.row.avatar || '/DefaultUser.svg'"
@@ -134,6 +142,21 @@
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号"/>
         </el-form-item>
+        <el-form-item label="分配角色" prop="roleIds">
+          <el-select
+              v-model="form.roleIds"
+              multiple
+              placeholder="请选择角色"
+              style="width: 100%"
+          >
+            <el-option
+                v-for="item in roleOptions"
+                :key="item.id"
+                :label="item.roleName"
+                :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="头像" prop="avatar">
           <el-upload class="avatar-uploader" action="#" :show-file-list="false" :http-request="handleImageUpload">
             <img v-if="form.avatar" :src="form.avatar" class="avatar-img" alt="头像"/>
@@ -160,6 +183,7 @@
 </template>
 
 <script setup>
+import roleApi from '@/api/role'
 import {ref, onMounted, nextTick, computed} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Search, Refresh, Delete, Edit, Plus, Warning} from '@element-plus/icons-vue'
@@ -174,6 +198,7 @@ const total = ref(0)
 const multipleSelection = ref([])
 const userFormRef = ref(null)
 const userStore = useUserStore()
+const roleOptions = ref([])
 
 const queryParams = ref({
   pageNum: 1, pageSize: 10, username: null, realName: null, status: null, phone: null
@@ -181,11 +206,21 @@ const queryParams = ref({
 
 const drawerVisible = ref(false)
 const form = ref({
-  id: null, username: '', realName: '', phone: '', avatar: '', status: 0, password: '', confirmPassword: ''
+  id: null, username: '', realName: '', phone: '', avatar: '', status: 0, password: '', confirmPassword: '', roleIds: []
 })
 
 // 获取当前登录人的 ID
 const currentUserId = computed(() => userStore.userInfo?.id || userStore.id)
+
+// 获取角色列表
+const getRoleOptions = async () => {
+  try {
+    const res = await roleApi.listAll()
+    roleOptions.value = res.data
+  } catch (error) {
+    console.error('获取角色列表失败', error)
+  }
+}
 
 // --- 表单校验规则 ---
 const validateConfirmPassword = (rule, value, callback) => {
@@ -273,12 +308,33 @@ const handleAdd = () => {
   })
 }
 
-const handleEdit = (row) => {
-  drawerVisible.value = true
-  nextTick(() => {
-    if (userFormRef.value) userFormRef.value.clearValidate()
-    form.value = {...row, confirmPassword: ''}
-  })
+// 修改 handleEdit 逻辑
+const handleEdit = async (row) => {
+  // 1. 开启 Loading，防止网络慢时用户重复点击
+  loading.value = true
+  try {
+    // 2. 调用后端详情接口
+    const res = await userApi.getById(row.id)
+    const userInfo = res.data // 假设后端返回的对象包含 roleIds 数组
+
+    // 3. 打开抽屉
+    drawerVisible.value = true
+
+    // 4. 填充表单
+    nextTick(() => {
+      if (userFormRef.value) userFormRef.value.clearValidate()
+      form.value = {
+        ...userInfo,
+        confirmPassword: '', // 密码和确认密码通常不回显
+        password: ''
+      }
+    })
+  } catch (error) {
+    console.error('获取用户详情失败', error)
+    // ElMessage 已经在拦截器处理了
+  } finally {
+    loading.value = false
+  }
 }
 
 // 提交表单：简化判断逻辑
@@ -436,6 +492,7 @@ const handleStatusChange = (row, val) => {
 
 onMounted(() => {
   getUserPageList()
+  getRoleOptions()
 })
 </script>
 

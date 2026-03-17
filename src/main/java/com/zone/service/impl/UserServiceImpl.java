@@ -4,19 +4,24 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
+import com.zone.common.response.Result;
 import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.UserDTO;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
 import com.zone.entity.vo.UserVO;
 import com.zone.mapper.UserMapper;
+import com.zone.mapper.UserRoleMapper;
 import com.zone.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +38,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private UserMapper userMapper;
+
+	@Autowired
+	private UserRoleMapper userRoleMapper;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -59,7 +67,8 @@ public class UserServiceImpl implements UserService {
 
 		List<UserVO> voList = page.getResult().stream().map(user -> {
 			UserVO vo = new UserVO();
-			BeanUtils.copyProperties(user,vo);
+			// BeanUtils 会自动拷贝 username, realName 以及 roleName (前提是 User 类里有这个字段)
+			BeanUtils.copyProperties(user, vo);
 			return vo;
 		}).collect(Collectors.toList());
 
@@ -73,6 +82,7 @@ public class UserServiceImpl implements UserService {
 	 * @return boolean
 	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public boolean addUser(UserDTO userDTO) {
 		if (userMapper.checkUsernameExists(userDTO.getUsername()) > 0) {
 			throw new BusinessException(ResponseCodeEnum.USER_NAME_DUPLICATE);
@@ -91,6 +101,11 @@ public class UserServiceImpl implements UserService {
 				throw new BusinessException("用户信息转换失败: " + e.getMessage());
 			}
 			boolean result = userMapper.insert(user);
+			// 绑定角色关系
+			if (result && userDTO.getRoleIds() != null && !userDTO.getRoleIds().isEmpty()) {
+				// 注意：这里用的是刚插入数据库回填的 user.getId()
+				userRoleMapper.insertBatch(user.getId(), userDTO.getRoleIds());
+			}
 			log.info("新增用户{}成功，ID：{}", userDTO.getUsername(), user.getId());
 			return result;
 		} catch (Exception e) {
@@ -111,8 +126,15 @@ public class UserServiceImpl implements UserService {
 		if (ids == null || ids.isEmpty()) {
 			return false;
 		}
-		// deleteByIds 返回的是受影响的行数
+		// 1. 先删除用户与角色的关联关系（清理中间表）
+		// 规范：删除主表前，一定要先清理从表/中间表，防止外键约束报错或产生脏数据
+		for (Long userId : ids) {
+			userRoleMapper.deleteByUserId(userId);
+		}
+
+		// 2. 再删除用户主表
 		int rows = userMapper.deleteByIds(ids);
+
 		return rows > 0;
 	}
 
@@ -125,23 +147,41 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean updateById(UserDTO userDTO) {
+		// 1. 基础校验：用户是否存在
 		Long id = userDTO.getId();
 		User existUser = userMapper.selectById(id);
 		if (existUser == null) {
 			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
-
+		// 2. 转换对象
 		User user = new User();
 		try {
-			BeanUtils.copyProperties(userDTO,user);
+			BeanUtils.copyProperties(userDTO, user);
 		} catch (Exception e) {
 			throw new BusinessException("用户信息转换失败: " + e.getMessage());
 		}
-		// 2. 执行更新
+		// 3. 执行主表更新
 		int rows = userMapper.update(user);
+		// 只有主表更新成功（rows > 0），才处理关联关系
+		if (rows > 0) {
+			log.info("用户 [ID: {}] 基础资料更新成功，开始处理角色关联", id);
 
-		// 3. 返回是否成功
-		return rows > 0;
+			// 4. 更新角色关联 (只有当前端传了 roleIds 字段时才处理)
+			if (userDTO.getRoleIds() != null) {
+				// 先删掉旧关联
+				userRoleMapper.deleteByUserId(id);
+
+				// 如果新集合不为空，则批量插入
+				if (!userDTO.getRoleIds().isEmpty()) {
+					userRoleMapper.insertBatch(id, userDTO.getRoleIds());
+					log.debug("用户 [ID: {}] 角色关联更新完成，新角色数量: {}", id, userDTO.getRoleIds().size());
+				}
+			}
+			return true;
+		}
+		// 如果 rows == 0，说明没有任何行被改变（可能传的值和数据库一模一样）
+		log.warn("用户 [ID: {}] 资料未发生变更", id);
+		return false;
 	}
 
 	/**
@@ -198,5 +238,16 @@ public class UserServiceImpl implements UserService {
 			log.info("用户 [ID: {}] 状态已变更为: {}", id, status == 1 ? "正常" : "停用");
 		}
 		return rows > 0;
+	}
+
+	/**
+	 * 根据 ID 查询用户信息
+	 *
+	 * @param id
+	 * @return User
+	 */
+	@Override
+	public User getById(Long id) {
+		return userMapper.selectById(id);
 	}
 }

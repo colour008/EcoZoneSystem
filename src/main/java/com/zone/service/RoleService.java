@@ -3,6 +3,9 @@ package com.zone.service;
 import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.RoleDTO;
 import com.zone.entity.dto.RolePageQueryDTO;
+import com.zone.entity.sys.Role;
+
+import java.util.List;
 
 /**
  * @Author: JamHoo
@@ -33,4 +36,17 @@ public interface RoleService {
 	 * @return
 	 */
 	boolean updateById(RoleDTO roleDTO);
+
+	/**
+	 * 删除角色
+	 * @param ids
+	 * @return
+	 */
+	boolean deleteByIds(List<Long> ids);
+
+	/**
+	 * 获取所有角色列表
+	 * @return
+	 */
+	List<Role> listAll();
 }

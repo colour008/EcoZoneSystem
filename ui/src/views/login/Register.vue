@@ -117,8 +117,7 @@
           </div>
 
           <el-form-item class="submit-item">
-            <el-button type="primary" :loading="loading" :disabled="!isFormValid" @click="handleRegister"
-                       class="submit-btn">
+            <el-button type="primary" :loading="loading" @click="handleRegister" class="submit-btn">
               注 册
             </el-button>
           </el-form-item>
@@ -195,28 +194,34 @@ const isFormValid = computed(() => {
   )
 })
 
+
 // 注册逻辑
 const handleRegister = async () => {
-  await registerFormRef.value.validate(async (valid) => {
+  if (!registerFormRef.value) return
+
+  // 1. 执行表单校验
+  // validate 方法会触发页面上所有 prop 对应规则的校验，并自动显示红字提示
+  await registerFormRef.value.validate(async (valid, fields) => {
     if (valid) {
+      // 校验通过，执行注册逻辑
       loading.value = true
       try {
-        // 调用注册接口
         const res = await registerApi(regForm)
-
-        // 提示成功
         ElMessage.success('注册成功，请登录')
-
-        // 核心：注册成功后延迟或直接跳转回登录页
         setTimeout(() => {
           router.push('/login')
-        }, 1200) // 稍微延迟一下，让用户看清成功提示
-
+        }, 1200)
       } catch (error) {
-        console.error('注册失败:', error)
+        console.error('注册请求失败:', error)
       } finally {
         loading.value = false
       }
+    } else {
+      // 校验不通过
+      // fields 包含了具体哪个字段没过，我们可以精准提示
+      const firstError = Object.values(fields)[0][0].message
+      ElMessage.warning(`请检查输入: ${firstError}`)
+      console.log('表单校验未通过:', fields)
     }
   })
 }

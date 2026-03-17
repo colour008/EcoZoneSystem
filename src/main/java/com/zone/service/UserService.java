@@ -65,4 +65,11 @@ public interface UserService {
 	 * @return boolean
 	 */
 	boolean updateStatus(Long id, Integer status);
+
+	/**
+	 * 根据ID查询用户
+	 * @param id
+	 * @return User
+	 */
+	User getById(Long id);
 }

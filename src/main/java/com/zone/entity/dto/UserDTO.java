@@ -3,6 +3,7 @@ package com.zone.entity.dto;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Author: JamHoo
@@ -20,4 +21,5 @@ public class UserDTO {
 	private String phone;
 	private Integer status;
 	private Date updateTime;
+	private List<Long> roleIds;
 }

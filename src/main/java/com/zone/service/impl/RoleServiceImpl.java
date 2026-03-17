@@ -108,4 +108,44 @@ public class RoleServiceImpl implements RoleService {
 		int rows = roleMapper.update(roleDTO);
 		return rows > 0;
 	}
+
+	/**
+	 * 删除角色
+	 *
+	 * @param ids 支持单一删除和批量删除
+	 * @return boolean
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean deleteByIds(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return false;
+		}
+
+		// 1. 【核心逻辑】检查角色是否被用户占用
+		int count = roleMapper.countUserRoleByRoleIds(ids);
+		if (count > 0) {
+			// 发现有用户关联，拒绝删除，抛出业务异常
+			log.warn("尝试删除正在使用的角色，操作被拒绝。角色IDs: {}", ids);
+			throw new BusinessException("所选角色中存在已分配给用户的角色，请先取消关联后再删除");
+		}
+
+		// 2. 执行物理删除
+		int rows = roleMapper.deleteByIds(ids);
+
+		// 3. (进阶) 如果以后有角色菜单关联表，这里还要顺便删除 sys_role_menu 里的记录
+		// roleMenuMapper.deleteByRoleIds(ids);
+
+		return rows > 0;
+	}
+
+	/**
+	 * 查询所有角色
+	 *
+	 * @return List<Role>
+	 */
+	@Override
+	public List<Role> listAll() {
+		return roleMapper.selectAllActiveRoles();
+	}
 }

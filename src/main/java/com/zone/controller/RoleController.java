@@ -4,6 +4,7 @@ import com.zone.common.response.Result;
 import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.RoleDTO;
 import com.zone.entity.dto.RolePageQueryDTO;
+import com.zone.entity.sys.Role;
 import com.zone.entity.vo.RoleVO;
 import com.zone.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @Author: JamHoo
@@ -26,6 +29,19 @@ public class RoleController {
 
 	@Autowired
 	private RoleService roleService;
+
+	/**
+	 * 获取所有角色列表(不分页)
+	 *
+	 * @return
+	 */
+	@GetMapping("/listAll")
+	@Operation(summary = "获取所有角色列表(不分页)")
+	public Result<List<Role>> listAll() {
+		// 调用 Service 获取所有可用角色
+		List<Role> list = roleService.listAll();
+		return Result.success(list);
+	}
 
 	/**
 	 * 新增角色
@@ -74,5 +90,18 @@ public class RoleController {
 		}
 		boolean success = roleService.updateById(roleDTO);
 		return success ? Result.success() : Result.sysError("更新失败");
+	}
+
+	/**
+	 * 删除角色
+	 *
+	 * @param ids 支持单一删除和批量删除
+	 * @return
+	 */
+	@DeleteMapping("/delete")
+	@Operation(summary = "删除角色", description = "删除角色")
+	public Result<String> delete(@RequestBody List<Long> ids) {
+		boolean success = roleService.deleteByIds(ids);
+		return success ? Result.success("删除成功") : Result.sysError("删除失败或数据不存在");
 	}
 }

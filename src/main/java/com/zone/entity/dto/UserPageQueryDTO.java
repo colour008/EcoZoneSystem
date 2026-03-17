@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @Author: JamHoo
- * @Description: 分页查询DTO
+ * @Description: 用户查询参数
  * @Date: 2026/3/13 20:35
  * @Version: 1.0
  */
@@ -18,20 +18,12 @@ public class UserPageQueryDTO extends PageQuery {
 	 */
 	private String username;
 
-	/**
-	 * 密码
-	 */
-	private String password;
 
 	/**
 	 * 姓名
 	 */
 	private String realName;
 
-	/**
-	 * 头像
-	 */
-	private String avatar;
 
 	/**
 	 * 手机号
@@ -42,6 +34,5 @@ public class UserPageQueryDTO extends PageQuery {
 	 * 状态
 	 */
 	private Integer status;
-
 
 }

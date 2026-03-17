@@ -7,6 +7,8 @@ import com.zone.entity.sys.Role;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @Author: JamHoo
  * @Description: 角色映射接口
@@ -60,4 +62,32 @@ public interface RoleMapper {
 	 * 修改时专用：判断编码是否被【其他角色】占用
 	 */
 	Role selectByRoleCodeExcludeId(@Param("roleCode") String roleCode, @Param("id") Long id);
+
+	/**
+	 * 批量删除角色
+	 *
+	 * @param ids
+	 * @return
+	 */
+	int deleteByIds(List<Long> ids);
+
+	/**
+	 * 统计角色被用户关联的数量
+	 * @param roleIds 角色ID集合
+	 * @return 关联的数量
+	 */
+	int countUserRoleByRoleIds(@Param("roleIds") List<Long> roleIds);
+
+	/**
+	 * 根据用户ID查询角色编码
+	 * @param id 用户ID
+	 * @return 角色编码集合
+	 */
+	List<String> getRoleCodesByUserId(Long id);
+
+	/**
+	 * 查询所有有效的角色
+	 * @return 角色列表
+	 */
+	List<Role> selectAllActiveRoles();
 }
