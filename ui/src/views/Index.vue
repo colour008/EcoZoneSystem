@@ -131,47 +131,34 @@
             :unique-opened="true"
             router
         >
-          <el-sub-menu index="1">
-            <template #title>
-              <el-icon>
-                <Odometer/>
-              </el-icon>
-              <span>后台面板</span>
-            </template>
-            <el-menu-item index="/index/dashboard">
-              <el-icon>
-                <House/>
-              </el-icon>
-              <span>主控台</span>
-            </el-menu-item>
-          </el-sub-menu>
+          <template v-for="menu in userStore.routes" :key="menu.path">
+            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+              <template #title>
+                <el-icon v-if="menu.icon">
+                  <component :is="menu.icon"/>
+                </el-icon>
+                <span>{{ menu.menuName }}</span>
+              </template>
+              <el-menu-item
+                  v-for="child in menu.children"
+                  :key="child.path"
+                  :index="resolvePath(menu.path, child.path)"
+                  @click="handleMenuClick(child, menu.path)"
+              >
+                <el-icon v-if="child.icon">
+                  <component :is="child.icon"/>
+                </el-icon>
+                <span>{{ child.menuName }}</span>
+              </el-menu-item>
+            </el-sub-menu>
 
-          <el-sub-menu index="2">
-            <template #title>
-              <el-icon>
-                <Setting/>
+            <el-menu-item v-else :index="menu.path">
+              <el-icon v-if="menu.icon">
+                <component :is="menu.icon"/>
               </el-icon>
-              <span>系统管理</span>
-            </template>
-            <el-menu-item index="/index/user/list">
-              <el-icon>
-                <User/>
-              </el-icon>
-              <span>用户列表</span>
+              <span>{{ menu.menuName }}</span>
             </el-menu-item>
-            <el-menu-item index="/index/role/list">
-              <el-icon>
-                <UserFilled/>
-              </el-icon>
-              <span>角色列表</span>
-            </el-menu-item>
-            <el-menu-item index="/index/access/list">
-              <el-icon>
-                <Key/>
-              </el-icon>
-              <span>权限列表</span>
-            </el-menu-item>
-          </el-sub-menu>
+          </template>
         </el-menu>
       </aside>
 
@@ -199,6 +186,7 @@ import {
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
+import { resolvePath } from '@/utils/path'
 
 const route = useRoute()
 const router = useRouter()
@@ -213,6 +201,20 @@ const profileFormRef = ref(null)
 
 // 获取用户信息
 const userInfo = computed(() => userStore.userInfo)
+
+// 增加菜单点击处理函数
+const handleMenuClick = (item, parentPath) => {
+  const fullPath = resolvePath(parentPath, item.path)
+
+  // 如果后端标记了是外链，或者路径本身就是 http 开头
+  if (item.isExternal === 1 || fullPath.startsWith('http')) {
+    window.open(fullPath, '_blank')
+    return
+  }
+
+  // 正常内部路由跳转
+  router.push(fullPath)
+}
 
 // 初始表单数据
 const profileForm = ref({
@@ -333,6 +335,10 @@ const toggleFullScreen = () => {
 
 onMounted(() => {
   activeMenu.value = route.path
+  // 如果登录后停在 /index 或 /，自动跳往主控台
+  if (route.path === '/index' || route.path === '/') {
+    router.push('/index/dashboard')
+  }
 })
 </script>
 

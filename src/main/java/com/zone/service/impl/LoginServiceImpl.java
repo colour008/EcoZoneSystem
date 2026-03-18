@@ -70,7 +70,7 @@ public class LoginServiceImpl implements LoginService {
 			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
 		}
 
-		// 2. 校验密码 (使用你之前配置的 passwordEncoder)
+		// 2. 校验密码
 		if (!passwordEncoder.matches(password, user.getPassword())) {
 			throw new BusinessException(ResponseCodeEnum.USER_PASSWORD_ERROR);
 		}
@@ -80,24 +80,31 @@ public class LoginServiceImpl implements LoginService {
 			throw new BusinessException(ResponseCodeEnum.USER_STATUS_DISABLED);
 		}
 
-		// 4. 生成 Token (传入 userId 和 username)
-		String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-
-		// 5. 查询权限和角色，查询权限标识列表 (如: ["user:add", "role:list"])
-		List<String> permissions = menuMapper.selectPermsByUserId(user.getId());
-
-		// 查询角色编码列表 (如: ["ROLE_ADMIN"])，在 RoleMapper 里加个方法
+		// 4. 查询角色、权限以及最高等级
+		// 查询角色编码列表 (如: ["admin"])
 		List<String> roles = roleMapper.getRoleCodesByUserId(user.getId());
 
-		// 5. 封装返回
+		// 查询权限标识列表 (如: ["user:add"])
+		List<String> permissions = menuMapper.selectPermsByUserId(user.getId());
+
+		// --- 新增：查询当前登录用户的最高角色权重 (role_sort 最小值) ---
+		Integer topRoleSort = userRoleMapper.selectMinRoleSortByUserId(user.getId());
+
+		// 5. 生成 Token
+		String token = jwtUtil.generateToken(user.getId(), user.getUsername(), roles);
+
+		// 6. 封装返回
 		UserVO userVO = new UserVO();
 		BeanUtils.copyProperties(user, userVO);
 
+		// --- 关键：将最高等级塞入返回给前端的 userVO 中 ---
+		userVO.setTopRoleSort(topRoleSort);
+
 		return LoginResultVO.builder()
 				.token(token)
-				.user(userVO)
-				.roles(roles)           // 塞入角色
-				.permissions(permissions) // 塞入权限
+				.user(userVO)           // 这里面的 userVO 现在包含了 topRoleSort
+				.roles(roles)
+				.permissions(permissions)
 				.build();
 	}
 

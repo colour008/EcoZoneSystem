@@ -34,6 +34,7 @@ public class RoleServiceImpl implements RoleService {
 	@Autowired
 	private RoleMapper roleMapper;
 
+
 	/**
 	 * 新增角色
 	 *
@@ -122,21 +123,16 @@ public class RoleServiceImpl implements RoleService {
 			return false;
 		}
 
-		// 1. 【核心逻辑】检查角色是否被用户占用
+		// 1. 检查角色是否被用户占用
 		int count = roleMapper.countUserRoleByRoleIds(ids);
 		if (count > 0) {
-			// 发现有用户关联，拒绝删除，抛出业务异常
-			log.warn("尝试删除正在使用的角色，操作被拒绝。角色IDs: {}", ids);
-			throw new BusinessException("所选角色中存在已分配给用户的角色，请先取消关联后再删除");
+			throw new com.zone.common.exception.BusinessException("选中的角色中有关联用户，无法删除");
 		}
-
-		// 2. 执行物理删除
-		int rows = roleMapper.deleteByIds(ids);
-
-		// 3. (进阶) 如果以后有角色菜单关联表，这里还要顺便删除 sys_role_menu 里的记录
-		// roleMenuMapper.deleteByRoleIds(ids);
-
-		return rows > 0;
+		// 同时删除角色与菜单的关联（防止脏数据）
+		for (Long roleId : ids) {
+			roleMapper.deleteRoleMenusByRoleId(roleId);
+		}
+		return roleMapper.deleteByIds(ids) > 0;
 	}
 
 	/**
@@ -147,5 +143,25 @@ public class RoleServiceImpl implements RoleService {
 	@Override
 	public List<Role> listAll() {
 		return roleMapper.selectAllActiveRoles();
+	}
+
+	/**
+	 * 更新角色权限
+	 *
+	 * @Transactional 保证删除和插入是一个整体，要么全成功，要么全失败
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public void updateRoleMenus(Long roleId, List<Long> menuIds) {
+		// 1. 物理删除该角色在关联表里的所有旧数据
+		roleMapper.deleteRoleMenusByRoleId(roleId);
+
+		// 2. 如果前端传过来的 ID 列表不为空，则进行批量插入
+		if (menuIds != null && !menuIds.isEmpty()) {
+			roleMapper.insertRoleMenus(roleId, menuIds);
+			log.info("角色ID: {} 权限更新成功，关联节点数: {}", roleId, menuIds.size());
+		} else {
+			log.warn("角色ID: {} 清空了所有权限", roleId);
+		}
 	}
 }

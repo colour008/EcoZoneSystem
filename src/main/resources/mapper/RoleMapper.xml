@@ -6,7 +6,7 @@
 
     <!--    数据库字段列表-->
     <sql id="Base_Column_List">
-        id, role_name, role_code, create_time, update_time
+        id, role_name, role_code, role_sort, create_time, update_time
     </sql>
 
     <!-- ResultMap -->
@@ -14,14 +14,15 @@
         <id column="id" property="id"/>
         <result column="role_name" property="roleName"/>
         <result column="role_code" property="roleCode"/>
+        <result column="role_sort" property="roleSort"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <!--    添加角色-->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into sys_role(role_name, role_code, create_time, update_time) values(#{roleName}, #{roleCode}, NOW(),
-        NOW())
+        insert into sys_role(role_name, role_code, role_sort, create_time, update_time)
+        values(#{roleName}, #{roleCode}, #{roleSort}, NOW(), NOW())
     </insert>
 
     <!--    查询角色编码-->
@@ -42,7 +43,7 @@
                 AND role_code like concat('%', #{roleCode}, '%')
             </if>
         </where>
-        ORDER BY id
+        ORDER BY role_sort ASC, id ASC
     </select>
 
     <!--    修改角色-->
@@ -54,6 +55,9 @@
             </if>
             <if test="roleCode != null">
                 role_code = #{roleCode},
+            </if>
+            <if test="roleSort != null">
+                role_sort = #{roleSort},
             </if>
             update_time = NOW()
         </set>
@@ -104,9 +108,22 @@
 
     <!-- 查询所有激活的角色 -->
     <select id="selectAllActiveRoles" resultMap="RoleResultMap">
-        SELECT id, role_name
+        SELECT id, role_name, role_sort
         FROM sys_role
-        ORDER BY id ASC
+        ORDER BY role_sort ASC
     </select>
+
+    <!-- 删除角色菜单关联关系 -->
+    <delete id="deleteRoleMenusByRoleId">
+        DELETE FROM sys_role_menu WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 批量插入角色菜单关联关系 -->
+    <insert id="insertRoleMenus">
+        INSERT INTO sys_role_menu (role_id, menu_id) VALUES
+        <foreach collection="menuIds" item="menuId" separator=",">
+            (#{roleId}, #{menuId})
+        </foreach>
+    </insert>
 
 </mapper>

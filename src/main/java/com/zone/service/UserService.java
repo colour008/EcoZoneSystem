@@ -4,6 +4,7 @@ import com.zone.entity.base.PageResult;
 import com.zone.entity.dto.UserDTO;
 import com.zone.entity.dto.UserPageQueryDTO;
 import com.zone.entity.sys.User;
+import com.zone.entity.vo.UserVO;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public interface UserService {
 	 * @param dto
 	 * @return PageResult
 	 */
-	PageResult getUserPage(UserPageQueryDTO dto);
+	PageResult<UserVO> getUserPage(UserPageQueryDTO dto);
 
 	/**
 	 * 添加用户
@@ -41,14 +42,14 @@ public interface UserService {
 	 * @param ids
 	 * @return boolean
 	 */
-	boolean deleteByIds(List<Long> ids);
+	boolean deleteByIds(List<Long> ids, Long currentUserId);
 
 	/**
 	 * 修改用户
 	 * @param userDTO
 	 * @return boolean
 	 */
-	boolean updateById(UserDTO userDTO);
+	boolean updateById(UserDTO userDTO, Long currentUserId);
 
 	/**
 	 * 重置密码
@@ -56,7 +57,7 @@ public interface UserService {
 	 * @param defaultPwd
 	 * @return boolean
 	 */
-	boolean resetPassword(Long id, String defaultPwd);
+	boolean resetPassword(Long id, String defaultPwd, Long currentUserId);
 
 	/**
 	 * 修改用户状态
@@ -64,7 +65,7 @@ public interface UserService {
 	 * @param status
 	 * @return boolean
 	 */
-	boolean updateStatus(Long id, Integer status);
+	boolean updateStatus(Long id, Integer status, Long currentUserId);
 
 	/**
 	 * 根据ID查询用户

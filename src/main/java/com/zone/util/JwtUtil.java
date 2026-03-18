@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * JWT 工具类
@@ -39,18 +41,20 @@ public class JwtUtil {
 	}
 
 	/**
-	 * 生成 Token
-	 * @param userId   用户ID (存入自定义 claim)
-	 * @param username 用户名 (存入 subject)
+	 * 生成 Token (新增 roles 参数)
+	 * @param userId   用户ID
+	 * @param username 用户名
+	 * @param roles    角色编码列表 (如 ["admin", "common"])
 	 * @return 签名的 JWT 字符串
 	 */
-	public String generateToken(Long userId, String username) {
+	public String generateToken(Long userId, String username, List<String> roles) {
 		return Jwts.builder()
 				.setSubject(username)
 				.claim("userId", userId)
+				.claim("roles", roles) // 将角色列表存入自定义 claim
 				.setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpire()))
-				.signWith(secretKey) // 直接使用预存密钥
+				.signWith(secretKey)
 				.compact();
 	}
 
@@ -80,6 +84,15 @@ public class JwtUtil {
 	}
 
 	/**
+	 * 公开解析方法
+	 * 将解析逻辑从 private 改为 public (或者新增这个别名方法)
+	 * 这样拦截器只需调用这一次，即可获取 userId, username, roles 等所有信息
+	 */
+	public Claims parseToken(String token) {
+		return parseAllClaims(token);
+	}
+
+	/**
 	 * 从 Token 中获取用户ID
 	 */
 	public Long getUserId(String token) {
@@ -92,6 +105,25 @@ public class JwtUtil {
 	public String getUsername(String token) {
 		return parseAllClaims(token).getSubject();
 	}
+
+	/**
+	 * 从 Token 中获取角色编码列表
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> getRoleCodes(String token) {
+		try {
+			Claims claims = parseAllClaims(token);
+			Object roles = claims.get("roles");
+			if (roles instanceof List) {
+				return (List<String>) roles;
+			}
+		} catch (Exception e) {
+			log.error("获取角色列表失败: {}", e.getMessage());
+		}
+		return Collections.emptyList();
+	}
+
+
 
 	/**
 	 * 校验 Token 是否有效

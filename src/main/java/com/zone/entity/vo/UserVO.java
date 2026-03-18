@@ -26,4 +26,9 @@ public class UserVO extends BaseEntity {
 	private Integer status;
 	private String roleName;
 	private List<Long> roleIds;
+	// --- 新增字段 ---
+	/**
+	 * 该用户的最高角色权限等级（role_sort 最小值）
+	 */
+	private Integer topRoleSort;
 }

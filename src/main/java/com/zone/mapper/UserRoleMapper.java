@@ -37,4 +37,11 @@ public interface UserRoleMapper {
 	 * @return
 	 */
 	int deleteByUserId(Long userId);
+
+	/**
+	 * 获取用户的最高角色权限等级（role_sort 最小值）
+	 * @param userId 用户ID
+	 * @return 最小的 role_sort，若无角色则返回 null
+	 */
+	Integer selectMinRoleSortByUserId(@Param("userId") Long userId);
 }

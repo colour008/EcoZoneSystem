@@ -43,6 +43,22 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	// 核心校验私有方法
+	private void checkHierarchyPermission(Long currentUserId, Long targetUserId) {
+		if (currentUserId.equals(targetUserId)) return;
+
+		Integer myTopSort = userRoleMapper.selectMinRoleSortByUserId(currentUserId);
+		Integer targetTopSort = userRoleMapper.selectMinRoleSortByUserId(targetUserId);
+
+		if (myTopSort == null) {
+			throw new BusinessException("您未分配角色，无权执行此操作");
+		}
+		// 如果目标没角色，targetTopSort 为 null，myTopSort > null 在 Java 中不成立，会跳过拦截
+		if (targetTopSort != null && myTopSort > targetTopSort) {
+			throw new BusinessException("权限不足：无法操作等级高于您的用户");
+		}
+	}
+
 	/**
 	 * 获取用户列表
 	 *
@@ -65,8 +81,9 @@ public class UserServiceImpl implements UserService {
 
 		List<UserVO> voList = page.getResult().stream().map(user -> {
 			UserVO vo = new UserVO();
-			// BeanUtils 会自动拷贝 username, realName 以及 roleName (前提是 User 类里有这个字段)
 			BeanUtils.copyProperties(user, vo);
+			// 额外查询该用户的最高权限等级，传给前端用于按钮显隐控制
+			vo.setTopRoleSort(userRoleMapper.selectMinRoleSortByUserId(user.getId()));
 			return vo;
 		}).collect(Collectors.toList());
 
@@ -120,20 +137,18 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class) // 开启事务，确保删除操作的原子性
-	public boolean deleteByIds(List<Long> ids) {
-		if (ids == null || ids.isEmpty()) {
-			return false;
+	public boolean deleteByIds(List<Long> ids, Long currentUserId) {
+		if (ids == null || ids.isEmpty()) return false;
+
+		// 逐个校验权限
+		for (Long id : ids) {
+			checkHierarchyPermission(currentUserId, id);
 		}
-		// 1. 先删除用户与角色的关联关系（清理中间表）
-		// 规范：删除主表前，一定要先清理从表/中间表，防止外键约束报错或产生脏数据
+
 		for (Long userId : ids) {
 			userRoleMapper.deleteByUserId(userId);
 		}
-
-		// 2. 再删除用户主表
-		int rows = userMapper.deleteByIds(ids);
-
-		return rows > 0;
+		return userMapper.deleteByIds(ids) > 0;
 	}
 
 	/**
@@ -144,42 +159,21 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean updateById(UserDTO userDTO) {
-		// 1. 基础校验：用户是否存在
-		Long id = userDTO.getId();
-		User existUser = userMapper.selectById(id);
-		if (existUser == null) {
-			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
-		}
-		// 2. 转换对象
+	public boolean updateById(UserDTO userDTO, Long currentUserId) {
+		// 修改前校验
+		checkHierarchyPermission(currentUserId, userDTO.getId());
+
 		User user = new User();
-		try {
-			BeanUtils.copyProperties(userDTO, user);
-		} catch (Exception e) {
-			throw new BusinessException("用户信息转换失败: " + e.getMessage());
-		}
-		// 3. 执行主表更新
+		BeanUtils.copyProperties(userDTO, user);
 		int rows = userMapper.update(user);
-		// 只有主表更新成功（rows > 0），才处理关联关系
-		if (rows > 0) {
-			log.info("用户 [ID: {}] 基础资料更新成功，开始处理角色关联", id);
 
-			// 4. 更新角色关联 (只有当前端传了 roleIds 字段时才处理)
-			if (userDTO.getRoleIds() != null) {
-				// 先删掉旧关联
-				userRoleMapper.deleteByUserId(id);
-
-				// 如果新集合不为空，则批量插入
-				if (!userDTO.getRoleIds().isEmpty()) {
-					userRoleMapper.insertBatch(id, userDTO.getRoleIds());
-					log.debug("用户 [ID: {}] 角色关联更新完成，新角色数量: {}", id, userDTO.getRoleIds().size());
-				}
+		if (rows > 0 && userDTO.getRoleIds() != null) {
+			userRoleMapper.deleteByUserId(userDTO.getId());
+			if (!userDTO.getRoleIds().isEmpty()) {
+				userRoleMapper.insertBatch(userDTO.getId(), userDTO.getRoleIds());
 			}
-			return true;
 		}
-		// 如果 rows == 0，说明没有任何行被改变（可能传的值和数据库一模一样）
-		log.warn("用户 [ID: {}] 资料未发生变更", id);
-		return false;
+		return rows > 0;
 	}
 
 	/**
@@ -191,24 +185,14 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean resetPassword(Long id, String defaultPwd) {
-		// 1. 先根据 ID 查询用户信息（用于获取用户名）
-		User user = userMapper.selectById(id);
-		if (user == null) {
-			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
-		}
-		// 2. 准备更新对象
+	public boolean resetPassword(Long id, String defaultPwd, Long currentUserId) {
+		// 重置前校验
+		checkHierarchyPermission(currentUserId, id);
+
 		User updateUserInfo = new User();
 		updateUserInfo.setId(id);
-		// 确保加密前 defaultPwd 不为 null
 		updateUserInfo.setPassword(passwordEncoder.encode(defaultPwd));
-		// 3. 执行更新
-		int rows = userMapper.update(updateUserInfo);
-		if (rows > 0) {
-			// 4. 此时可以使用 existUser.getUsername() 记录日志了
-			log.info("用户 [ID: {}, 账号: {}] 密码重置完成", id, user.getUsername());
-		}
-		return rows > 0;
+		return userMapper.update(updateUserInfo) > 0;
 	}
 
 	/**
@@ -220,22 +204,14 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean updateStatus(Long id, Integer status) {
-		// 1. 检查用户是否存在（防御性编程）
-		User user = userMapper.selectById(id);
-		if (user == null) {
-			throw new BusinessException(ResponseCodeEnum.USER_NOT_EXIST);
-		}
-		// 2. 构造瘦身后的更新对象，减少数据库压力
+	public boolean updateStatus(Long id, Integer status, Long currentUserId) {
+		// 修改状态前校验
+		checkHierarchyPermission(currentUserId, id);
+
 		User updateInfo = new User();
 		updateInfo.setId(id);
 		updateInfo.setStatus(status);
-		// 3. 执行更新（复用你现有的 update 方法）
-		int rows = userMapper.update(updateInfo);
-		if (rows > 0) {
-			log.info("用户 [ID: {}] 状态已变更为: {}", id, status == 1 ? "正常" : "停用");
-		}
-		return rows > 0;
+		return userMapper.update(updateInfo) > 0;
 	}
 
 	/**
@@ -248,4 +224,5 @@ public class UserServiceImpl implements UserService {
 	public User getById(Long id) {
 		return userMapper.selectById(id);
 	}
+
 }

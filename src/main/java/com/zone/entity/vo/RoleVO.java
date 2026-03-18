@@ -25,4 +25,9 @@ public class RoleVO extends BaseEntity {
 	 * 角色编码
 	 */
 	private String roleCode;
+
+	/**
+	 * 角色排序
+	 */
+	private Integer roleSort;
 }

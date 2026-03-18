@@ -1,35 +1,118 @@
+import { resolvePath } from '@/utils/path' // 根据你的路径别名修改
+import router from '@/router/index'
+import menuApi from '@/api/menu'
 import { useUserStore } from '@/store/user'
 
-/**
- * 权限校验逻辑
- */
-export function checkPermi(value) {
-    if (value && value instanceof Array && value.length > 0) {
-        const userStore = useUserStore()
-        const permissions = userStore.permissions
-        const permissionRoles = value
 
-        // 只要 permissions 数组里包含传入的任意一个权限标识，就返回 true
-        const hasPermission = permissions.some(permission => {
-            return permission === '*:*:*' || permissionRoles.includes(permission)
-        })
+const whiteList = ['/login', '/register', '/404']
+const modules = import.meta.glob('../views/**/*.vue')
 
-        return hasPermission
+router.beforeEach(async (to, from, next) => {
+    const userStore = useUserStore()
+    const hasToken = localStorage.getItem('token')
+
+    if (hasToken) {
+        if (to.path === '/login') {
+            next({ path: '/' })
+        } else {
+            if (userStore.routes.length === 0) {
+                try {
+                    const res = await menuApi.getRouters()
+                    const rewriteRoutes = filterAsyncRouter(res.data)
+
+                    // 1. 核心修复：手动添加主控台到菜单显示列表
+                    const dashboardMenu = {
+                        path: '/index/dashboard',
+                        menuName: '主控台',
+                        icon: 'House',
+                        children: []
+                    }
+
+                    // 2. 将主控台放在动态路由最前面，供侧边栏渲染
+                    userStore.setRoutes([dashboardMenu, ...rewriteRoutes])
+
+                    // 3. 动态注册后端路由
+                    rewriteRoutes.forEach(route => {
+                        if (route.children && route.children.length > 0) {
+                            route.children.forEach(child => {
+                                // 核心判定：外链不注册到 Vue Router 路由表，否则会报组件丢失错误
+                                if (child.isExternal !== 1 && !child.path.startsWith('http')) {
+                                    const fullPath = resolvePath(route.path, child.path)
+
+                                    router.addRoute('Layout', {
+                                        path: fullPath,
+                                        name: fullPath.replace(/\//g, '_'), // 唯一 Name
+                                        component: child.component,
+                                        meta: {
+                                            title: child.menuName,
+                                            icon: child.icon
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+
+                    // 4. 最后添加通配符路由
+                    router.addRoute({
+                        path: '/:pathMatch(.*)*',
+                        redirect: '/404'
+                    })
+
+                    // 确保路由注册完成后再跳转
+                    next({ ...to, replace: true })
+                } catch (error) {
+                    console.error('路由加载失败', error)
+                    userStore.logout()
+                    next(`/login`)
+                }
+            } else {
+                next()
+            }
+        }
     } else {
-        console.error(`need roles! Like v-hasPermi="['sys:user:add']"`)
-        return false
+        if (whiteList.includes(to.path)) {
+            next()
+        } else {
+            next(`/login`)
+        }
     }
+})
+
+function filterAsyncRouter(asyncRouterMap) {
+    return asyncRouterMap.filter(route => {
+        // 1. 处理路径规范
+        if (route.path && !route.path.startsWith('/') && !route.path.startsWith('http')) {
+            route.path = '/' + route.path
+        }
+
+        // 2. 如果是目录(M)，通常不需要 component 或者指向一个 ParentView
+        // 如果是菜单(C)，加载真实组件
+        if (route.type === 'C') {
+            if (route.isExternal === 1) {
+                // 外链不需要加载组件
+                route.component = null
+            } else if (route.component) {
+                route.component = loadView(route.component)
+            }
+        }
+
+        // 3. 递归处理子菜单
+        if (route.children && route.children.length) {
+            route.children = filterAsyncRouter(route.children)
+        }
+
+        return true
+    })
 }
 
-/**
- * 定义 Vue 指令
- */
-export default {
-    mounted(el, binding) {
-        const { value } = binding
-        if (!checkPermi(value)) {
-            // 如果没有权限，直接从 DOM 中移除该元素
-            el.parentNode && el.parentNode.removeChild(el)
-        }
+function loadView(view) {
+    let path = view.replace(/^\//, '').replace(/\.vue$/, '')
+    const filePath = `../views/${path}.vue`
+    if (modules[filePath]) {
+        return modules[filePath]
+    } else {
+        console.error(`🔴 找不到组件: ${filePath}`)
+        return () => import('@/views/404.vue')
     }
 }

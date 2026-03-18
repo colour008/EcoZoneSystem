@@ -6,6 +6,7 @@ import com.zone.entity.dto.RoleDTO;
 import com.zone.entity.dto.RolePageQueryDTO;
 import com.zone.entity.sys.Role;
 import com.zone.entity.vo.RoleVO;
+import com.zone.service.MenuService;
 import com.zone.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,9 @@ public class RoleController {
 
 	@Autowired
 	private RoleService roleService;
+
+	@Autowired
+	private MenuService menuService;
 
 	/**
 	 * 获取所有角色列表(不分页)
@@ -103,5 +107,29 @@ public class RoleController {
 	public Result<String> delete(@RequestBody List<Long> ids) {
 		boolean success = roleService.deleteByIds(ids);
 		return success ? Result.success("删除成功") : Result.sysError("删除失败或数据不存在");
+	}
+
+
+	/**
+	 * 获取角色已分配的菜单ID列表
+	 */
+	@GetMapping("/{roleId}/menus")
+	@Operation(summary = "获取角色拥有的菜单ID集合")
+	public Result<List<Long>> getRoleMenus(@PathVariable Long roleId) {
+		log.info("查询角色权限回显，角色ID: {}", roleId);
+		// 直接调用之前 MenuService 实现好的逻辑
+		List<Long> menuIds = menuService.getMenuIdsByRoleId(roleId);
+		return Result.success(menuIds);
+	}
+
+	/**
+	 * 保存角色权限
+	 */
+	@PostMapping("/{roleId}/menus")
+	@Operation(summary = "保存角色分配的权限")
+	public Result<String> saveRoleMenus(@PathVariable Long roleId, @RequestBody List<Long> menuIds) {
+		log.info("分配角色权限，角色ID: {}, 菜单数量: {}", roleId, menuIds.size());
+		roleService.updateRoleMenus(roleId, menuIds);
+		return Result.success("权限分配成功");
 	}
 }

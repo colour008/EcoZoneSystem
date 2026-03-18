@@ -4,6 +4,7 @@ import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.UnauthorizedException;
 import com.zone.config.JwtConfig;
 import com.zone.util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.List;
 
 /**
  * 企业级 JWT 拦截器
@@ -55,16 +58,22 @@ public class JwtInterceptor implements HandlerInterceptor {
 			throw new UnauthorizedException(ResponseCodeEnum.TOKEN_INVALID.getMsg());
 		}
 
-		// 4. 解析 Token (这里只需解析一次，因为 JwtUtil 内部已经封装了过期和校验逻辑)
-		// 建议在 JwtUtil 中增加一个返回所有 Claims 的方法，或者像下面这样按需获取
-		String username = jwtUtil.getUsername(token);
-		Long userId = jwtUtil.getUserId(token);
+		// 4. 只解析一次 JWT 调用 parseToken 方法
+		Claims claims = jwtUtil.parseToken(token);
 
-		// 5. 存入 request 域，方便后续 Controller 或 Service 使用
+		// 直接从解析好的 claims 对象中取值，不再调用 jwtUtil 的其他方法
+		String username = claims.getSubject();
+		Long userId = claims.get("userId", Long.class);
+
+		@SuppressWarnings("unchecked")
+		List<String> roleCodes = claims.get("roles", List.class);
+
+		// 5. 存入 request 域，供后续 SecurityUtils 使用
 		request.setAttribute("username", username);
 		request.setAttribute("userId", userId);
+		request.setAttribute("roles", roleCodes); // 这里的 Key 必须叫 "roles"
 
-		log.debug("用户验证通过: [ID: {}, Name: {}]", userId, username);
+		log.debug("用户验证通过 (单次解析优化): [ID: {}, Name: {}]", userId, username);
 		return true;
 	}
 }
