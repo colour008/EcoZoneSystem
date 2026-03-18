@@ -4,15 +4,107 @@
 
 <mapper namespace="com.zone.mapper.MenuMapper">
 
+    <sql id="Base_Column_List">
+        id, parent_id, menu_name, icon, order_num, path, component, perms, type, status, is_external, create_time, update_time
+    </sql>
 
-    <!-- 根据用户ID查询权限 -->
+    <resultMap id="MenuResultMap" type="com.zone.entity.sys.Menu">
+        <id column="id" property="id"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="menu_name" property="menuName"/>
+        <result column="icon" property="icon"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="path" property="path"/>
+        <result column="component" property="component"/>
+        <result column="perms" property="perms"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <result column="is_external" property="isExternal"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 查询所有菜单 -->
+    <select id="listAll" resultMap="MenuResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_menu
+        ORDER BY order_num ASC
+    </select>
+
+    <!-- 新增菜单 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_menu (
+        parent_id, menu_name, icon, order_num, path,
+        component, perms, type, status, is_external,
+        create_time, update_time
+        ) VALUES (
+        #{parentId}, #{menuName}, #{icon}, #{orderNum}, #{path},
+        #{component}, #{perms}, #{type}, #{status}, #{isExternal},
+        NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 修改菜单 -->
+    <update id="updateById">
+        UPDATE sys_menu
+        <set>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="menuName != null and menuName != ''">menu_name = #{menuName},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="path != null">path = #{path},</if>
+            <if test="component != null">component = #{component},</if>
+            <if test="perms != null">perms = #{perms},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isExternal != null">is_external = #{isExternal},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除菜单 -->
+    <delete id="deleteById">
+        DELETE FROM sys_menu WHERE id = #{id}
+    </delete>
+
+    <!-- 检查菜单下是否有子菜单 -->
+    <select id="hasChildByMenuId" resultType="int">
+        SELECT COUNT(1) FROM sys_menu WHERE parent_id = #{id}
+    </select>
+
+    <!-- 检查菜单是否被角色使用 -->
+    <select id="checkMenuExistRole" resultType="int">
+        SELECT COUNT(1) FROM sys_role_menu WHERE menu_id = #{id}
+    </select>
+
+    <!-- 根据角色ID查询菜单ID集合 -->
+    <select id="getMenuIdsByRoleId" resultType="long">
+        SELECT menu_id FROM sys_role_menu WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 根据用户ID查询所有权限标识(perms) -->
     <select id="selectPermsByUserId" resultType="string">
         SELECT DISTINCT m.perms
         FROM sys_menu m
         INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
         INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id
         WHERE ur.user_id = #{userId}
+        AND m.status = 1
         AND m.perms IS NOT NULL
         AND m.perms != ''
+    </select>
+
+    <!-- 根据用户ID查询菜单树 -->
+    <select id="selectMenuTreeByUserId" resultMap="MenuResultMap">
+        SELECT DISTINCT
+        m.id, m.parent_id, m.menu_name, m.icon, m.order_num,
+        m.path, m.component, m.perms, m.type, m.status, m.is_external
+        FROM sys_menu m
+        INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
+        INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND m.status = 1
+        AND m.type IN ('M', 'C')  ORDER BY m.parent_id, m.order_num ASC
     </select>
 </mapper>

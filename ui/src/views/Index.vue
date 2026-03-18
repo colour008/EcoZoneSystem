@@ -131,47 +131,27 @@
             :unique-opened="true"
             router
         >
-          <el-sub-menu index="1">
-            <template #title>
-              <el-icon>
-                <Odometer/>
-              </el-icon>
-              <span>后台面板</span>
-            </template>
-            <el-menu-item index="/index/dashboard">
-              <el-icon>
-                <House/>
-              </el-icon>
-              <span>主控台</span>
-            </el-menu-item>
-          </el-sub-menu>
+          <template v-for="menu in userStore.routes" :key="menu.path">
+            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+              <template #title>
+                <el-icon v-if="menu.icon"><component :is="menu.icon"/></el-icon>
+                <span>{{ menu.menuName }}</span>
+              </template>
+              <el-menu-item
+                  v-for="child in menu.children"
+                  :key="child.path"
+                  :index="resolvePath(menu.path, child.path)"
+              >
+                <el-icon v-if="child.icon"><component :is="child.icon"/></el-icon>
+                <span>{{ child.menuName }}</span>
+              </el-menu-item>
+            </el-sub-menu>
 
-          <el-sub-menu index="2">
-            <template #title>
-              <el-icon>
-                <Setting/>
-              </el-icon>
-              <span>系统管理</span>
-            </template>
-            <el-menu-item index="/index/user/list">
-              <el-icon>
-                <User/>
-              </el-icon>
-              <span>用户列表</span>
+            <el-menu-item v-else :index="menu.path">
+              <el-icon v-if="menu.icon"><component :is="menu.icon"/></el-icon>
+              <span>{{ menu.menuName }}</span>
             </el-menu-item>
-            <el-menu-item index="/index/role/list">
-              <el-icon>
-                <UserFilled/>
-              </el-icon>
-              <span>角色列表</span>
-            </el-menu-item>
-            <el-menu-item index="/index/access/list">
-              <el-icon>
-                <Key/>
-              </el-icon>
-              <span>权限列表</span>
-            </el-menu-item>
-          </el-sub-menu>
+          </template>
         </el-menu>
       </aside>
 
@@ -213,6 +193,13 @@ const profileFormRef = ref(null)
 
 // 获取用户信息
 const userInfo = computed(() => userStore.userInfo)
+
+// 路径解析函数
+const resolvePath = (parentPath, childPath) => {
+  const parent = parentPath.startsWith('/') ? parentPath : '/' + parentPath
+  const child = childPath.startsWith('/') ? childPath.substring(1) : childPath
+  return `${parent}/${child}`.replace(/\/+/g, '/')
+}
 
 // 初始表单数据
 const profileForm = ref({
@@ -333,6 +320,10 @@ const toggleFullScreen = () => {
 
 onMounted(() => {
   activeMenu.value = route.path
+  // 如果登录后停在 /index 或 /，自动跳往主控台
+  if (route.path === '/index' || route.path === '/') {
+    router.push('/index/dashboard')
+  }
 })
 </script>
 

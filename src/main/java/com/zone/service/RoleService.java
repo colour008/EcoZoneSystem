@@ -45,8 +45,12 @@ public interface RoleService {
 	boolean deleteByIds(List<Long> ids);
 
 	/**
-	 * 获取所有角色列表
-	 * @return
+	 * 获取所有可用角色
 	 */
 	List<Role> listAll();
+
+	/**
+	 * 更新角色分配的菜单权限
+	 */
+	void updateRoleMenus(Long roleId, List<Long> menuIds);
 }

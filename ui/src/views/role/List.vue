@@ -102,6 +102,24 @@
         </div>
       </template>
     </el-drawer>
+
+    <el-dialog title="分配权限" v-model="permissionVisible" width="500px" destroy-on-close>
+      <div v-loading="treeLoading" style="max-height: 450px; overflow-y: auto; padding: 10px 20px">
+        <el-tree
+            ref="menuTreeRef"
+            :data="menuOptions"
+            show-checkbox
+            node-key="id"
+            :props="{ label: 'menuName', children: 'children' }"
+            default-expand-all
+            highlight-current
+        />
+      </div>
+      <template #footer>
+        <el-button @click="permissionVisible = false">取 消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="submitPermission">确 定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -110,6 +128,7 @@ import {ref, onMounted, nextTick} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Search, Refresh, Delete, Edit, Plus, Setting} from '@element-plus/icons-vue'
 import roleApi from '@/api/role'
+import menuApi from '@/api/menu'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -117,6 +136,12 @@ const roleList = ref([])
 const total = ref(0)
 const multipleSelection = ref([])
 const roleFormRef = ref(null)
+
+const permissionVisible = ref(false)
+const treeLoading = ref(false)
+const menuOptions = ref([]) // 全量菜单树
+const menuTreeRef = ref(null)
+const activeRoleId = ref(null) // 当前操作的角色ID
 
 const queryParams = ref({
   pageNum: 1,
@@ -202,9 +227,55 @@ const submitForm = async () => {
   })
 }
 
-// 分配权限（占位）
-const handlePermission = (row) => {
-  ElMessage.info(`正在为角色 [${row.roleName}] 开发权限分配功能...`)
+// 分配权限
+const handlePermission = async (row) => {
+  activeRoleId.value = row.id
+  permissionVisible.value = true
+  treeLoading.value = true
+
+  try {
+    // 1. 获取全量菜单树（用于展示）
+    const resTree = await menuApi.list()
+    menuOptions.value = resTree.data
+
+    // 2. 获取该角色已绑定的菜单ID（用于勾选回显）
+    const resKeys = await roleApi.getRoleMenus(row.id)
+
+    // 3. 设置勾选回显（使用 nextTick 确保 Tree DOM 已加载）
+    await nextTick()
+    if (menuTreeRef.value) {
+      // 注意：这里建议后端只返回“叶子节点”的ID，否则 Element Tree 的父子联动可能会导致自动全选
+      menuTreeRef.value.setCheckedKeys(resKeys.data)
+    }
+  } catch (error) {
+    console.error('获取权限数据失败', error)
+  } finally {
+    treeLoading.value = false
+  }
+}
+
+// 提交权限
+const submitPermission = async () => {
+  // 获取当前选中的和半选中的节点 ID (半选 ID 是为了保证父级菜单也能传给后端)
+  const checkedKeys = menuTreeRef.value.getCheckedKeys()
+  const halfCheckedKeys = menuTreeRef.value.getHalfCheckedKeys()
+  const finalKeys = [...checkedKeys, ...halfCheckedKeys]
+
+  if (finalKeys.length === 0) {
+    ElMessage.warning('请至少选择一个权限')
+    return
+  }
+
+  submitLoading.value = true
+  try {
+    await roleApi.saveRoleMenus(activeRoleId.value, finalKeys)
+    ElMessage.success('分配权限成功')
+    permissionVisible.value = false
+  } catch (error) {
+    console.error('保存权限失败', error)
+  } finally {
+    submitLoading.value = false
+  }
 }
 
 // 选中变化

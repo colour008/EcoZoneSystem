@@ -93,4 +93,19 @@ public interface RoleMapper {
 	 * @return 角色列表
 	 */
 	List<Role> selectAllActiveRoles();
+
+	/**
+	 * 根据角色ID删除角色菜单关联关系
+	 *
+	 * @param roleId 角色ID
+	 */
+	int deleteRoleMenusByRoleId(@Param("roleId") Long roleId);
+
+	/**
+	 * 批量插入角色菜单关联关系
+	 *
+	 * @param roleId  角色ID
+	 * @param menuIds 菜单ID集合
+	 */
+	int insertRoleMenus(@Param("roleId") Long roleId, @Param("menuIds") List<Long> menuIds);
 }
