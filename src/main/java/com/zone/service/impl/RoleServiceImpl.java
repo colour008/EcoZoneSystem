@@ -52,7 +52,7 @@ public class RoleServiceImpl implements RoleService {
 		// 属性拷贝 & 插入数据库
 		Role role = new Role();
 		try {
-			BeanUtils.copyProperties(role, roleDTO);
+			BeanUtils.copyProperties(roleDTO, role);
 			return roleMapper.insert(role) > 0;
 		} catch (Exception e) {
 			log.error("属性拷贝异常：{}", e.getMessage());
@@ -104,8 +104,8 @@ public class RoleServiceImpl implements RoleService {
 		}
 
 		Role role = new Role();
-		BeanUtils.copyProperties(role, roleDTO);
-		int rows = roleMapper.update(roleDTO);
+		BeanUtils.copyProperties(roleDTO, role);
+		int rows = roleMapper.update(role);
 		return rows > 0;
 	}
 

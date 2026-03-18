@@ -159,6 +159,12 @@
               </el-icon>
               <span>用户列表</span>
             </el-menu-item>
+            <el-menu-item index="/index/role/list">
+              <el-icon>
+                <UserFilled/>
+              </el-icon>
+              <span>角色列表</span>
+            </el-menu-item>
             <el-menu-item index="/index/access/list">
               <el-icon>
                 <Key/>
@@ -189,7 +195,7 @@ import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
-  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus
+  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus, UserFilled
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'

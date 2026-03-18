@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * @Author: JamHoo
+ * @Description: 登录和注册控制器
+ * @Date: 2026/3/10 09:21
+ * @Version: 1.0
+ */
 
 @RestController
 @RequestMapping("/auth")

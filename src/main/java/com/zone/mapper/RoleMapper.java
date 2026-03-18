@@ -44,10 +44,10 @@ public interface RoleMapper {
 	/**
 	 * 修改角色
 	 *
-	 * @param roleDTO
+	 * @param role
 	 * @return
 	 */
-	int update(RoleDTO roleDTO);
+	int update(Role role);
 
 	/**
 	 * 根据ID查询角色
@@ -69,10 +69,11 @@ public interface RoleMapper {
 	 * @param ids
 	 * @return
 	 */
-	int deleteByIds(List<Long> ids);
+	int deleteByIds(@Param("roleIds") List<Long> ids);
 
 	/**
 	 * 统计角色被用户关联的数量
+	 *
 	 * @param roleIds 角色ID集合
 	 * @return 关联的数量
 	 */
@@ -80,6 +81,7 @@ public interface RoleMapper {
 
 	/**
 	 * 根据用户ID查询角色编码
+	 *
 	 * @param id 用户ID
 	 * @return 角色编码集合
 	 */
@@ -87,6 +89,7 @@ public interface RoleMapper {
 
 	/**
 	 * 查询所有有效的角色
+	 *
 	 * @return 角色列表
 	 */
 	List<Role> selectAllActiveRoles();

@@ -192,7 +192,7 @@ public class UserController {
 	 */
 	@GetMapping("/{id}")
 	@Operation(summary = "查询用户详情")
-	public Result<UserDTO> getById(@PathVariable Long id) {
+	public Result<UserVO> getById(@PathVariable Long id) {
 		// 1. 查基础信息
 		User user = userService.getById(id);
 		if (user == null) {
@@ -203,10 +203,10 @@ public class UserController {
 		List<Long> roleIds = userRoleService.getRoleIdsByUserId(id);
 
 		// 3. 封装
-		UserDTO dto = new UserDTO();
-		BeanUtils.copyProperties(user, dto);
-		dto.setRoleIds(roleIds);
+		UserVO vo= new UserVO();
+		BeanUtils.copyProperties(user, vo);
+		vo.setRoleIds(roleIds);
 
-		return Result.success(dto);
+		return Result.success(vo);
 	}
 }

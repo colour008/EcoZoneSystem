@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Author: JamHoo
  * @Description: 返回用户信息
@@ -23,4 +25,5 @@ public class UserVO extends BaseEntity {
 	private String avatar;
 	private Integer status;
 	private String roleName;
+	private List<Long> roleIds;
 }

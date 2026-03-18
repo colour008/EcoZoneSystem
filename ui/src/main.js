@@ -1,15 +1,19 @@
-import { createApp } from 'vue'
+import {createApp} from 'vue'
 import App from './App.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 导入所有图标
-import { createPinia } from 'pinia'
+import hasPermi from '@/utils/permission'
+import {createPinia} from 'pinia'
 import router from '@/router'
 import './style.css' // <--- 全局样式
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 // 创建Vue实例
 const app = createApp(App)
+
+// 注册全局指令
+app.directive('hasPermi', hasPermi)
 
 // 1. 注册Pinia状态管理
 app.use(createPinia())
@@ -18,7 +22,7 @@ app.use(createPinia())
 app.use(router)
 
 // 3.注册Element Plus（含全局配置）
-app.use(ElementPlus,{
+app.use(ElementPlus, {
     locale: zhCn, // 全局中文语言
     size: 'default' // 全局组件尺寸（可选：large / default / small）
 })
