@@ -18,11 +18,18 @@
 
         <div class="breadcrumb">
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/index' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-for="item in route.matched.filter(m => m.meta.title)" :key="item.path">
-              <el-icon v-if="item.meta.icon" style="vertical-align: middle; margin-right: 4px;">
-                <component :is="item.meta.icon"/>
-              </el-icon>
+            <el-breadcrumb-item :to="{ path: '/index/dashboard' }">首页</el-breadcrumb-item>
+
+            <el-breadcrumb-item
+                v-for="(item, index) in breadcrumbList"
+                :key="item.path"
+                v-show="item.meta.title !== '首页'"
+            >
+              <svg-icon
+                  v-if="item.meta.icon"
+                  :name="item.meta.icon"
+                  style="margin-right: 4px;"
+              />
               {{ item.meta.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
@@ -129,36 +136,34 @@
             class="sidebar-menu"
             :collapse="isCollapse"
             :unique-opened="true"
-            router
         >
-          <template v-for="menu in userStore.routes" :key="menu.path">
-            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
-              <template #title>
-                <el-icon v-if="menu.icon">
-                  <component :is="menu.icon"/>
-                </el-icon>
-                <span>{{ menu.menuName }}</span>
-              </template>
-              <el-menu-item
-                  v-for="child in menu.children"
-                  :key="child.path"
-                  :index="resolvePath(menu.path, child.path)"
-                  @click="handleMenuClick(child, menu.path)"
-              >
-                <el-icon v-if="child.icon">
-                  <component :is="child.icon"/>
-                </el-icon>
-                <span>{{ child.menuName }}</span>
-              </el-menu-item>
-            </el-sub-menu>
-
-            <el-menu-item v-else :index="menu.path">
-              <el-icon v-if="menu.icon">
-                <component :is="menu.icon"/>
-              </el-icon>
+        <template v-for="menu in userStore.routes" :key="menu.path">
+          <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+            <template #title>
+              <svg-icon v-if="menu.icon" :name="menu.icon" />
               <span>{{ menu.menuName }}</span>
+            </template>
+
+            <el-menu-item
+                v-for="child in menu.children"
+                :key="child.path"
+                :index="resolvePath(menu.path, child.path)"
+            @click="handleMenuClick(child, menu.path)"
+            >
+              <svg-icon v-if="child.icon" :name="child.icon" />
+            <span>{{ child.menuName }}</span>
             </el-menu-item>
-          </template>
+          </el-sub-menu>
+
+          <el-menu-item
+              v-else
+              :index="menu.path"
+              @click="handleMenuClick(menu, '')"
+          >
+            <svg-icon v-if="menu.icon" :name="menu.icon" />
+            <span>{{ menu.menuName }}</span>
+          </el-menu-item>
+        </template>
         </el-menu>
       </aside>
 
@@ -186,11 +191,12 @@ import {
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
-import { resolvePath } from '@/utils/path'
+import {resolvePath} from '@/utils/path'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const breadcrumbList = ref([])
 
 const isCollapse = ref(false)
 const activeMenu = ref(route.path)
@@ -202,17 +208,38 @@ const profileFormRef = ref(null)
 // 获取用户信息
 const userInfo = computed(() => userStore.userInfo)
 
+const getBreadcrumb = () => {
+  let matched = route.matched.filter(item => item.meta && item.meta.title)
+
+  // 核心逻辑：如果当前路由有父级标题（parentTitle），手动把它塞进面包屑数组前面
+  const current = matched[matched.length - 1]
+  if (current && current.meta.parentTitle) {
+    // 构造一个虚拟的父级节点
+    const parentNode = {
+      path: '', // 目录通常不可点击，所以路径设为空
+      meta: { title: current.meta.parentTitle }
+    }
+    // 插入到当前节点之前
+    matched.splice(matched.length - 1, 0, parentNode)
+  }
+
+  breadcrumbList.value = matched
+}
+
 // 增加菜单点击处理函数
 const handleMenuClick = (item, parentPath) => {
-  const fullPath = resolvePath(parentPath, item.path)
+  const path = item.path
 
-  // 如果后端标记了是外链，或者路径本身就是 http 开头
-  if (item.isExternal === 1 || fullPath.startsWith('http')) {
-    window.open(fullPath, '_blank')
+  // 判断逻辑：
+  // 1. 后端返回的 isExternal 字段为 1
+  // 2. 路径以 http 或 https 开头
+  if (item.isExternal === 1 || path.startsWith('http') || path.startsWith('https')) {
+    window.open(path, '_blank')
     return
   }
 
   // 正常内部路由跳转
+  const fullPath = resolvePath(parentPath, path)
   router.push(fullPath)
 }
 
@@ -305,8 +332,9 @@ watch(
     () => route.path,
     (newPath) => {
       activeMenu.value = newPath
+      getBreadcrumb() // <--- 在这里调用，确保每次路由变化都重新生成面包屑
     },
-    {immediate: true}
+    { immediate: true }
 )
 
 

@@ -33,19 +33,23 @@ router.beforeEach(async (to, from, next) => {
 
                     // 3. 动态注册后端路由
                     rewriteRoutes.forEach(route => {
+                        // 如果该目录有子菜单
                         if (route.children && route.children.length > 0) {
                             route.children.forEach(child => {
-                                // 核心判定：外链不注册到 Vue Router 路由表，否则会报组件丢失错误
+                                // 排除外链：不注册到本地路由表
                                 if (child.isExternal !== 1 && !child.path.startsWith('http')) {
                                     const fullPath = resolvePath(route.path, child.path)
 
                                     router.addRoute('Layout', {
                                         path: fullPath,
-                                        name: fullPath.replace(/\//g, '_'), // 唯一 Name
+                                        name: fullPath.replace(/\//g, '_'),
                                         component: child.component,
                                         meta: {
+                                            // 【核心修复】确保这里有 title，面包屑才能通过 route.matched 拿到它
                                             title: child.menuName,
-                                            icon: child.icon
+                                            icon: child.icon,
+                                            // 可选：存一下父级标题，方便面包屑做特殊处理
+                                            parentTitle: route.menuName
                                         }
                                     })
                                 }

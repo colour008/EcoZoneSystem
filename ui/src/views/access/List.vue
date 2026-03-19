@@ -31,9 +31,11 @@
         <el-table-column prop="menuName" label="菜单名称" min-width="180"/>
         <el-table-column prop="icon" label="图标" align="center" width="80">
           <template #default="scope">
-            <el-icon v-if="scope.row.icon && scope.row.icon !== '#'">
-              <component :is="scope.row.icon"/>
-            </el-icon>
+            <svg-icon
+                v-if="scope.row.icon && scope.row.icon !== '#'"
+                :name="scope.row.icon"
+                size="18"
+            />
           </template>
         </el-table-column>
         <el-table-column prop="type" label="类型" align="center" width="100">
@@ -103,20 +105,31 @@
           <el-col :span="24" v-if="form.type !== 'F'">
             <el-form-item label="菜单图标" prop="icon">
               <el-popover
+                  ref="iconPopoverRef"
+                  @after-enter="handlePopoverShow"
                   placement="bottom-start"
-                  :width="500"
+                  :width="450"
                   trigger="click"
+                  popper-class="icon-select-popper"
               >
                 <template #reference>
-                  <el-input v-model="form.icon" placeholder="点击选择图标" readonly>
+                  <el-input
+                      v-model="form.icon"
+                      placeholder="点击选择图标"
+                      readonly
+                  >
                     <template #prefix>
-                      <el-icon v-if="form.icon"><component :is="form.icon" /></el-icon>
-                      <el-icon v-else><Pointer /></el-icon>
+                      <svg-icon v-if="form.icon" :name="form.icon" />
+                      <el-icon v-else><Search /></el-icon>
                     </template>
                   </el-input>
                 </template>
 
-                <IconSelect v-model="form.icon" />
+                <icon-select
+                    ref="iconSelectRef"
+                    v-model="form.icon"
+                    @selected="handleIconSelected"
+                />
               </el-popover>
             </el-form-item>
           </el-col>
@@ -182,7 +195,6 @@
 <script setup>
 import {ref, onMounted, nextTick} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {Plus, Edit, Delete, Refresh} from '@element-plus/icons-vue'
 import menuApi from '@/api/menu'
 import IconSelect from '@/components/IconSelect.vue'
 
@@ -192,6 +204,8 @@ const dialogVisible = ref(false)
 const menuList = ref([])
 const menuOptions = ref([])
 const menuFormRef = ref(null)
+const iconPopoverRef = ref(null)
+const iconSelectRef = ref(null)
 
 const form = ref({
   id: null,
@@ -226,6 +240,21 @@ const rules = {
       trigger: 'blur'
     }
   ]
+}
+
+// 当 Popover 动画结束并完全显示后触发
+const handlePopoverShow = () => {
+  if (iconSelectRef.value) {
+    iconSelectRef.value.scrollToActive()
+  }
+}
+
+// 选中图标后的处理逻辑
+const handleIconSelected = () => {
+  // 使用 Element Plus Popover 提供的 hide 方法关闭气泡窗
+  if (iconPopoverRef.value) {
+    iconPopoverRef.value.hide()
+  }
 }
 
 const getMenuList = async () => {

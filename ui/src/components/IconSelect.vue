@@ -24,7 +24,8 @@
       >
         <div class="icon-wrapper">
           <el-icon :size="22">
-            <component :is="item"/>
+            <Icon v-if="item.includes(':')" :icon="item"/>
+            <component v-else :is="item"/>
           </el-icon>
         </div>
         <span class="icon-name">{{ item }}</span>
@@ -36,9 +37,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import {ref, computed, onMounted, nextTick} from 'vue'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import {Search} from '@element-plus/icons-vue'
+import {Icon} from '@iconify/vue'
+import antDesignIcons from '@iconify-json/ant-design/icons.json'
 
 // 优化：显式声明 v-model
 const props = defineProps({
@@ -48,9 +51,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
-
-const allIcons = Object.keys(ElementPlusIconsVue)
+const emit = defineEmits(['update:modelValue', 'selected'])
+const antIcons = Object.keys(antDesignIcons.icons).map(name => `ant-design:${name}`)
+const allIcons = [...Object.keys(ElementPlusIconsVue), ...antIcons]
 const filterValue = ref('')
 
 const filteredIcons = computed(() => {
@@ -60,8 +63,23 @@ const filteredIcons = computed(() => {
 })
 
 const selectIcon = (name) => {
+  // 更新 v-model 的值
   emit('update:modelValue', name)
+  // 发送选中信号，用于触发关闭逻辑
+  emit('selected')
 }
+
+// 在 IconSelect.vue 的 <script setup> 中增加导出
+const scrollToActive = () => {
+  nextTick(() => {
+    const activeItem = document.querySelector('.icon-item.active');
+    if (activeItem) {
+      activeItem.scrollIntoView({block: 'center', behavior: 'smooth'});
+    }
+  });
+}
+
+defineExpose({scrollToActive}) // 显式暴露给父组件调用
 
 onMounted(() => {
   // 只有在 modelValue 有值时才滚动
@@ -69,7 +87,7 @@ onMounted(() => {
     nextTick(() => {
       const activeItem = document.querySelector('.icon-item.active');
       if (activeItem) {
-        activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        activeItem.scrollIntoView({block: 'center', behavior: 'smooth'});
       }
     });
   }
@@ -95,12 +113,13 @@ onMounted(() => {
 
 .icon-list {
   display: grid;
+  /* 强制固定 4 列，1fr 确保等分空间 */
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  max-height: 280px;
+  gap: 12px;
+  max-height: 300px;
   overflow-y: auto;
   margin-top: 15px;
-  padding: 4px;
+  padding: 5px;
 }
 
 /* 滚动条美化：更细、更现代 */
@@ -118,16 +137,18 @@ onMounted(() => {
 }
 
 .icon-item {
-  height: 72px;
+  width: 100%;
+  /* 解决长文字撑开网格的关键：最小宽度设为 0 */
+  min-width: 0;
+  height: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
-  cursor: pointer;
   background: #fafafa;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.2s;
 }
 
 .icon-wrapper {
@@ -161,12 +182,19 @@ onMounted(() => {
 }
 
 .icon-name {
-  font-size: 11px;
+  font-size: 10px; /* 稍微调小一点以适配 'ant-design:home-outlined' */
   color: #666;
-  width: 85%;
+  width: 90%;
   text-align: center;
+  margin-top: 4px;
+  /* 强制单行并显示省略号 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 针对 Iconify 图标的颜色修正（可选） */
+.icon-item.active .svg-icon {
+  color: #fff;
 }
 </style>

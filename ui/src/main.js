@@ -3,6 +3,7 @@ import App from './App.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 导入所有图标
+import SvgIcon from '@/components/SvgIcon.vue'
 import router from '@/router'
 import {createPinia} from 'pinia'
 import './style.css' // <--- 全局样式
@@ -28,6 +29,8 @@ app.use(ElementPlus, {
     locale: zhCn, // 全局中文语言
     size: 'default' // 全局组件尺寸（可选：large / default / small）
 })
+
+app.component('SvgIcon', SvgIcon)
 
 // 4.全局注册所有Element Plus图标（关键：确保图标组件可全局使用）
 // 优化：添加异常捕获，避免图标注册失败导致项目崩溃

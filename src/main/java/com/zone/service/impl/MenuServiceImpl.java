@@ -82,6 +82,15 @@ public class MenuServiceImpl implements MenuService {
 			menu.setIsExternal(0);
 		}
 
+		// 4. 将空字符串转为 null，避免唯一索引冲突
+		if (menu.getPerms() != null && menu.getPerms().trim().isEmpty()) {
+			menu.setPerms(null);
+		}
+		// 5. 处理一下 component
+		if (menu.getComponent() != null && menu.getComponent().trim().isEmpty()) {
+			menu.setComponent(null);
+		}
+
 		log.info("开始插入菜单数据: {}", menu.getMenuName());
 		return menuMapper.insert(menu) > 0;
 	}
