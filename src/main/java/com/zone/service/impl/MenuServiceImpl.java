@@ -69,6 +69,9 @@ public class MenuServiceImpl implements MenuService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean save(Menu menu) {
+		// 执行唯一性检查
+		checkMenuUnique(menu);
+
 		// 1. 逻辑处理：如果没有设置父ID，默认设为顶级目录(0)
 		if (menu.getParentId() == null) {
 			menu.setParentId(0L);
@@ -105,6 +108,9 @@ public class MenuServiceImpl implements MenuService {
 		if (menu.getId() != null && menu.getId().equals(menu.getParentId())) {
 			throw new BusinessException("上级菜单不能选择当前菜单本身");
 		}
+
+		// 执行唯一性检查
+		checkMenuUnique(menu);
 
 		log.info("开始更新菜单数据，ID: {}", menu.getId());
 		return menuMapper.updateById(menu) > 0;
@@ -186,5 +192,37 @@ public class MenuServiceImpl implements MenuService {
 
 		// 2. 构建树形结构并处理外链逻辑
 		return buildMenuTree(menus);
+	}
+
+	/**
+	 * 校验菜单属性唯一性
+	 * @param menu 菜单实体
+	 */
+	private void checkMenuUnique(Menu menu) {
+		Long menuId = menu.getId();
+
+		// 1. 校验权限标识 perms (按钮和菜单必须唯一)
+		if (menu.getPerms() != null && !menu.getPerms().trim().isEmpty()) {
+			Menu info = menuMapper.checkPermsUnique(menu.getPerms());
+			if (info != null && !info.getId().equals(menuId)) {
+				throw new BusinessException("保存失败，权限标识 '" + menu.getPerms() + "' 已存在");
+			}
+		}
+
+		// 2. 校验路由地址 path (仅目录 M 和菜单 C 校验唯一性)
+		if (menu.getPath() != null && !menu.getPath().trim().isEmpty()) {
+			Menu info = menuMapper.checkPathUnique(menu.getPath());
+			if (info != null && !info.getId().equals(menuId)) {
+				throw new BusinessException("保存失败，路由地址 '" + menu.getPath() + "' 已存在");
+			}
+		}
+
+		// 3. 校验组件路径 component (仅菜单 C 校验唯一性，排除目录和外链)
+		if ("C".equals(menu.getType()) && menu.getComponent() != null && !menu.getComponent().trim().isEmpty()) {
+			Menu info = menuMapper.checkComponentUnique(menu.getComponent());
+			if (info != null && !info.getId().equals(menuId)) {
+				throw new BusinessException("保存失败，组件路径 '" + menu.getComponent() + "' 已存在");
+			}
+		}
 	}
 }

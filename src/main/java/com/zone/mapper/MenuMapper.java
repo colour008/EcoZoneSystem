@@ -52,4 +52,19 @@ public interface MenuMapper {
 	 * 根据用户ID查询菜单树
 	 */
 	List<Menu> selectMenuTreeByUserId(Long userId);
+
+	/**
+	 * 根据权限标识查询菜单
+	 */
+	Menu checkPermsUnique(String perms);
+
+	/**
+	 * 根据路径查询菜单
+	 */
+	Menu checkPathUnique(String path);
+
+	/**
+	 * 根据组件名称查询菜单
+	 */
+	Menu checkComponentUnique(String component);
 }

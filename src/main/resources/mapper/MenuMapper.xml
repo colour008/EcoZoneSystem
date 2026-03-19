@@ -107,4 +107,28 @@
         AND m.status = 1
         AND m.type IN ('M', 'C')  ORDER BY m.parent_id, m.order_num ASC
     </select>
+
+    <!-- 检查权限标识是否唯一 -->
+    <select id="checkPermsUnique" resultMap="MenuResultMap">
+        SELECT id, perms
+        FROM sys_menu
+        WHERE perms = #{perms}
+        LIMIT 1
+    </select>
+
+    <!-- 检查路径是否唯一 -->
+    <select id="checkPathUnique" resultMap="MenuResultMap">
+        SELECT id, path
+        FROM sys_menu
+        WHERE path = #{path}
+        LIMIT 1
+    </select>
+
+    <!-- 检查组件名称是否唯一 -->
+    <select id="checkComponentUnique" resultMap="MenuResultMap">
+        SELECT id, component
+        FROM sys_menu
+        WHERE component = #{component}
+        LIMIT 1
+    </select>
 </mapper>

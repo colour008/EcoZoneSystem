@@ -184,16 +184,14 @@ const menuOptions = ref([])
 const menuTreeRef = ref(null)
 const activeRoleId = ref(null)
 
-// 高风险权限的标识（可以根据你的数据库实际情况调整）
-const HIGH_RISK_CODES = ['sys:user:list', 'sys:role:list', 'sys:menu:list']
-// 核心系统权限标识，禁止被取消勾选
+// 高风险权限的标识，禁止被取消勾选
 const CORE_PERMS = ['sys:user:list', 'sys:role:list', 'sys:menu:list']
 
 /**
  * 判断一个菜单是否属于高风险权限
  */
 const isHighRisk = (menu) => {
-  return HIGH_RISK_CODES.includes(menu.menuCode) || (menu.children && menu.children.some(isHighRisk))
+  return CORE_PERMS.includes(menu.menuCode) || (menu.children && menu.children.some(isHighRisk))
 }
 
 const queryParams = ref({
