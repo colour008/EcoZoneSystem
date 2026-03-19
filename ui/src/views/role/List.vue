@@ -140,16 +140,13 @@
             :data="menuOptions"
             show-checkbox
             node-key="id"
-            :props="{ label: 'menuName', children: 'children' }"
+            :props="{ label: 'menuName', children: 'children', disabled: 'disabled' }"
             default-expand-all
             highlight-current
         >
           <template #default="{ node, data }">
             <span style="display: flex; align-items: center">
-              <el-icon v-if="data.icon && typeof data.icon === 'string' && !data.icon.includes('#')"
-                       style="margin-right: 8px; font-size: 16px">
-                <component :is="data.icon"/>
-              </el-icon>
+            <svg-icon v-if="data.icon && data.icon !== '#'" :name="data.icon" size="16" style="margin-right: 8px"/>
               <span>{{ node.label }}</span>
             </span>
           </template>
@@ -189,6 +186,8 @@ const activeRoleId = ref(null)
 
 // 高风险权限的标识（可以根据你的数据库实际情况调整）
 const HIGH_RISK_CODES = ['sys:user:list', 'sys:role:list', 'sys:menu:list']
+// 核心系统权限标识，禁止被取消勾选
+const CORE_PERMS = ['sys:user:list', 'sys:role:list', 'sys:menu:list']
 
 /**
  * 判断一个菜单是否属于高风险权限
@@ -314,7 +313,6 @@ const handlePermission = async (row) => {
   treeLoading.value = true
 
   try {
-    // 1. 先并发获取菜单树和当前角色的权限 ID
     const [resTree, resKeys] = await Promise.all([
       menuApi.list(),
       roleApi.getRoleMenus(row.id)
@@ -323,36 +321,43 @@ const handlePermission = async (row) => {
     const allMenus = resTree.data || []
     const roleMenuIds = resKeys.data || []
 
-    // 2. 定义递归处理函数
+    // 递归处理菜单树
     const processMenus = (menus) => {
       return menus.map(node => {
-        let disabled = false
+        const children = node.children ? processMenus(node.children) : []
+        let isDisabled = false
 
-        if (myLevel.value !== 0) {
-          // 规则1：高风险权限直接禁用
-          if (isHighRisk(node)) {
-            disabled = true
-          }
-          // 规则2：禁止取消已有权限（实现“不可取消本级已分配权限”）
-          else if (roleMenuIds.includes(node.id)) {
-            disabled = true
+        // 核心判定 1：防误触逻辑
+        // 只有当我们在为“超级管理员”(ROLE_ADMIN) 分配权限时，才禁用核心权限勾选
+        if (row.roleCode === 'ROLE_ADMIN') {
+          const isCore = CORE_PERMS.includes(node.perms)
+          const hasDisabledChild = children.some(c => c.disabled)
+          isDisabled = isCore || hasDisabledChild
+        }
+
+            // 核心判定 2：职级越权逻辑（根据你之前的 myLevel 逻辑）
+            // 如果当前登录人的职级(myLevel)不是超管(0)，且该权限原本就不在当前人的权限范围内，则应该禁用
+        // 或者：如果当前角色不是正在操作超管，但你希望限制非超管用户分配这些敏感权限
+        else if (myLevel.value !== 0) {
+          // 这里可以根据业务增加限制，比如非超管不能给别人发系统管理权限
+          if (CORE_PERMS.includes(node.perms)) {
+            isDisabled = true
           }
         }
 
         return {
           ...node,
-          disabled,
-          children: node.children ? processMenus(node.children) : []
+          disabled: isDisabled,
+          children
         }
       })
     }
 
-    // 3. 执行过滤并赋值
     menuOptions.value = processMenus(allMenus)
 
     await nextTick()
 
-    // 4. 设置勾选状态（逻辑保持不变）
+    // 设置勾选状态（保持叶子节点逻辑）
     if (menuTreeRef.value) {
       const leafKeys = []
       const getLeafKeys = (nodes) => {
