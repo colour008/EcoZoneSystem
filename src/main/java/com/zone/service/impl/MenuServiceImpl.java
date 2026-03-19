@@ -178,6 +178,7 @@ public class MenuServiceImpl implements MenuService {
 
 		// 1. 通过角色编码判断权限
 		if (SecurityUtils.isAdmin()) {
+			log.info(">>> 识别成功：超级管理员权限模式");
 			log.info("超级管理员 {} 正在加载全量动态路由", userId);
 			// 超管加载所有 目录(M)和菜单(C)，且状态必须为 正常(1)
 			menus = menuMapper.listAll().stream()
@@ -185,6 +186,7 @@ public class MenuServiceImpl implements MenuService {
 							&& m.getStatus() == 1)
 					.collect(Collectors.toList());
 		} else {
+			log.info(">>> 识别失败：按普通角色模式加载，当前角色：{}", SecurityUtils.getRoleCodes());
 			log.info("普通用户 {} 正在根据角色权限加载路由", userId);
 			// 普通用户通过 XML 关联查询，SQL 中已包含 m.status = 1 过滤
 			menus = menuMapper.selectMenuTreeByUserId(userId);

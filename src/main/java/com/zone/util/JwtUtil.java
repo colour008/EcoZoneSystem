@@ -44,7 +44,7 @@ public class JwtUtil {
 	 * 生成 Token (新增 roles 参数)
 	 * @param userId   用户ID
 	 * @param username 用户名
-	 * @param roles    角色编码列表 (如 ["admin", "common"])
+	 * @param roles    角色编码列表 (如 ["ROLE_ADMIN", "ROLE_COMMEN"])
 	 * @return 签名的 JWT 字符串
 	 */
 	public String generateToken(Long userId, String username, List<String> roles) {

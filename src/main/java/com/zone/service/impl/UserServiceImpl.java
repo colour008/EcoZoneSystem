@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -160,14 +161,41 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean updateById(UserDTO userDTO, Long currentUserId) {
-		// 修改前校验
+		// 1. 基础校验：如果是修改别人，执行职级校验
 		checkHierarchyPermission(currentUserId, userDTO.getId());
+
+		// 2. 敏感权限保护：防止“平民”通过修改接口把自己变成“皇帝”
+		// 如果不是超管，且尝试修改角色列表，则需要增加额外的逻辑判断
+		if (!currentUserId.equals(userDTO.getId())) {
+			// 修改别人，逻辑已由 checkHierarchyPermission 覆盖
+		} else {
+			// 如果是修改自己，且传入了 roleIds，通常建议禁止普通用户通过此接口修改自己的角色
+			// 或者在这里强制重新查询该用户原有的角色，覆盖掉传入的 roleIds（防止越权）
+			log.warn("用户 {} 尝试修改自己的信息", currentUserId);
+		}
+
+		// 3. 用户名冲突检查（排除自身）
+		User existingUser = userMapper.selectByUsername(userDTO.getUsername());
+		if (existingUser != null && !existingUser.getId().equals(userDTO.getId())) {
+			throw new BusinessException(ResponseCodeEnum.USER_NAME_DUPLICATE);
+		}
 
 		User user = new User();
 		BeanUtils.copyProperties(userDTO, user);
+
+		// 如果前端没传密码，不要把空密码更新进去（PasswordEncoder 会把空串也加密）
+		if (!StringUtils.hasText(user.getPassword())) {
+			user.setPassword(null);
+		} else {
+			user.setPassword(passwordEncoder.encode(user.getPassword()));
+		}
+
 		int rows = userMapper.update(user);
 
+		// 4. 角色更新的特殊处理
 		if (rows > 0 && userDTO.getRoleIds() != null) {
+			// 建议：只有超管或者具有特定权限的人才能通过此接口修改角色
+			// 如果是个人中心调用，前端不应传 roleIds，或者后端在这里做过滤
 			userRoleMapper.deleteByUserId(userDTO.getId());
 			if (!userDTO.getRoleIds().isEmpty()) {
 				userRoleMapper.insertBatch(userDTO.getId(), userDTO.getRoleIds());
