@@ -69,19 +69,19 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" min-width="250" fixed="right">
+        <el-table-column label="操作" align="center" min-width="240" fixed="right">
           <template #default="scope">
-            <el-button type="primary" plain :icon="Edit" size="small"
+            <el-button link type="primary" plain :icon="Edit" size="small"
                        :disabled="!canIActionRole(scope.row)"
                        @click="handleEdit(scope.row)">编辑
             </el-button>
 
-            <el-button type="success" plain :icon="Setting" size="small"
+            <el-button link type="success" plain :icon="Setting" size="small"
                        :disabled="!canIActionRole(scope.row)"
                        @click="handlePermission(scope.row)">分配权限
             </el-button>
 
-            <el-button type="danger" plain :icon="Delete" size="small"
+            <el-button link type="danger" plain :icon="Delete" size="small"
                        :disabled="!canIActionRole(scope.row)"
                        @click="handleDelete(scope.row)">删除
             </el-button>

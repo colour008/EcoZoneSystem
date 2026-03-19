@@ -104,8 +104,8 @@ public class MenuController {
 	public Result<List<MenuVO>> getRouters() {
 		// 获取登录用户ID
 		Long userId = SecurityUtils.getUserId();
-
-		log.info("用户 {} 正在加载路由", userId);
+		String userName = SecurityUtils.getUsername();
+		log.info("用户 {} 正在加载路由", userName);
 		List<MenuVO> menuTree = menuService.selectMenuTreeByUserId(userId);
 		return Result.success(menuTree);
 	}

@@ -197,6 +197,7 @@ import {ref, onMounted, nextTick} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import menuApi from '@/api/menu'
 import IconSelect from '@/components/IconSelect.vue'
+import {Delete, Edit, Plus} from "@element-plus/icons-vue";
 
 const loading = ref(false)
 const submitLoading = ref(false)

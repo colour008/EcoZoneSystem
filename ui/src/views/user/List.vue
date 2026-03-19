@@ -94,25 +94,26 @@
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" min-width="250" fixed="right">
+        <el-table-column label="操作" align="center" min-width="220" fixed="right">
           <template #default="scope">
-            <el-button type="primary" plain :icon="Edit" size="small"
+            <el-button link type="primary" plain :icon="Edit" size="small"
                        :disabled="!canIAction(scope.row)"
                        @click="handleEdit(scope.row)">
               编辑
             </el-button>
 
-            <el-button type="danger" plain :icon="Delete" size="small"
+            <el-button link type="warning" plain :icon="Warning" size="small"
+                       :disabled="!canIAction(scope.row)"
+                       @click="handleReset(scope.row)">
+              重置密码
+            </el-button>
+
+            <el-button link type="danger" plain :icon="Delete" size="small"
                        :disabled="!canIAction(scope.row)"
                        @click="handleDelete(scope.row)">
               删除
             </el-button>
 
-            <el-button type="warning" plain :icon="Warning" size="small"
-                       :disabled="!canIAction(scope.row)"
-                       @click="handleReset(scope.row)">
-              重置密码
-            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -626,8 +627,8 @@ const handleReset = (row) => {
       const res = await userApi.resetPassword(row.id)
       // res.msg: "密码已重置成功", res.data: "123456"
       ElMessageBox.alert(
-          `用户 <b>${row.realName}</b> 的密码已成功重置为：<br/><br/>
-         <span style="color: #f56c6c; font-size: 20px; font-weight: bold; letter-spacing: 2px;">${res.data}</span><br/><br/>
+          `用户 <b>${row.realName}</b> 的密码重置成功✅️<br/><br/>
+         <span style="color: #f56c6c; font-size: 18px; font-weight: 500; letter-spacing: 1px;">${res.data}</span><br/><br/>
          请告知用户登录后及时修改。`,
           '重置结果',
           {
