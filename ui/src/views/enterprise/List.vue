@@ -358,25 +358,46 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="执照附件" prop="licenseUrl">
-          <el-upload
-              class="license-uploader"
-              action="#"
-              :show-file-list="false"
-              :http-request="handleImageUpload"
-              :before-upload="beforeLicenseUpload"
-              accept=".jpg,.jpeg,.png,.gif"
-          >
-            <img v-if="form.licenseUrl" :src="form.licenseUrl" class="license-img" alt="营业执照"/>
+        <el-form-item label="营业执照附件" prop="licenseUrl">
+          <div class="license-upload-wrapper">
+            <el-upload
+                class="license-uploader"
+                action="#"
+                :show-file-list="false"
+                :http-request="handleImageUpload"
+                :before-upload="beforeLicenseUpload"
+                accept=".jpg,.jpeg,.png,.gif"
+            >
+              <div v-if="form.licenseUrl" class="image-preview-container">
+                <img :src="form.licenseUrl" class="license-img" alt="营业执照附件"/>
+                <div class="image-actions">
+                  <span class="action-item" @click.stop="handlePreview">
+                    <el-icon><ZoomIn/></el-icon>
+                    <span>预览</span>
+                  </span>
+                  <span class="action-item" @click.stop="handleRemove">
+                    <el-icon><Delete/></el-icon>
+                    <span>删除</span>
+                   </span>
+                </div>
+              </div>
 
-            <div v-else class="license-placeholder">
-              <el-icon class="license-icon">
-                <Plus/>
-              </el-icon>
-              <span class="license-text">上传营业执照</span>
-            </div>
-          </el-upload>
-          <div class="upload-tip">支持 JPG/JPEG/PNG/GIF 格式，小于 5MB</div>
+              <div v-else class="license-placeholder">
+                <el-icon class="license-icon">
+                  <Plus/>
+                </el-icon>
+                <span class="license-text">上传营业执照</span>
+              </div>
+            </el-upload>
+
+            <div class="upload-tip">请上传清晰的营业执照扫描件 (支持 JPG/JPEG/PNG/GIF，小于 5MB)</div>
+          </div>
+
+          <el-image-viewer
+              v-if="showViewer"
+              :url-list="[form.licenseUrl]"
+              @close="showViewer = false"
+          />
         </el-form-item>
       </el-form>
 
@@ -395,7 +416,7 @@ import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Search, Refresh, Plus, Check, Close, View, Delete,
-  InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen
+  InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen, ZoomIn
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from "@/utils/upload.js";
@@ -417,6 +438,7 @@ const multipleSelection = ref([])
 const enterpriseTableRef = ref(null)
 const dialogVisible = ref(false)
 const formRef = ref(null)
+const showViewer = ref(false)
 
 // 定义详情弹窗控制
 const detailVisible = ref(false)
@@ -519,6 +541,24 @@ const handleImageUpload = async (options) => {
   } catch (error) {
     ElMessage.error('上传失败，请稍后重试')
   }
+}
+
+// 预览大图
+const handlePreview = () => {
+  if (!form.value.licenseUrl) return
+  showViewer.value = true
+}
+
+// 删除图片
+const handleRemove = () => {
+  ElMessageBox.confirm('确定要删除已上传的执照图片吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    form.value.licenseUrl = ''
+    ElMessage.success('已移除')
+  })
 }
 
 const submitForm = async () => {
@@ -746,12 +786,66 @@ onMounted(() => {
   background-color: #f5f7fa;
 }
 
+/* 预览容器开启定位 */
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* 2. 预览图：核心是 object-fit: cover，让图片充满容器且不变形 */
 .license-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 关键：裁剪并填充，不再有黑边或留白 */
+  object-fit: contain; /* 证件类建议用 contain，不裁剪内容 */
+  background-color: #fff;
   display: block;
+}
+
+/* 核心：遮罩层样式 */
+.image-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑背景 */
+  opacity: 0; /* 初始隐藏 */
+  transition: opacity 0.3s; /* 平滑过渡 */
+  gap: 15px;
+}
+
+/* 鼠标悬停容器时，遮罩层显示 */
+.image-preview-container:hover .image-actions {
+  opacity: 1;
+}
+
+/* 单个按钮样式 */
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.action-item:hover {
+  color: #409EFF; /* 悬停变蓝色 */
+}
+
+.action-item .el-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.action-item span {
+  font-size: 12px;
 }
 
 /* 3. 占位状态：垂直居中布局 */
@@ -761,7 +855,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #8c939d;
-  height: 100%;
 }
 
 .license-icon {
@@ -779,7 +872,6 @@ onMounted(() => {
   font-size: 12px;
   color: #909399;
   margin-top: 10px;
-  margin-left: 10px;
   line-height: 1.4;
 }
 
