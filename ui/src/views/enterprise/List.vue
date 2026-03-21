@@ -62,14 +62,28 @@
       >
         <el-table-column type="selection" width="50" align="center"/>
 
-        <el-table-column label="企业基本信息" min-width="150" align="center">
+        <el-table-column label="企业基本信息" min-width="180" align="center">
           <template #default="scope">
             <div style="font-weight: 200; color: #303133">{{ scope.row.companyName }}</div>
-            <div style="font-size: 12px; color: #6d96e6; margin-top: 4px">
-              <el-icon style="vertical-align: middle">
-                <Postcard/>
-              </el-icon>
+            <div style="font-size: 12px; color: #6d96e6; margin-top: 4px; display: flex; align-items: center; justify-content: center;">
+              <el-icon style="margin-right: 4px"><Postcard/></el-icon>
               信用代码：{{ scope.row.creditCode }}
+
+              <el-tooltip content="点击预览营业执照" placement="top" v-if="scope.row.licenseUrl">
+                <el-image
+                    style="width: 16px; height: 16px; margin-left: 8px; cursor: pointer; color: #409EFF"
+                    :src="scope.row.licenseUrl"
+                    :preview-src-list="[scope.row.licenseUrl]"
+                    preview-teleported
+                >
+                  <template #error>
+                    <el-icon><Picture /></el-icon>
+                  </template>
+                  <template #viewer>
+                    <el-icon @click.stop><View /></el-icon>
+                  </template>
+                </el-image>
+              </el-tooltip>
             </div>
           </template>
         </el-table-column>
@@ -77,7 +91,7 @@
         <el-table-column label="法人/资本" width="160" align="center">
           <template #default="scope">
             <div style="color: #606266">{{ scope.row.legalPerson }}</div>
-            <el-tag size="small" type="primary" effect="plain" style="margin-top: 4px">
+            <el-tag size="small" type="primary" effect="dark" style="margin-top: 4px;border: #0f4780 dotted 1px">
               {{ scope.row.registeredCapital }} 万
             </el-tag>
           </template>
@@ -257,6 +271,22 @@
             </template>
             {{ enterpriseDetail.contactPhone }}
           </el-descriptions-item>
+          <el-descriptions-item label-class-name="desc-label" :span="2">
+            <template #label>
+              <el-icon><Picture /></el-icon>
+              营业执照
+            </template>
+            <div class="detail-license-preview" v-if="enterpriseDetail.licenseUrl">
+              <el-image
+                  :src="enterpriseDetail.licenseUrl"
+                  :preview-src-list="[enterpriseDetail.licenseUrl]"
+                  fit="contain"
+                  class="detail-img"
+                  preview-teleported
+              />
+            </div>
+            <span v-else style="color: #909399; font-size: 12px">未上传附件</span>
+          </el-descriptions-item>
         </el-descriptions>
 
         <div class="opinion-section">
@@ -416,7 +446,8 @@ import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Search, Refresh, Plus, Check, Close, View, Delete,
-  InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen, ZoomIn
+  InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen, ZoomIn,
+  Picture
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from "@/utils/upload.js";
@@ -478,7 +509,8 @@ const rules = {
   ],
   legalPerson: [{required: true, message: '法人代表不能为空', trigger: 'blur'}],
   contactPerson: [{required: true, message: '联系人不能为空', trigger: 'blur'}],
-  contactPhone: [{required: true, message: '联系电话不能为空', trigger: 'blur'}]
+  contactPhone: [{required: true, message: '联系电话不能为空', trigger: 'blur'}],
+  licenseUrl: [{required: true, message: '请上传营业执照附件', trigger: 'change'}]
 }
 
 // 6. 核心业务方法
@@ -537,6 +569,7 @@ const handleImageUpload = async (options) => {
     const url = await uploadFile(options.file)
     // 赋值给表单，这样预览图 <img> 标签就能通过 :src="form.licenseUrl" 显示出来
     form.value.licenseUrl = url
+    formRef.value.validateField('licenseUrl')
     ElMessage.success('执照上传成功')
   } catch (error) {
     ElMessage.error('上传失败，请稍后重试')
@@ -870,7 +903,7 @@ onMounted(() => {
 /* 4. 辅助提示文字 */
 .upload-tip {
   font-size: 12px;
-  color: #909399;
+  color: #ff6c6c;
   margin-top: 10px;
   line-height: 1.4;
 }
@@ -882,5 +915,27 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 详情页图片预览样式 */
+.detail-license-preview {
+  padding: 8px;
+  background-color: #f9f9f9;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  width: fit-content;
+  margin-top: 5px;
+}
+
+.detail-img {
+  width: 200px; /* 详情页展示稍大一点 */
+  height: 140px;
+  display: block;
+  cursor: zoom-in; /* 提示用户可以点击放大 */
+}
+
+/* 确保必填星号与文字对齐 */
+:deep(.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:before) {
+  margin-right: 4px;
 }
 </style>
