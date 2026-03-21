@@ -34,7 +34,57 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	@Autowired
 	private EnterpriseMapper enterpriseMapper;
 
+	// ================== C端自助接口 ==================
+	/**
+	 * 提交入驻申请
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean apply(EnterpriseDTO enterpriseDTO) {
 
+		// 1. 检测信用代码是否重复
+		if (enterpriseMapper.countByCreditCode(enterpriseDTO.getCreditCode()) > 0) {
+			throw new BusinessException(ResponseCodeEnum.ENTERPRISE_CREDIT_CODE_DUPLICATE);
+		}
+
+		// 2. 封装成 Entity
+		Enterprise enterprise = new Enterprise();
+		BeanUtils.copyProperties(enterpriseDTO, enterprise);
+
+		// 3. 绑定当前操作用户，这样“李四”登录后提交，企业就自动记在“李四”名下了
+		enterprise.setUserId(SecurityUtils.getUserId());
+
+		// 4. 默认待审核
+		enterprise.setStatus(0);
+		log.info("用户 {} 提交入驻申请: {}", SecurityUtils.getUsername(), enterprise.getCompanyName());
+
+		// 5. 插入数据库
+		return enterpriseMapper.insert(enterprise) > 0;
+	}
+
+	/**
+	 * 获取企业的入驻信息
+	 *
+	 * @return
+	 */
+	@Override
+	public EnterpriseVO getMyEnterprise() {
+		return null;
+	}
+
+	/**
+	 * 修改入驻信息
+	 *
+	 * @param enterpriseDTO
+	 * @return
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean updateMyEnterprise(EnterpriseDTO enterpriseDTO) {
+		return false;
+	}
+
+	// ================== B端管控接口 ==================
 	/**
 	 * 获取所有企业列表
 	 *
@@ -73,33 +123,6 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	}
 
 	/**
-	 * 提交入驻申请
-	 */
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public boolean apply(EnterpriseDTO enterpriseDTO) {
-
-		// 1. 检测信用代码是否重复
-		if (enterpriseMapper.countByCreditCode(enterpriseDTO.getCreditCode()) > 0) {
-			throw new BusinessException(ResponseCodeEnum.ENTERPRISE_CREDIT_CODE_DUPLICATE);
-		}
-
-		// 2. 封装成 Entity
-		Enterprise enterprise = new Enterprise();
-		BeanUtils.copyProperties(enterpriseDTO, enterprise);
-
-		// 3. 绑定当前操作用户，这样“李四”登录后提交，企业就自动记在“李四”名下了
-		enterprise.setUserId(SecurityUtils.getUserId());
-
-		// 4. 默认待审核
-		enterprise.setStatus(0);
-		log.info("用户 {} 提交入驻申请: {}", SecurityUtils.getUsername(), enterprise.getCompanyName());
-
-		// 5. 插入数据库
-		return enterpriseMapper.insert(enterprise) > 0;
-	}
-
-	/**
 	 * 审核入驻申请
 	 *
 	 * @param id     企业ID
@@ -125,5 +148,36 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return rows > 0;
 	}
 
+	/**
+	 * 获取企业详情
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Override
+	public EnterpriseVO getDetailById(Long id) {
+		return null;
+	}
 
+	/**
+	 * 迁出企业
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Override
+	public boolean moveOut(Long id) {
+		return false;
+	}
+
+	/**
+	 * 删除企业
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Override
+	public boolean deleteById(Long id) {
+		return false;
+	}
 }

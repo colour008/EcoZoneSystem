@@ -4,7 +4,7 @@
     <div class="login-left">
       <div class="brand-logo">
         <div class="logo-icon">
-          <el-icon :size="20">
+          <el-icon :size="25" color="var(--text-main)">
             <OfficeBuilding/>
           </el-icon>
         </div>

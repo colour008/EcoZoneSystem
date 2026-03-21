@@ -15,15 +15,7 @@ import java.util.List;
  */
 public interface EnterpriseService {
 
-	/**
-	 * 获取所有企业列表
-	 *
-	 * @return
-	 */
-	List<EnterpriseVO> listAll();
-
-
-
+	// ================== C端自助接口 ==================
 	/**
 	 * 提交入驻申请
 	 *
@@ -31,6 +23,31 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	boolean apply(EnterpriseDTO enterpriseDTO);
+
+	/**
+	 * 获取当前用户入驻信息
+	 *
+	 * @return
+	 */
+	EnterpriseVO getMyEnterprise();
+
+	/**
+	 * 修改入驻信息
+	 *
+	 * @param enterpriseDTO
+	 * @return
+	 */
+	boolean updateMyEnterprise(EnterpriseDTO enterpriseDTO);
+
+
+	// ================== B端管控接口 ==================
+
+	/**
+	 * 获取所有企业列表
+	 *
+	 * @return
+	 */
+	List<EnterpriseVO> listAll();
 
 	/**
 	 * 审核入驻申请
@@ -48,4 +65,28 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	PageResult<EnterpriseVO> getEnterprisePage(EnterprisePageQueryDTO dto);
+
+	/**
+	 * 获取详情
+	 *
+	 * @param id
+	 * @return
+	 */
+	EnterpriseVO getDetailById(Long id);
+
+	/**
+	 * 迁出
+	 *
+	 * @param id
+	 * @return
+	 */
+	boolean moveOut(Long id);
+
+	/**
+	 * 删除
+	 *
+	 * @param id
+	 * @return
+	 */
+	boolean deleteById(Long id);
 }

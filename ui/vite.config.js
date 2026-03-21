@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    open: '/login', // 启动直接打开登录页
+    open: '/',
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
