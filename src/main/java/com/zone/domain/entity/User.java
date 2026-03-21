@@ -1,6 +1,6 @@
-package com.zone.entity.sys;
+package com.zone.domain.entity;
 
-import com.zone.entity.base.BaseEntity;
+import com.zone.domain.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -1,12 +1,12 @@
-package com.zone.entity.dto;
+package com.zone.domain.dto;
 
-import com.zone.entity.base.PageQuery;
+import com.zone.domain.base.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * @Author: JamHoo
- * @Description: 角色查询参数
+ * @Description: 角色分页查询参数
  * @Date: 2026/3/16 21:28
  * @Version: 1.0
  */

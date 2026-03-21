@@ -1,10 +1,10 @@
 package com.zone.service;
 
-import com.zone.entity.base.PageResult;
-import com.zone.entity.dto.UserDTO;
-import com.zone.entity.dto.UserPageQueryDTO;
-import com.zone.entity.sys.User;
-import com.zone.entity.vo.UserVO;
+import com.zone.domain.base.PageResult;
+import com.zone.domain.dto.UserDTO;
+import com.zone.domain.dto.UserPageQueryDTO;
+import com.zone.domain.entity.User;
+import com.zone.domain.vo.UserVO;
 
 import java.util.List;
 

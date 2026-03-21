@@ -1,9 +1,9 @@
 package com.zone.controller;
 
 import com.zone.common.response.Result;
-import com.zone.entity.dto.UserLoginDTO;
-import com.zone.entity.dto.UserRegisterDTO;
-import com.zone.entity.vo.LoginResultVO;
+import com.zone.domain.dto.UserLoginDTO;
+import com.zone.domain.dto.UserRegisterDTO;
+import com.zone.domain.vo.LoginResultVO;
 import com.zone.service.LoginService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

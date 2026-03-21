@@ -10,7 +10,7 @@
     </sql>
 
     <!-- ResultMap -->
-    <resultMap id="UserResultMap" type="com.zone.entity.sys.User">
+    <resultMap id="UserResultMap" type="com.zone.domain.entity.User">
         <id column="id" property="id"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
@@ -22,7 +22,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <resultMap id="UserPageResultMap" type="com.zone.entity.sys.User" extends="UserResultMap">
+    <resultMap id="UserPageResultMap" type="com.zone.domain.entity.User" extends="UserResultMap">
         <result column="role_names" property="roleName"/>
     </resultMap>
 

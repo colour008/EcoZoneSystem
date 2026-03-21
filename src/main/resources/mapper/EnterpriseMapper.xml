@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zone.mapper.EnterpriseMapper">
+
+    <sql id="Base_Column_List">
+        id, user_id, company_name, credit_code, building_no, industry, contact_person, contact_phone, status, create_time, update_time
+    </sql>
+
+    <!-- 企业列表信息 -->
+    <resultMap id="EnterpriseResultMap" type="com.zone.domain.entity.Enterprise">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="company_name" property="companyName"/>
+        <result column="credit_code" property="creditCode"/>
+        <result column="building_no" property="buildingNo"/>
+        <result column="industry" property="industry"/>
+        <result column="contact_person" property="contactPerson"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 企业分页查询返回信息 -->
+    <resultMap id="EnterpriseVOResultMap" type="com.zone.domain.vo.EnterpriseVO" extends="EnterpriseResultMap">
+        <result column="real_name" property="userName"/>
+    </resultMap>
+
+    <!-- 获取所有企业信息 -->
+    <select id="listAll" resultMap="EnterpriseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from biz_enterprise
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 获取企业分页信息 -->
+    <select id="getEnterprisePage" resultMap="EnterpriseVOResultMap">
+        SELECT
+        e.*,
+        u.real_name
+        FROM biz_enterprise e
+        LEFT JOIN sys_user u ON e.user_id = u.id
+        <where>
+
+            <if test="userName != null and userName != ''">
+                AND u.real_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+
+            <if test="companyName != null and companyName != ''">
+                AND e.company_name LIKE CONCAT('%', #{companyName}, '%')
+            </if>
+
+            <if test="creditCode != null and creditCode != ''">
+                AND e.credit_code LIKE CONCAT('%', #{creditCode}, '%')
+            </if>
+
+            <if test="buildingNo != null and buildingNo != ''">
+                AND e.building_no LIKE CONCAT('%', #{buildingNo}, '%')
+            </if>
+
+            <if test="industry != null and industry != ''">
+                AND e.industry = #{industry}
+            </if>
+
+            <if test="contactPerson != null and contactPerson != ''">
+                AND e.contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+            </if>
+
+            <if test="status != null">
+                AND e.status = #{status}
+            </if>
+        </where>
+        ORDER BY e.id
+    </select>
+
+    <!-- 新增入驻申请 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_enterprise (
+        user_id, company_name, credit_code, building_no,
+        industry, contact_person, contact_phone, status,
+        create_time, update_time
+        ) values (
+        #{userId}, #{companyName}, #{creditCode}, #{buildingNo},
+        #{industry}, #{contactPerson}, #{contactPhone}, 0,
+        NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 信用代码重复查询 -->
+    <select id="countByCreditCode" resultType="java.lang.Integer">
+        select count(1) from biz_enterprise where credit_code = #{creditCode}
+    </select>
+
+    <!-- 修改入驻申请状态 -->
+    <update id="updateStatus">
+        update biz_enterprise
+        set status = #{status},
+        update_time = NOW()
+        where id = #{id}
+    </update>
+
+    <!-- 修改企业信息 -->
+    <update id="update">
+        UPDATE biz_enterprise
+        <set>
+            <if test="companyName != null and companyName != ''">company_name = #{companyName},</if>
+            <if test="buildingNo != null and buildingNo != ''">building_no = #{buildingNo},</if>
+            <if test="industry != null and industry != ''">industry = #{industry},</if>
+            <if test="contactPerson != null and contactPerson != ''">contact_person = #{contactPerson},</if>
+            <if test="contactPhone != null and contactPhone != ''">contact_phone = #{contactPhone},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除企业 -->
+    <delete id="deleteByIds">
+        DELETE FROM biz_enterprise WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

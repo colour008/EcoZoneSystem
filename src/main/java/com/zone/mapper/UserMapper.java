@@ -1,10 +1,8 @@
 package com.zone.mapper;
 
 import com.github.pagehelper.Page;
-import com.zone.entity.dto.UserPageQueryDTO;
-import com.zone.entity.sys.User;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.zone.domain.dto.UserPageQueryDTO;
+import com.zone.domain.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

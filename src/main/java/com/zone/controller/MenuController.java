@@ -1,13 +1,12 @@
 package com.zone.controller;
 
 import com.zone.common.response.Result;
-import com.zone.entity.sys.Menu;
-import com.zone.entity.vo.MenuVO;
+import com.zone.domain.entity.Menu;
+import com.zone.domain.vo.MenuVO;
 import com.zone.service.MenuService;
 import com.zone.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

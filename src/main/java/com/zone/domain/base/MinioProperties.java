@@ -1,4 +1,4 @@
-package com.zone.entity.base;
+package com.zone.domain.base;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

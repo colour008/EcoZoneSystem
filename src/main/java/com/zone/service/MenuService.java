@@ -1,8 +1,8 @@
 package com.zone.service;
 
 
-import com.zone.entity.sys.Menu;
-import com.zone.entity.vo.MenuVO;
+import com.zone.domain.entity.Menu;
+import com.zone.domain.vo.MenuVO;
 
 import java.util.List;
 

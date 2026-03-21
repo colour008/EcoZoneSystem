@@ -37,7 +37,7 @@ public enum ResponseCodeEnum {
 	// ===================== 企业档案相关（4101-4199） =====================
 	ENTERPRISE_NOT_EXIST(4101, "企业档案不存在"),
 	ENTERPRISE_NAME_DUPLICATE(4102, "企业名称已存在"),
-	ENTERPRISE_CREDIT_CODE_DUPLICATE(4103, "统一社会信用代码已存在"),
+	ENTERPRISE_CREDIT_CODE_DUPLICATE(4103, "统一社会信用代码已存在，请核实"),
 	ENTERPRISE_STATUS_ERROR(4104, "企业状态异常，无法操作"),
 	ENTERPRISE_USER_BIND_ERROR(4105, "该账号已绑定企业，请勿重复绑定"),
 

@@ -1,9 +1,8 @@
 package com.zone.mapper;
 
 import com.github.pagehelper.Page;
-import com.zone.entity.dto.RoleDTO;
-import com.zone.entity.dto.RolePageQueryDTO;
-import com.zone.entity.sys.Role;
+import com.zone.domain.dto.RolePageQueryDTO;
+import com.zone.domain.entity.Role;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

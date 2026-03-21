@@ -1,8 +1,8 @@
 package com.zone.service.impl;
 
 import com.zone.common.exception.BusinessException;
-import com.zone.entity.sys.Menu;
-import com.zone.entity.vo.MenuVO;
+import com.zone.domain.entity.Menu;
+import com.zone.domain.vo.MenuVO;
 import com.zone.mapper.MenuMapper;
 import com.zone.service.MenuService;
 import com.zone.util.SecurityUtils;

@@ -2,11 +2,11 @@ package com.zone.service.impl;
 
 import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
-import com.zone.entity.dto.UserRegisterDTO;
-import com.zone.entity.sys.Role;
-import com.zone.entity.sys.User;
-import com.zone.entity.vo.LoginResultVO;
-import com.zone.entity.vo.UserVO;
+import com.zone.domain.dto.UserRegisterDTO;
+import com.zone.domain.entity.Role;
+import com.zone.domain.entity.User;
+import com.zone.domain.vo.LoginResultVO;
+import com.zone.domain.vo.UserVO;
 import com.zone.mapper.MenuMapper;
 import com.zone.mapper.RoleMapper;
 import com.zone.mapper.UserMapper;

@@ -1,11 +1,11 @@
 package com.zone.controller;
 
 import com.zone.common.response.Result;
-import com.zone.entity.base.PageResult;
-import com.zone.entity.dto.RoleDTO;
-import com.zone.entity.dto.RolePageQueryDTO;
-import com.zone.entity.sys.Role;
-import com.zone.entity.vo.RoleVO;
+import com.zone.domain.base.PageResult;
+import com.zone.domain.dto.RoleDTO;
+import com.zone.domain.dto.RolePageQueryDTO;
+import com.zone.domain.entity.Role;
+import com.zone.domain.vo.RoleVO;
 import com.zone.service.MenuService;
 import com.zone.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;

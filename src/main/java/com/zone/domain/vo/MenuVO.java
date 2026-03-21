@@ -1,30 +1,25 @@
-package com.zone.entity.sys;
+package com.zone.domain.vo;
 
-import com.zone.entity.base.BaseEntity;
-import com.zone.entity.vo.MenuVO;
+import com.zone.domain.base.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @Author: JamHoo
- * @Description: 菜单实体类
- * @Date: 2026/3/18 20:30
+ * @Description: 菜单VO
+ * @Date: 2026/3/18 20:33
  * @Version: 1.0
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class Menu extends BaseEntity {
-	@Serial
-	private static final long serialVersionUID = 1L;
-	private Long id;
+@NoArgsConstructor
+public class MenuVO extends BaseEntity {
 	/**
 	 * 父菜单ID，一级菜单为0
 	 */

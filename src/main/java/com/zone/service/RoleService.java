@@ -1,9 +1,9 @@
 package com.zone.service;
 
-import com.zone.entity.base.PageResult;
-import com.zone.entity.dto.RoleDTO;
-import com.zone.entity.dto.RolePageQueryDTO;
-import com.zone.entity.sys.Role;
+import com.zone.domain.base.PageResult;
+import com.zone.domain.dto.RoleDTO;
+import com.zone.domain.dto.RolePageQueryDTO;
+import com.zone.domain.entity.Role;
 
 import java.util.List;
 

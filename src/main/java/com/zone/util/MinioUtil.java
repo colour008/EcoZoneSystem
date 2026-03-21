@@ -3,7 +3,7 @@ package com.zone.util;
 import cn.hutool.core.lang.UUID;
 import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
-import com.zone.entity.base.MinioProperties;
+import com.zone.domain.base.MinioProperties;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.RequiredArgsConstructor;

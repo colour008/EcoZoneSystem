@@ -1,4 +1,4 @@
-package com.zone.entity.dto;
+package com.zone.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

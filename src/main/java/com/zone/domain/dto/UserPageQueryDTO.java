@@ -1,6 +1,6 @@
-package com.zone.entity.dto;
+package com.zone.domain.dto;
 
-import com.zone.entity.base.PageQuery;
+import com.zone.domain.base.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

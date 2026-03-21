@@ -1,6 +1,6 @@
 package com.zone.mapper;
 
-import com.zone.entity.sys.Menu;
+import com.zone.domain.entity.Menu;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

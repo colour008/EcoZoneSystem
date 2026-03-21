@@ -1,7 +1,7 @@
 package com.zone.service;
 
-import com.zone.entity.dto.UserRegisterDTO;
-import com.zone.entity.vo.LoginResultVO;
+import com.zone.domain.dto.UserRegisterDTO;
+import com.zone.domain.vo.LoginResultVO;
 
 public interface LoginService {
 	/**

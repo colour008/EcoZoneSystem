@@ -1,4 +1,4 @@
-package com.zone.entity.base;
+package com.zone.domain.base;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

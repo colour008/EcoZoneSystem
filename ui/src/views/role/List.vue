@@ -185,7 +185,7 @@ const menuTreeRef = ref(null)
 const activeRoleId = ref(null)
 
 // 高风险权限的标识，禁止被取消勾选
-const CORE_PERMS = ['sys:user:list', 'sys:role:list', 'sys:menu:list']
+const CORE_PERMS = ['entity:user:list', 'entity:role:list', 'entity:menu:list']
 
 /**
  * 判断一个菜单是否属于高风险权限

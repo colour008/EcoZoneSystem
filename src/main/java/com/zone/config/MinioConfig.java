@@ -1,6 +1,6 @@
 package com.zone.config;
 
-import com.zone.entity.base.MinioProperties;
+import com.zone.domain.base.MinioProperties;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
