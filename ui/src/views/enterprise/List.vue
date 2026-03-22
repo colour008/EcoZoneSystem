@@ -74,7 +74,7 @@
 
               <el-tooltip content="点击预览营业执照" placement="top" v-if="scope.row.licenseUrl">
                 <el-image
-                    style="width: 16px; height: 16px; margin-left: 8px; cursor: pointer; color: #409EFF"
+                    style="width: 30px; height: 20px; margin-left: 8px; cursor: pointer; color: #409EFF; border: rgba(170,189,205,0.87) 1px groove"
                     :src="scope.row.licenseUrl"
                     :preview-src-list="[scope.row.licenseUrl]"
                     preview-teleported
@@ -1059,7 +1059,7 @@ onMounted(() => {
 /* 详情页图片预览样式 */
 .detail-license-preview {
   padding: 8px;
-  background-color: #f9f9f9;
+  background-color: transparent;
   border: 1px solid #ebeef5;
   border-radius: 4px;
   width: fit-content;
