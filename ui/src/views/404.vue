@@ -16,9 +16,10 @@
       <p class="error-desc">抱歉，您访问的页面不存在或已被移除。请检查输入的地址是否正确。</p>
 
       <div class="error-actions">
-        <el-button type="primary" size="large" @click="$router.push('/index/dashboard')">
-          返回工作台
+        <el-button type="primary" size="large" @click="handleBack">
+          {{ backButtonText }}
         </el-button>
+
         <el-button size="large" @click="handleToLogin" plain>
           返回登录页
         </el-button>
@@ -32,14 +33,46 @@
 </template>
 
 <script setup>
+import {computed} from 'vue'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '@/store/user'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// 1. 权限与角色状态判断
+const hasToken = computed(() => !!userStore.token)
+const roles = computed(() => userStore.roles || [])
+const isAdmin = computed(() => roles.value.includes('ROLE_ADMIN') || roles.value.includes('ROLE_STAFF'))
+const isEnterprise = computed(() => roles.value.includes('ROLE_ENTERPRISE'))
+
+// 2. 动态显示按钮文字
+const backButtonText = computed(() => {
+  if (!hasToken.value) return '返回门户首页'
+  if (isEnterprise.value) return '返回申请页面'
+  return '返回工作台'
+})
+
+// 3. 核心分流跳转逻辑
+const handleBack = () => {
+  if (!hasToken.value) {
+    // 游客：跳转到门户首页
+    router.push('/')
+  } else if (isAdmin.value) {
+    // 管理员/专员：跳转到后台主控台
+    router.push('/index/dashboard')
+  } else if (isEnterprise.value) {
+    // 企业用户：跳转到其专属的企业入驻页面
+    router.push('/my-enterprise')
+  } else {
+    // 兜底方案：返回首页
+    router.push('/')
+  }
+}
+
+// 4. 登出并返回登录页
 const handleToLogin = () => {
-  userStore.logout() // 清除登录状态，确保能重新登录
+  userStore.logout() // 清理 Pinia 和 LocalStorage 状态
   router.push('/login')
 }
 </script>
@@ -94,15 +127,15 @@ const handleToLogin = () => {
   gap: 20px;
 }
 
-/* 适配你项目中的橙色风格 */
+/* 适配 UI 蓝色风格 */
 :deep(.el-button--primary) {
   background-color: #0082ec;
   border-color: #2895ef;
 }
 
 :deep(.el-button--primary:hover) {
-  background-color: #0082ec;
-  border-color: #2895ef;
+  background-color: #1a92f0;
+  border-color: #1a92f0;
 }
 
 .footer-copyright {
