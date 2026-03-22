@@ -83,10 +83,19 @@ public interface EnterpriseService {
 	boolean moveOut(Long id);
 
 	/**
+	 * 修改
+	 *
+	 * @param enterpriseDTO
+	 * @return
+	 */
+	boolean updateEnterprise(EnterpriseDTO enterpriseDTO);
+
+	/**
 	 * 删除
 	 *
 	 * @param id
 	 * @return
 	 */
 	boolean deleteById(Long id);
+
 }

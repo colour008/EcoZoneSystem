@@ -1,6 +1,7 @@
 package com.zone.controller;
 
 import com.zone.common.response.Result;
+import com.zone.domain.dto.MenuDTO;
 import com.zone.domain.entity.Menu;
 import com.zone.domain.vo.MenuVO;
 import com.zone.service.MenuService;
@@ -45,9 +46,9 @@ public class MenuController {
 	 */
 	@PostMapping("/add")
 	@Operation(summary = "新增菜单")
-	public Result<String> add(@RequestBody Menu menu) {
-		log.info("新增菜单: {}", menu.getMenuName());
-		boolean success = menuService.save(menu);
+	public Result<String> add(@RequestBody MenuDTO menuDTO) {
+		log.info("新增菜单: {}", menuDTO.getMenuName());
+		boolean success = menuService.save(menuDTO);
 		return success ? Result.success("新增成功") : Result.sysError("新增失败");
 	}
 
@@ -56,12 +57,12 @@ public class MenuController {
 	 */
 	@PutMapping("/{id}")
 	@Operation(summary = "修改菜单")
-	public Result<String> update(@PathVariable Long id, @RequestBody Menu menu) {
+	public Result<String> update(@PathVariable Long id, @RequestBody MenuDTO menuDTO) {
 		log.info("修改菜单ID: {}", id);
-		if (!id.equals(menu.getId())) {
+		if (!id.equals(menuDTO.getId())) {
 			return Result.bizError(400, "请求ID不一致");
 		}
-		boolean success = menuService.updateById(menu);
+		boolean success = menuService.updateById(menuDTO);
 		return success ? Result.success("修改成功") : Result.sysError("修改失败");
 	}
 

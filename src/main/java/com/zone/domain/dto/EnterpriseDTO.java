@@ -25,6 +25,7 @@ public class EnterpriseDTO {
 	private String contactPerson;   // 企业联系人
 	private String contactPhone;    // 联系方式
 	private String licenseUrl;      // 营业执照附件（文件上传后的路径）
+	private Integer status;         // 0:待审核 1:已入驻 2:驳回 3:迁出
 
 	// 审核意见通常在 B 端审核接口单独传，但为了通用也可以保留
 	private String auditOpinion;

@@ -73,14 +73,14 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into biz_enterprise (
+        INSERT INTO biz_enterprise (
         user_id, company_name, credit_code, legal_person, registered_capital,
-        industry, contact_person, contact_phone, license_url, status,
-        create_time, update_time
-        ) values (
+        building_no, rent_area, industry, contact_person, contact_phone,
+        license_url, status, create_time, update_time
+        ) VALUES (
         #{userId}, #{companyName}, #{creditCode}, #{legalPerson}, #{registeredCapital},
-        #{industry}, #{contact_person}, #{contactPhone}, #{licenseUrl}, 0,
-        NOW(), NOW()
+        #{buildingNo}, #{rentArea}, #{industry}, #{contactPerson}, #{contactPhone},
+        #{licenseUrl}, 0, NOW(), NOW()
         )
     </insert>
 
@@ -97,10 +97,11 @@
         where id = #{id}
     </update>
 
-    <update id="update">
+    <update id="updateById">
         UPDATE biz_enterprise
         <set>
             <if test="companyName != null and companyName != ''">company_name = #{companyName},</if>
+            <if test="creditCode != null and creditCode != ''">credit_code = #{creditCode},</if>
             <if test="legalPerson != null">legal_person = #{legalPerson},</if>
             <if test="registeredCapital != null">registered_capital = #{registeredCapital},</if>
             <if test="buildingNo != null">building_no = #{buildingNo},</if>
@@ -128,4 +129,12 @@
         DELETE FROM biz_enterprise WHERE id = #{id}
     </delete>
 
+    <select id="countByCreditCode" resultType="int">
+        SELECT COUNT(*)
+        FROM biz_enterprise
+        WHERE credit_code = #{creditCode}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
 </mapper>

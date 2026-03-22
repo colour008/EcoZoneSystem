@@ -43,9 +43,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	public boolean apply(EnterpriseDTO enterpriseDTO) {
 
 		// 1. 检测信用代码是否重复
-		if (enterpriseMapper.countByCreditCode(enterpriseDTO.getCreditCode()) > 0) {
-			throw new BusinessException(ResponseCodeEnum.ENTERPRISE_CREDIT_CODE_DUPLICATE);
-		}
+		checkCreditCodeUnique(enterpriseDTO.getCreditCode(), null);
 
 		// 2. 封装成 Entity
 		Enterprise enterprise = new Enterprise();
@@ -170,6 +168,33 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return false;
 	}
 
+	@Override
+	public boolean updateEnterprise(EnterpriseDTO enterpriseDTO) {
+		// 1. 基础校验
+		if (enterpriseDTO.getId() == null) {
+			throw new BusinessException(ResponseCodeEnum.PARAM_ERROR);
+		}
+
+		// 2. 权限校验
+		if (!SecurityUtils.isAdmin() && !SecurityUtils.getRoleCodes().contains("ROLE_STAFF")) {
+			throw new BusinessException(ResponseCodeEnum.PERMISSION_DENIED);
+		}
+
+		// 3. 唯一性校验：传入当前 DTO 的 creditCode 和 ID
+		// 这样如果用户没改信用代码，SQL 会执行: WHERE credit_code = '原值' AND id != '原ID'，结果为 0，通过校验
+		checkCreditCodeUnique(enterpriseDTO.getCreditCode(), enterpriseDTO.getId());
+
+		// 4. 执行更新
+		Enterprise enterprise = new Enterprise();
+		BeanUtils.copyProperties(enterpriseDTO, enterprise);
+
+		log.info("管理员 {} 正在修改企业 ID: {}", SecurityUtils.getUsername(), enterpriseDTO.getId());
+
+		// 原生 MyBatis 通常返回受影响行数
+		int rows = enterpriseMapper.updateById(enterprise);
+		return rows > 0;
+	}
+
 	/**
 	 * 删除企业
 	 *
@@ -179,5 +204,26 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	@Override
 	public boolean deleteById(Long id) {
 		return false;
+	}
+
+	/**
+	 * 校验信用代码唯一性
+	 */
+	private void checkCreditCodeUnique(String creditCode, Long excludeId) {
+		// 强制处理：如果是新增，ID 可能是 0 或空，统一视为 null
+		if (excludeId != null && excludeId <= 0) {
+			excludeId = null;
+		}
+		if (creditCode == null || creditCode.trim().isEmpty()) {
+			return;
+		}
+
+		// 调用 Mapper 查询数据库中是否存在冲突
+		int count = enterpriseMapper.countByCreditCode(creditCode, excludeId);
+
+		if (count > 0) {
+			// 这里抛出你的业务异常
+			throw new BusinessException(ResponseCodeEnum.ENTERPRISE_CREDIT_CODE_DUPLICATE);
+		}
 	}
 }

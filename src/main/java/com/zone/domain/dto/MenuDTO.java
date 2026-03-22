@@ -1,4 +1,4 @@
-package com.zone.domain.entity;
+package com.zone.domain.dto;
 
 import com.zone.domain.base.BaseEntity;
 import com.zone.domain.vo.MenuVO;
@@ -7,23 +7,20 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @Author: JamHoo
- * @Description: 菜单实体类
- * @Date: 2026/3/18 20:30
+ * @Description: 菜单权限参数
+ * @Date: 2026/3/22 09:09
  * @Version: 1.0
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Menu extends BaseEntity {
-	@Serial
-	private static final long serialVersionUID = 1L;
+public class MenuDTO extends BaseEntity {
 	/**
 	 * 父菜单ID，一级菜单为0
 	 */

@@ -34,6 +34,30 @@ const enterpriseApi = {
             method: 'put',
             params: { status }
         })
+    },
+
+    /**
+     * 修改企业信息 (更新)
+     * 对应后端 updateEnterprise(EnterpriseDTO enterpriseDTO)
+     */
+    update(data) {
+        return request({
+            url: '/enterprise/update',
+            method: 'put',
+            data
+        })
+    },
+
+    /**
+     * 删除企业 (支持批量)
+     * @param {Array} ids ID数组
+     */
+    delete(ids) {
+        return request({
+            url: '/enterprise/delete',
+            method: 'delete',
+            data: ids
+        })
     }
 }
 

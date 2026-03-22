@@ -116,6 +116,16 @@ public class EnterpriseController {
 		return success ? Result.success("迁出办理成功") : Result.sysError("操作失败");
 	}
 
+	/**
+	 * 修改企业信息
+	 */
+	@PutMapping("/update")
+	@Operation(summary = "修改企业信息")
+	public Result<String> updateById(@RequestBody EnterpriseDTO enterpriseDTO) {
+		log.info("管理员更新企业信息");
+		boolean success = enterpriseService.updateEnterprise(enterpriseDTO);
+		return success ? Result.success("更新成功") : Result.sysError("更新失败");
+	}
 
 	/**
 	 * 删除企业

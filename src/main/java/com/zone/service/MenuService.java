@@ -1,6 +1,7 @@
 package com.zone.service;
 
 
+import com.zone.domain.dto.MenuDTO;
 import com.zone.domain.entity.Menu;
 import com.zone.domain.vo.MenuVO;
 
@@ -32,18 +33,18 @@ public interface MenuService {
 	/**
 	 * 新增菜单
 	 *
-	 * @param menu
+	 * @param menuDTO
 	 * @return
 	 */
-	boolean save(Menu menu);
+	boolean save(MenuDTO menuDTO);
 
 	/**
 	 * 修改菜单
 	 *
-	 * @param menu
+	 * @param menuDTO
 	 * @return
 	 */
-	boolean updateById(Menu menu);
+	boolean updateById(MenuDTO menuDTO);
 
 	/**
 	 * 检查菜单下是否有子菜单

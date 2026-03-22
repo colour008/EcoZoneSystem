@@ -1,6 +1,8 @@
 package com.zone.service.impl;
 
+import com.zone.common.enums.ResponseCodeEnum;
 import com.zone.common.exception.BusinessException;
+import com.zone.domain.dto.MenuDTO;
 import com.zone.domain.entity.Menu;
 import com.zone.domain.vo.MenuVO;
 import com.zone.mapper.MenuMapper;
@@ -68,7 +70,9 @@ public class MenuServiceImpl implements MenuService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean save(Menu menu) {
+	public boolean save(MenuDTO menuDTO) {
+		Menu menu = new Menu();
+		BeanUtils.copyProperties(menuDTO, menu);
 		// 执行唯一性检查
 		checkMenuUnique(menu);
 
@@ -103,14 +107,19 @@ public class MenuServiceImpl implements MenuService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean updateById(Menu menu) {
+	public boolean updateById(MenuDTO menuDTO) {
+		if (menuDTO.getId()== null){
+			throw new BusinessException(ResponseCodeEnum.PARAM_ERROR);
+		}
 		// 在修改前可以做个简单校验：不能把父菜单指向自己
-		if (menu.getId() != null && menu.getId().equals(menu.getParentId())) {
+		if (menuDTO.getId().equals(menuDTO.getParentId())) {
 			throw new BusinessException("上级菜单不能选择当前菜单本身");
 		}
-
+		Menu menu = new Menu();
 		// 执行唯一性检查
 		checkMenuUnique(menu);
+
+		BeanUtils.copyProperties(menuDTO, menu);
 
 		log.info("开始更新菜单数据，ID: {}", menu.getId());
 		return menuMapper.updateById(menu) > 0;

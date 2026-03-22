@@ -65,8 +65,11 @@
         <el-table-column label="企业基本信息" min-width="180" align="center">
           <template #default="scope">
             <div style="font-weight: 200; color: #303133">{{ scope.row.companyName }}</div>
-            <div style="font-size: 12px; color: #6d96e6; margin-top: 4px; display: flex; align-items: center; justify-content: center;">
-              <el-icon style="margin-right: 4px"><Postcard/></el-icon>
+            <div
+                style="font-size: 12px; color: #6d96e6; margin-top: 4px; display: flex; align-items: center; justify-content: center;">
+              <el-icon style="margin-right: 4px">
+                <Postcard/>
+              </el-icon>
               信用代码：{{ scope.row.creditCode }}
 
               <el-tooltip content="点击预览营业执照" placement="top" v-if="scope.row.licenseUrl">
@@ -77,10 +80,14 @@
                     preview-teleported
                 >
                   <template #error>
-                    <el-icon><Picture /></el-icon>
+                    <el-icon>
+                      <Picture/>
+                    </el-icon>
                   </template>
                   <template #viewer>
-                    <el-icon @click.stop><View /></el-icon>
+                    <el-icon @click.stop>
+                      <View/>
+                    </el-icon>
                   </template>
                 </el-image>
               </el-tooltip>
@@ -146,14 +153,20 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="280" fixed="right">
+        <el-table-column label="操作" align="center" width="310" fixed="right">
           <template #default="scope">
             <template v-if="scope.row.status === 0">
-              <el-button link type="success" :icon="Check" @click="handleAudit(scope.row, 1)">通过</el-button>
-              <el-button link type="danger" :icon="Close" @click="handleAudit(scope.row, 2)">驳回</el-button>
+              <el-button link type="success" size="small" :icon="Check" @click="handleAudit(scope.row, 1)">通过
+              </el-button>
+              <el-button link type="danger" size="small" :icon="Close" @click="handleAudit(scope.row, 2)">驳回
+              </el-button>
             </template>
-            <el-button link type="primary" :icon="View" @click="handleDetail(scope.row)">详情</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
+
+            <el-button link type="primary" size="small" :icon="View" @click="handleDetail(scope.row)">详情</el-button>
+
+            <el-button link type="warning" size="small" :icon="EditPen" @click="handleEdit(scope.row)">修改</el-button>
+
+            <el-button link type="danger" size="small" :icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -173,7 +186,7 @@
       <el-dialog
           v-model="detailVisible"
           title="企业入驻电子档案"
-          width="650px"
+          width="700px"
           class="enterprise-detail-dialog"
           destroy-on-close
       >
@@ -257,6 +270,21 @@
               <el-icon>
                 <Calendar/>
               </el-icon>
+              租约起止
+            </template>
+            <template v-if="enterpriseDetail.leaseStartDate">
+              <el-tag size="small" type="info" effect="plain">
+                {{ enterpriseDetail.leaseStartDate }} 至 {{ enterpriseDetail.leaseEndDate }}
+              </el-tag>
+            </template>
+            <span v-else style="color: #909399">尚未签署合同</span>
+          </el-descriptions-item>
+
+          <el-descriptions-item label-class-name="desc-label">
+            <template #label>
+              <el-icon>
+                <Calendar/>
+              </el-icon>
               申请日期
             </template>
             {{ enterpriseDetail.createTime }}
@@ -273,7 +301,9 @@
           </el-descriptions-item>
           <el-descriptions-item label-class-name="desc-label" :span="2">
             <template #label>
-              <el-icon><Picture /></el-icon>
+              <el-icon>
+                <Picture/>
+              </el-icon>
               营业执照
             </template>
             <div class="detail-license-preview" v-if="enterpriseDetail.licenseUrl">
@@ -307,134 +337,178 @@
       </el-dialog>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '修改企业信息' : '提交入驻申请'" width="750px"
-               destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" style="padding: 10px">
+    <el-dialog
+        v-model="dialogVisible"
+        :title="form.id ? '编辑企业电子档案' : '提交入驻申请'"
+        width="800px"
+        class="custom-form-dialog"
+        destroy-on-close
+    >
+      <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          label-width="100px"
+          label-position="top"
+          style="padding: 0 20px"
+      >
+        <div class="form-section">
+          <h4 class="section-title">
+            <el-icon>
+              <InfoFilled/>
+            </el-icon>
+            工商基础信息
+          </h4>
+          <el-row :gutter="30">
+            <el-col :span="12">
+              <el-form-item label="企业全称" prop="companyName">
+                <el-input v-model="form.companyName" placeholder="请按营业执照名称填写" clearable/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="信用代码" prop="creditCode">
+                <el-input v-model="form.creditCode" placeholder="18位社会信用代码"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="法人代表" prop="legalPerson">
+                <el-input v-model="form.legalPerson" placeholder="姓名"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="注册资本" prop="registeredCapital">
+                <el-input-number v-model="form.registeredCapital" :precision="2" :step="100" :min="0"
+                                 controls-position="right" style="width: 100%"/>
+                <span class="input-suffix">万元</span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="所属行业" prop="industry">
+                <el-input v-model="form.industry" placeholder="如：人工智能、生物医药"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
 
-        <el-divider content-position="left">
-          <el-icon>
-            <InfoFilled/>
-          </el-icon>
-          工商基础信息
-        </el-divider>
-        <el-form-item label="企业全称" prop="companyName">
-          <el-input v-model="form.companyName" placeholder="请按营业执照名称填写"/>
-        </el-form-item>
+        <div class="form-section mt-2">
+          <h4 class="section-title">
+            <el-icon>
+              <Location/>
+            </el-icon>
+            园区入驻意向
+          </h4>
+          <el-row :gutter="30">
+            <el-col :span="12">
+              <el-form-item label="意向楼宇" prop="buildingNo">
+                <el-input v-model="form.buildingNo" placeholder="例如：A座-808"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="租用面积" prop="rentArea">
+                <el-input-number v-model="form.rentArea" :precision="2" :min="0" controls-position="right"
+                                 style="width: 100%"/>
+                <span class="input-suffix">㎡</span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="租约期限" prop="leaseEndDate" class="date-range-item">
+                <el-date-picker
+                    v-model="form.leaseStartDate"
+                    type="date"
+                    placeholder="起租日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 47%"
+                />
+                <span class="date-separator">至</span>
+                <el-date-picker
+                    v-model="form.leaseEndDate"
+                    type="date"
+                    placeholder="到期日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 47%"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
 
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="信用代码" prop="creditCode">
-              <el-input v-model="form.creditCode" placeholder="18位社会信用代码"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="法人代表" prop="legalPerson">
-              <el-input v-model="form.legalPerson" placeholder="姓名"/>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="注册资本" prop="registeredCapital">
-              <el-input-number v-model="form.registeredCapital" :precision="2" :step="100" :min="0"
-                               style="width: 100%"/>
-              <div class="form-tip">单位：万元</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="所属行业" prop="industry">
-              <el-input v-model="form.industry" placeholder="如：人工智能、生物医药"/>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-divider content-position="left">
-          <el-icon>
-            <Location/>
-          </el-icon>
-          园区入驻意向
-        </el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="意向楼宇" prop="buildingNo">
-              <el-input v-model="form.buildingNo" placeholder="例如：A座-808"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="租用面积" prop="rentArea">
-              <el-input-number v-model="form.rentArea" :precision="2" :step="10" :min="0" style="width: 100%"/>
-              <div class="form-tip">单位：平方米 (㎡)</div>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-divider content-position="left">
-          <el-icon>
-            <Phone/>
-          </el-icon>
-          联系方式
-        </el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="业务联系人" prop="contactPerson">
-              <el-input v-model="form.contactPerson" placeholder="姓名"/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="联系电话" prop="contactPhone">
-              <el-input v-model="form.contactPhone" placeholder="手机或固定电话"/>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-form-item label="营业执照附件" prop="licenseUrl">
-          <div class="license-upload-wrapper">
-            <el-upload
-                class="license-uploader"
-                action="#"
-                :show-file-list="false"
-                :http-request="handleImageUpload"
-                :before-upload="beforeLicenseUpload"
-                accept=".jpg,.jpeg,.png,.gif"
-            >
-              <div v-if="form.licenseUrl" class="image-preview-container">
-                <img :src="form.licenseUrl" class="license-img" alt="营业执照附件"/>
-                <div class="image-actions">
-                  <span class="action-item" @click.stop="handlePreview">
-                    <el-icon><ZoomIn/></el-icon>
-                    <span>预览</span>
-                  </span>
-                  <span class="action-item" @click.stop="handleRemove">
-                    <el-icon><Delete/></el-icon>
-                    <span>删除</span>
-                   </span>
+        <div class="form-section mt-2">
+          <h4 class="section-title">
+            <el-icon>
+              <Phone/>
+            </el-icon>
+            联系方式
+          </h4>
+          <el-row :gutter="30">
+            <el-col :span="12">
+              <el-form-item label="业务联系人" prop="contactPerson">
+                <el-input v-model="form.contactPerson" placeholder="姓名"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="联系电话" prop="contactPhone">
+                <el-input v-model="form.contactPhone" placeholder="手机或固定电话"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+        <div class="form-section  mt-2">
+          <h4 class="section-title">
+            <el-icon>
+              <Picture/>
+            </el-icon>
+            资质附件
+          </h4>
+          <el-form-item label="营业执照" prop="licenseUrl">
+            <div class="license-upload-wrapper">
+              <el-upload
+                  class="license-uploader"
+                  action="#"
+                  :show-file-list="false"
+                  :http-request="handleImageUpload"
+                  :before-upload="beforeLicenseUpload"
+                  accept=".jpg,.jpeg,.png,.gif"
+              >
+                <div v-if="form.licenseUrl" class="image-preview-container">
+                  <img :src="form.licenseUrl" class="license-img" alt="营业执照附件"/>
+                  <div class="image-actions">
+                    <span class="action-item" @click.stop="handlePreview">
+                      <el-icon><ZoomIn/></el-icon>
+                      <span>预览</span>
+                    </span>
+                    <span class="action-item" @click.stop="handleRemove">
+                      <el-icon><Delete/></el-icon>
+                      <span>删除</span>
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div v-else class="license-placeholder">
-                <el-icon class="license-icon">
-                  <Plus/>
-                </el-icon>
-                <span class="license-text">上传营业执照</span>
-              </div>
-            </el-upload>
+                <div v-else class="license-placeholder">
+                  <el-icon class="license-icon">
+                    <Plus/>
+                  </el-icon>
+                  <span class="license-text">上传营业执照</span>
+                </div>
+              </el-upload>
 
-            <div class="upload-tip">请上传清晰的营业执照扫描件 (支持 JPG/JPEG/PNG/GIF，小于 5MB)</div>
-          </div>
+              <div class="upload-tip">请上传清晰的营业执照扫描件 (支持 JPG/JPEG/PNG/GIF，小于 5MB)</div>
+            </div>
 
-          <el-image-viewer
-              v-if="showViewer"
-              :url-list="[form.licenseUrl]"
-              @close="showViewer = false"
-          />
-        </el-form-item>
+            <el-image-viewer
+                v-if="showViewer"
+                :url-list="[form.licenseUrl]"
+                @close="showViewer = false"
+            />
+          </el-form-item>
+        </div>
       </el-form>
 
       <template #footer>
-        <div style="padding: 10px">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="submitLoading" @click="submitForm">提交申请</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false" round>取 消</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm" round px-6>
+            {{ form.id ? '保存修改' : '立即提交申请' }}
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -498,7 +572,31 @@ const form = ref({
   contactPerson: '',
   contactPhone: '',
   licenseUrl: '',
+  // --- 租约字段 ---
+  leaseStartDate: '',
+  leaseEndDate: ''
 })
+
+// 租约日期校验逻辑
+const validateLeaseDates = (rule, value, callback) => {
+  const {leaseStartDate, leaseEndDate} = form.value
+
+  // 如果两个都有值，才进行逻辑判断
+  if (leaseStartDate && leaseEndDate) {
+    const start = new Date(leaseStartDate)
+    const end = new Date(leaseEndDate)
+
+    if (end < start) {
+      return callback(new Error('结束日期不能早于开始日期'))
+    }
+  }
+
+  if (leaseStartDate && !leaseEndDate) {
+    return callback(new Error('请选择结束日期'))
+  }
+  // 校验通过
+  callback()
+}
 
 // 5. 校验规则
 const rules = {
@@ -508,10 +606,19 @@ const rules = {
     {pattern: /^[0-9A-Z]{18}$/, message: '请输入18位大写字母或数字', trigger: 'blur'}
   ],
   legalPerson: [{required: true, message: '法人代表不能为空', trigger: 'blur'}],
+  registeredCapital: [{required: true, message: '注册资本不能为空', trigger: 'blur'}],
+  industry: [{required: true, message: '所属行业不能为空', trigger: 'blur'}],
   contactPerson: [{required: true, message: '联系人不能为空', trigger: 'blur'}],
   contactPhone: [{required: true, message: '联系电话不能为空', trigger: 'blur'}],
-  licenseUrl: [{required: true, message: '请上传营业执照附件', trigger: 'change'}]
+  buildingNo: [{required: true, message: '意向楼宇不能为空', trigger: 'blur'}],
+  rentArea: [{required: true, message: '租用面积不能为空', trigger: 'blur'}],
+  licenseUrl: [{required: true, message: '请上传营业执照照片附件', trigger: 'change'}],
+  // 租约日期校验
+  leaseEndDate: [
+    {required: true, validator: validateLeaseDates, trigger: 'change'}
+  ]
 }
+
 
 // 6. 核心业务方法
 const getList = async () => {
@@ -541,10 +648,22 @@ const handleSelectionChange = (val) => {
 
 const handleAdd = () => {
   form.value = {
-    id: null, companyName: '', creditCode: '', legalPerson: '', registeredCapital: 0,
-    buildingNo: '', rentArea: 0, industry: '', contactPerson: '', contactPhone: '', licenseUrl: ''
+    id: null,
+    companyName: '',
+    creditCode: '',
+    legalPerson: '',
+    registeredCapital: 0,
+    buildingNo: '',
+    rentArea: 0,
+    industry: '',
+    contactPerson: '',
+    contactPhone: '',
+    licenseUrl: '',
+    leaseStartDate: '',
+    leaseEndDate: ''
   }
-  dialogVisible.value = true
+  if (formRef.value) formRef.value.clearValidate();
+  dialogVisible.value = true;
 }
 
 // --- 营业执照上传前校验 ---
@@ -594,27 +713,47 @@ const handleRemove = () => {
   })
 }
 
+// 修改企业信息
+const handleEdit = (row) => {
+  // 1. 重置表单校验
+  if (formRef.value) formRef.value.clearValidate();
+
+  // 2. 将行数据深拷贝到表单对象中
+  form.value = {...row};
+
+  // 3. 打开弹窗
+  dialogVisible.value = true;
+};
+
 const submitForm = async () => {
-  if (!formRef.value) return
+  if (!formRef.value) return;
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
-      submitLoading.value = true
+      submitLoading.value = true;
       try {
         if (form.value.id) {
-          await enterpriseApi.update(form.value)
-          ElMessage.success('企业信息更新成功')
+          // 场景：更新
+          await enterpriseApi.update(form.value);
+          ElMessage.success('企业信息已成功更新');
         } else {
-          await enterpriseApi.apply(form.value)
-          ElMessage.success('入驻申请已提交，请耐心等待系统审核')
+          // 场景：新增申请
+          await enterpriseApi.apply(form.value);
+          ElMessage.success('入驻申请已提交，请等待审核');
         }
-        dialogVisible.value = false
-        getList()
+        dialogVisible.value = false;
+        getList(); // 刷新列表
+      } catch (error) {
+        // 后端抛出的 BusinessException (如信用代码重复)
+        // 通常会被响应拦截器捕获并报错，这里可以根据需要做特殊处理
+        console.error("提交失败:", error);
       } finally {
-        submitLoading.value = false
+        submitLoading.value = false;
       }
     }
-  })
-}
+  });
+};
+
 
 const handleAudit = (row, status) => {
   const isPass = status === 1
@@ -937,5 +1076,59 @@ onMounted(() => {
 /* 确保必填星号与文字对齐 */
 :deep(.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:before) {
   margin-right: 4px;
+}
+
+/* 弹窗整体圆角 */
+:deep(.custom-form-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* 分段标题样式 */
+.section-title {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 400;
+  color: #409EFF;
+  margin: 0 0 10px 0;
+  padding-left: 10px;
+  border-left: 4px solid #409EFF;
+}
+
+.section-title .el-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* 输入框后缀提示 */
+.input-suffix {
+  position: absolute;
+  right: 40px; /* 避开 input-number 的控制按钮 */
+  color: #909399;
+  font-size: 12px;
+}
+
+/* 日期选择器中间的横线 */
+.date-separator {
+  margin: 0 10px;
+  color: #dcdfe6;
+}
+
+.mt-2 {
+  margin-top: 2px;
+}
+
+/* 表单页脚 */
+.dialog-footer {
+  padding: 0 20px 5px;
+  text-align: right;
+}
+
+/* 针对标签置顶的优化 */
+:deep(.el-form-item__label) {
+  font-weight: 500 !important;
+  color: #606266 !important;
+  padding-bottom: 2px !important;
 }
 </style>
