@@ -4,6 +4,8 @@ import com.zone.common.response.Result;
 import com.zone.domain.base.PageResult;
 import com.zone.domain.dto.EnterpriseDTO;
 import com.zone.domain.dto.EnterprisePageQueryDTO;
+import com.zone.domain.entity.EnterpriseAudit;
+import com.zone.domain.vo.EnterpriseAuditVO;
 import com.zone.domain.vo.EnterpriseVO;
 import com.zone.service.EnterpriseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,11 +90,25 @@ public class EnterpriseController {
 	 */
 	@PutMapping("/audit/{id}")
 	@Operation(summary = "B端-审核入驻申请")
-	public Result<String> audit(@PathVariable Long id, @RequestParam Integer status) {
-		log.info("审核入驻申请 ID: {}, 状态: {}", id, status);
-		boolean success = enterpriseService.audit(id, status);
-		String msg = status == 1 ? "审核通过，企业已正式入驻" : "申请已驳回";
-		return success ? Result.success(msg) : Result.sysError("审核操作失败");
+	public Result<String> audit(
+			@PathVariable Long id,
+			@RequestParam Integer status,
+			@RequestParam(required = false) String auditOpinion // ✅ 接收驳回理由
+	) {
+		log.info("开始审核 - 企业ID: {}, 结果状态: {}, 意见: {}", id, status, auditOpinion);
+		boolean success = enterpriseService.audit(id, status, auditOpinion);
+		return success ? Result.success("审核操作已完成") : Result.sysError("操作失败");
+	}
+
+	/**
+	 * 获取企业审核历史流水
+	 */
+	@GetMapping("/audit/history/{id}")
+	@Operation(summary = "管理端-查看审核历史记录")
+	public Result<List<EnterpriseAuditVO>> getAuditHistory(@PathVariable Long id) {
+		// 假设你在 service 中实现了获取流水的方法
+		List<EnterpriseAuditVO> history = enterpriseService.getAuditHistory(id);
+		return Result.success(history);
 	}
 
 	/**

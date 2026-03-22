@@ -3,6 +3,8 @@ package com.zone.service;
 import com.zone.domain.base.PageResult;
 import com.zone.domain.dto.EnterpriseDTO;
 import com.zone.domain.dto.EnterprisePageQueryDTO;
+import com.zone.domain.entity.EnterpriseAudit;
+import com.zone.domain.vo.EnterpriseAuditVO;
 import com.zone.domain.vo.EnterpriseVO;
 
 import java.util.List;
@@ -56,7 +58,7 @@ public interface EnterpriseService {
 	 * @param status
 	 * @return
 	 */
-	boolean audit(Long id, Integer status);
+	boolean audit(Long id, Integer status, String auditOpinion);
 
 	/**
 	 * 分页查询企业列表
@@ -98,4 +100,11 @@ public interface EnterpriseService {
 	 */
 	boolean deleteById(Long id);
 
+	/**
+	 * 获取审核历史
+	 *
+	 * @param id
+	 * @return
+	 */
+	List<EnterpriseAuditVO> getAuditHistory(Long id);
 }

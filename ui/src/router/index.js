@@ -35,6 +35,12 @@ const routes = [
                 name: 'PortalArticle',
                 component: () => import('@/views/portal/Article.vue'),
                 meta: { title: '文章详情' }
+            },
+            {
+                path: 'my-enterprise',
+                name: 'MyEnterprise',
+                meta: { title: '我的入驻申请', requireAuth: true }, // C端需要登录
+                component: () => import('@/views/portal/MyEnterprise.vue')
             }
         ]
     },

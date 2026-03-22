@@ -69,7 +69,7 @@
                 AND e.building_no = #{buildingNo}
             </if>
         </where>
-        ORDER BY e.create_time DESC
+        ORDER BY id
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -85,16 +85,14 @@
     </insert>
 
     <update id="updateAuditStatus">
-        update biz_enterprise
-        set status = #{status},
+        UPDATE biz_enterprise
+        SET
+        status = #{status},
         audit_opinion = #{auditOpinion},
         auditor_id = #{auditorId},
         audit_time = NOW(),
         update_time = NOW()
-        <if test="status == 1"> , lease_start_date = #{leaseStartDate}
-            , lease_end_date = #{leaseEndDate}
-        </if>
-        where id = #{id}
+        WHERE id = #{id}
     </update>
 
     <update id="updateById">
@@ -136,5 +134,11 @@
         <if test="excludeId != null">
             AND id != #{excludeId}
         </if>
+    </select>
+
+    <select id="listAllByUserId" resultMap="EnterpriseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM biz_enterprise
+        WHERE user_id = #{userId}
     </select>
 </mapper>

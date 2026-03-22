@@ -1,10 +1,12 @@
 package com.zone.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.zone.domain.base.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
 import java.math.BigDecimal;
@@ -37,7 +39,11 @@ public class Enterprise extends BaseEntity {
 	private Integer status;         // 0:待审核 1:已入驻 2:驳回 3:迁出
 	private String auditOpinion;    // 审核意见/驳回理由
 	private Long auditorId;         // 审核人ID
+
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime auditTime; // 审核时间
+
 	private LocalDate leaseStartDate; // 租约开始日期
 	private LocalDate leaseEndDate;   // 租约结束日期
 }

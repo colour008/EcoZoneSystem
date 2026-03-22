@@ -322,12 +322,51 @@
         <div class="opinion-section">
           <div class="opinion-title">
             <el-icon>
-              <EditPen/>
+              <Timer/>
             </el-icon>
-            审核意见
+            入驻申请记录
           </div>
-          <div class="opinion-content">
-            {{ enterpriseDetail.auditOpinion || '暂无审核备注信息' }}
+
+          <div class="timeline-wrapper">
+            <el-timeline v-if="auditHistory.length > 0">
+              <el-timeline-item
+                  v-for="(activity, index) in auditHistory"
+                  :key="index"
+                  :type="statusMap[activity.status]?.type"
+                  :timestamp="activity.createTime"
+                  placement="top"
+              >
+                <el-card shadow="never" class="timeline-card" :status="activity.status">
+                  <div class="timeline-card-header">
+                    <span class="action-text">
+                      <el-icon :color="activity.status === 2 ? '#F56C6C' : '#409EFF'"
+                               style="vertical-align: middle; margin-right: 6px">
+                        <component :is="getActionIcon(activity.status)"/>
+                      </el-icon>
+                      {{ activity.auditAction }}
+                    </span>
+                    <span class="auditor-tag">
+                      <el-icon><User/></el-icon> {{ activity.auditorName || '系统管理员' }}
+                    </span>
+                  </div>
+
+                  <div class="opinion-box">
+                    <div class="opinion-content">
+                      <el-icon style="margin-right: 4px">
+                        <ChatDotSquare/>
+                      </el-icon>
+                      “ {{ activity.opinion || (activity.status === 1 ? '准予入驻' : '暂无说明') }} ”
+                    </div>
+                  </div>
+
+                  <div v-if="activity.status === 2" style="margin-top: 10px">
+                    <el-tag type="danger" size="small" closable @close="false">驳回记录</el-tag>
+                  </div>
+                </el-card>
+              </el-timeline-item>
+            </el-timeline>
+
+            <el-empty v-else :image-size="60" description="暂无流转历史"/>
           </div>
         </div>
 
@@ -512,6 +551,50 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog
+        v-model="auditDialogVisible"
+        :title="auditForm.status === 1 ? '审批通过' : '审批驳回'"
+        width="450px"
+        destroy-on-close
+    >
+      <div style="margin-bottom: 20px; color: #606266;">
+        正在处理企业：<strong style="color: #303133">{{ auditForm.companyName }}</strong>
+      </div>
+
+      <el-form ref="auditFormRef" :model="auditForm" :rules="auditRules">
+        <el-form-item label="审批意见" prop="opinion">
+          <el-input
+              v-model="auditForm.opinion"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入详细的审批意见或原因..."
+          />
+        </el-form-item>
+
+        <div class="common-opinions">
+          <div style="font-size: 12px; color: #909399; margin-bottom: 8px;">快捷回复：</div>
+          <el-space wrap>
+            <el-tag
+                v-for="item in commonOpinions[auditForm.status]"
+                :key="item"
+                class="opinion-tag"
+                effect="plain"
+                @click="auditForm.opinion = item"
+            >
+              {{ item.length > 10 ? item.substring(0, 10) + '...' : item }}
+            </el-tag>
+          </el-space>
+        </div>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="auditDialogVisible = false">取 消</el-button>
+        <el-button :type="auditForm.status === 1 ? 'success' : 'danger'" @click="submitAudit">
+          确认{{ auditForm.status === 1 ? '通过' : '驳回' }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -521,7 +604,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Search, Refresh, Plus, Check, Close, View, Delete,
   InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen, ZoomIn,
-  Picture
+  Picture, Timer, ChatDotSquare
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from "@/utils/upload.js";
@@ -544,10 +627,41 @@ const enterpriseTableRef = ref(null)
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const showViewer = ref(false)
+const auditHistory = ref([])
+
+// 审批弹窗控制
+const auditDialogVisible = ref(false)
+const auditFormRef = ref(null)
+const auditForm = ref({
+  id: null,
+  status: 1, // 1-通过，2-驳回
+  companyName: '',
+  opinion: ''
+})
+
+// 快捷审批语配置
+const commonOpinions = {
+  1: ['准予入驻。', '资料完整，符合园区产业导向，同意入驻。', '欢迎入驻，请尽快办理后续手续。'],
+  2: ['资料不全，请补全后重新申请。', '信用代码有误，请核实。', '所属行业不符合本园区准入标准。']
+}
+
+const auditRules = {
+  opinion: [{required: true, message: '请填写审批意见', trigger: 'blur'}]
+}
 
 // 定义详情弹窗控制
 const detailVisible = ref(false)
 const enterpriseDetail = ref({})
+
+const getActionIcon = (status) => {
+  const icons = {
+    0: 'DocumentAdd',
+    1: 'CircleCheckFilled',
+    2: 'CircleCloseFilled',
+    3: 'InfoFilled'
+  }
+  return icons[status] || 'Promotion'
+}
 
 // 3. 查询参数 (对应 EnterprisePageQueryDTO)
 const queryParams = ref({
@@ -756,33 +870,52 @@ const submitForm = async () => {
 
 
 const handleAudit = (row, status) => {
-  const isPass = status === 1
-  const title = isPass ? '通过申请' : '驳回申请'
-
-  if (isPass) {
-    ElMessageBox.confirm(`确定要批准企业 "${row.companyName}" 入驻园区吗？`, title, {
-      confirmButtonText: '确定',
-      type: 'success'
-    }).then(async () => {
-      await enterpriseApi.audit({id: row.id, status: 1})
-      ElMessage.success('操作成功，已批准入驻')
-      getList()
-    }).catch(() => {
-    })
-  } else {
-    ElMessageBox.prompt('请填写驳回原因：', title, {
-      confirmButtonText: '确认驳回',
-      cancelButtonText: '取消',
-      inputPattern: /\S+/,
-      inputErrorMessage: '驳回原因不能为空',
-      type: 'warning'
-    }).then(async ({value}) => {
-      await enterpriseApi.audit({id: row.id, status: 2, auditOpinion: value})
-      ElMessage.success('已驳回该申请')
-      getList()
-    }).catch(() => {
-    })
+  auditForm.value = {
+    id: row.id,
+    status: status,
+    companyName: row.companyName,
+    opinion: commonOpinions[status][0] // 默认选中第一条常用语
   }
+  auditDialogVisible.value = true
+}
+
+// 提交审批结果
+const submitAudit = async () => {
+  await auditFormRef.value.validate(async (valid) => {
+    if (valid) {
+      // 1. 根据当前状态定义提示文字和类型
+      const isPass = auditForm.value.status === 1
+      const confirmTitle = isPass ? '确认通过审批？' : '确认驳回申请？'
+      const confirmMessage = isPass
+          ? `确认准予 "${auditForm.value.companyName}" 入驻园区吗？`
+          : `确定要驳回 "${auditForm.value.companyName}" 的入驻申请吗？`
+      const confirmType = isPass ? 'success' : 'warning'
+
+      // 2. 调起二次确认弹窗
+      ElMessageBox.confirm(confirmMessage, confirmTitle, {
+        confirmButtonText: '确定提交',
+        cancelButtonText: '再检查下',
+        type: confirmType,
+        dangerouslyUseHTMLString: true,
+        center: true // 居中显示更显正式
+      }).then(async () => {
+        // 3. 用户确认后才执行提交接口
+        try {
+          await enterpriseApi.audit(auditForm.value.id, auditForm.value.status, auditForm.value.opinion)
+          ElMessage({
+            type: 'success',
+            message: `${isPass ? '通过' : '驳回'}操作已成功执行`
+          })
+          auditDialogVisible.value = false
+          getList() // 刷新列表
+        } catch (error) {
+          console.error("审批提交失败:", error)
+        }
+      }).catch(() => {
+        // 用户点击取消，不做任何处理，保留当前审批窗口
+      })
+    }
+  })
 }
 
 const handleDelete = (row) => {
@@ -807,9 +940,18 @@ const handleBatchDelete = () => {
 }
 
 // 详情展示弹窗
-const handleDetail = (row) => {
+const handleDetail = async (row) => {
   enterpriseDetail.value = row
   detailVisible.value = true
+
+  // 异步获取审核流水
+  try {
+    const res = await enterpriseApi.getAuditHistory(row.id)
+    auditHistory.value = res.data || []
+  } catch (error) {
+    console.error("获取审核历史失败", error)
+    auditHistory.value = []
+  }
 }
 
 onMounted(() => {
@@ -906,20 +1048,19 @@ onMounted(() => {
 }
 
 .opinion-section {
-  margin-top: 20px;
-  border: 1px dashed #e4e7ed;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: #fffaf4;
+  margin-top: 25px;
+  border: none;
+  background-color: transparent;
+  padding: 0;
 }
 
 .opinion-title {
-  display: flex;
-  align-items: center;
-  font-weight: normal;
-  color: #e6a23c;
-  margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 20px;
+  padding-left: 10px;
+  border-left: 4px solid #409EFF; /* 标题左侧加重 */
 }
 
 .opinion-title .el-icon {
@@ -927,9 +1068,9 @@ onMounted(() => {
 }
 
 .opinion-content {
+  color: #606266;
+  font-style: italic;
   font-size: 13px;
-  line-height: 1.6;
-  color: #666;
 }
 
 /* 覆盖 Element Plus 弹窗圆角 */
@@ -1130,5 +1271,129 @@ onMounted(() => {
   font-weight: 500 !important;
   color: #606266 !important;
   padding-bottom: 2px !important;
+}
+
+.timeline-wrapper {
+  padding: 5px 5px;
+}
+
+.timeline-card {
+  border: 1px solid #ebeef5 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.timeline-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.action-text {
+  font-weight: 600;
+  font-size: 14px;
+  color: #303133;
+}
+
+.auditor-tag {
+  font-size: 12px;
+  color: #909399;
+  background: #f4f4f5;
+  padding: 2px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 针对不同状态改变侧边条颜色 */
+.el-timeline-item__node--success + .el-timeline-item__wrapper .timeline-card {
+  border-left-color: #67C23A;
+}
+
+.el-timeline-item__node--danger + .el-timeline-item__wrapper .timeline-card {
+  border-left-color: #F56C6C;
+}
+
+.el-timeline-item__node--info + .el-timeline-item__wrapper .timeline-card {
+  border-left-color: #909399;
+}
+
+.opinion-box {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #f8f9fb;
+  border-radius: 6px;
+  border-left: 3px solid #dcdfe6;
+}
+
+/* 小气泡效果 */
+.opinion-box::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 15px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #f4f4f5;
+}
+
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f2f6fc;
+}
+
+
+/* 滚动条美化 */
+.timeline-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.timeline-wrapper::-webkit-scrollbar-thumb {
+  background: #e4e7ed;
+  border-radius: 2px;
+}
+
+/* 已通过-绿 */
+.timeline-card[status="1"] {
+  border-left: 4px solid #67C23A !important;
+}
+
+/* 已驳回-红 */
+.timeline-card[status="2"] {
+  border-left: 4px solid #F56C6C !important;
+}
+
+/* 待审核-黄 */
+
+.timeline-card[status="0"] {
+  border-left: 4px solid #E6A23C !important;
+}
+
+/* 已迁出-灰 */
+.timeline-card[status="3"] {
+  border-left: 4px solid #909399 !important;
+}
+
+.opinion-tag {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.opinion-tag:hover {
+  background-color: #ecf5ff;
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.common-opinions {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
 }
 </style>

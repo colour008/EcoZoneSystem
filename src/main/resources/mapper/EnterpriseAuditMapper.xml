@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zone.mapper.EnterpriseAuditMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_enterprise_audit (
+        enterprise_id, status, opinion, auditor_id, create_time
+        ) VALUES (
+        #{enterpriseId}, #{status}, #{opinion}, #{auditorId}, NOW()
+        )
+    </insert>
+
+    <select id="selectByEnterpriseId" resultType="com.zone.domain.vo.EnterpriseAuditVO">
+        SELECT
+        a.id,
+        a.enterprise_id,
+        a.status,
+        a.opinion,
+        a.auditor_id,
+        a.create_time,
+        u.real_name AS auditorName,
+        CASE a.status
+        WHEN 0 THEN '提交入驻申请'
+        WHEN 1 THEN '审核通过：准予入驻'
+        WHEN 2 THEN '审核驳回：退回修改'
+        WHEN 3 THEN '办理迁出：流程结束'
+        ELSE '变更状态'
+        END AS auditAction
+        FROM biz_enterprise_audit a
+        LEFT JOIN sys_user u ON a.auditor_id = u.id
+        WHERE a.enterprise_id = #{enterpriseId}
+        ORDER BY a.create_time DESC
+    </select>
+
+</mapper>

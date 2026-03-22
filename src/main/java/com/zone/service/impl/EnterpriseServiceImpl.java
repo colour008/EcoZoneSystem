@@ -8,7 +8,10 @@ import com.zone.domain.base.PageResult;
 import com.zone.domain.dto.EnterpriseDTO;
 import com.zone.domain.dto.EnterprisePageQueryDTO;
 import com.zone.domain.entity.Enterprise;
+import com.zone.domain.entity.EnterpriseAudit;
+import com.zone.domain.vo.EnterpriseAuditVO;
 import com.zone.domain.vo.EnterpriseVO;
+import com.zone.mapper.EnterpriseAuditMapper;
 import com.zone.mapper.EnterpriseMapper;
 import com.zone.service.EnterpriseService;
 import com.zone.util.SecurityUtils;
@@ -18,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,8 @@ import java.util.stream.Collectors;
 public class EnterpriseServiceImpl implements EnterpriseService {
 	@Autowired
 	private EnterpriseMapper enterpriseMapper;
+	@Autowired
+	private EnterpriseAuditMapper enterpriseAuditMapper;
 
 	// ================== C端自助接口 ==================
 	/**
@@ -41,23 +48,66 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean apply(EnterpriseDTO enterpriseDTO) {
+		Long currentUserId = SecurityUtils.getUserId();
 
-		// 1. 检测信用代码是否重复
-		checkCreditCodeUnique(enterpriseDTO.getCreditCode(), null);
+		// 1. 查询该用户是否已有入驻申请记录
+		// 注意：这里需要你在 EnterpriseMapper 中新增一个 selectByUserId 的方法，或者直接用 listAll 过滤
+		List<Enterprise> list = enterpriseMapper.listAllByUserId(currentUserId);
+		Enterprise existing = (list != null && !list.isEmpty()) ? list.get(0) : null;
 
-		// 2. 封装成 Entity
-		Enterprise enterprise = new Enterprise();
-		BeanUtils.copyProperties(enterpriseDTO, enterprise);
+		if (existing == null) {
+			// --- 场景 A：初次提交 ---
+			checkCreditCodeUnique(enterpriseDTO.getCreditCode(), null);
 
-		// 3. 绑定当前操作用户，这样“李四”登录后提交，企业就自动记在“李四”名下了
-		enterprise.setUserId(SecurityUtils.getUserId());
+			Enterprise enterprise = new Enterprise();
+			BeanUtils.copyProperties(enterpriseDTO, enterprise);
+			enterprise.setUserId(currentUserId);
+			enterprise.setStatus(0); // 待审核
 
-		// 4. 默认待审核
-		enterprise.setStatus(0);
-		log.info("用户 {} 提交入驻申请: {}", SecurityUtils.getUsername(), enterprise.getCompanyName());
+			boolean saved = enterpriseMapper.insert(enterprise) > 0;
+			if (saved) {
+				// 记录初始流转日志
+				saveAuditRecord(enterprise.getId(), 0, "用户发起初次入驻申请", currentUserId);
+			}
+			return saved;
+		} else {
+			// --- 场景 B：重新提交 (驳回或迁出后) ---
 
-		// 5. 插入数据库
-		return enterpriseMapper.insert(enterprise) > 0;
+			// 逻辑校验：只有【已驳回(2)】或【已迁出(3)】才允许重新申请
+			if (existing.getStatus() == 0) {
+				throw new BusinessException("申请正在审核中，请勿重复提交");
+			}
+			if (existing.getStatus() == 1) {
+				throw new BusinessException("企业已在园区入驻，如需变更请联系管理员");
+			}
+
+			// 唯一性校验需排除自身 ID
+			checkCreditCodeUnique(enterpriseDTO.getCreditCode(), existing.getId());
+
+			// 更新旧记录
+			BeanUtils.copyProperties(enterpriseDTO, existing);
+			existing.setStatus(0);           // 状态回滚为：待审核
+			existing.setAuditOpinion("");    // 清空历史驳回理由
+
+			boolean updated = enterpriseMapper.updateById(existing) > 0;
+			if (updated) {
+				// 记录“重新提交”流转日志
+				saveAuditRecord(existing.getId(), 0, "用户修改资料，重新发起入驻申请", currentUserId);
+			}
+			return updated;
+		}
+	}
+
+	/**
+	 * 提取出的私有方法：保存审核流转记录
+	 */
+	private void saveAuditRecord(Long enterpriseId, Integer status, String opinion, Long operatorId) {
+		EnterpriseAudit auditLog = new EnterpriseAudit();
+		auditLog.setEnterpriseId(enterpriseId);
+		auditLog.setStatus(status);
+		auditLog.setOpinion(opinion);
+		auditLog.setAuditorId(operatorId);
+		enterpriseAuditMapper.insert(auditLog);
 	}
 
 	/**
@@ -129,21 +179,18 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean audit(Long id, Integer status) {
-		// 1. 基本校验：状态值是否合法 (1-入驻, 2-驳回)
-		if (status != 1 && status != 2) {
-			throw new BusinessException(ResponseCodeEnum.PARAM_ERROR);
-		}
+	public boolean audit(Long id, Integer status, String auditOpinion) {
+		Long currentAdminId = SecurityUtils.getUserId();
+		log.info("执行审核操作: 企业ID={}, 状态={}, 理由={}", id, status, auditOpinion);
 
-		// 2. 权限校验：通常只有管理员 (ROLE_ADMIN) 或 专员 (ROLE_STAFF) 才能操作
-		if (!SecurityUtils.isAdmin() && !SecurityUtils.getRoleCodes().contains("ROLE_STAFF")) {
-			throw new BusinessException(ResponseCodeEnum.PERMISSION_DENIED);
-		}
-		log.info("管理员 {} 正在审核企业 ID: {}, 结果为: {}", SecurityUtils.getUsername(), id, status);
+		// 1. 更新主表状态
+		int updated = enterpriseMapper.updateAuditStatus(id, status, auditOpinion, currentAdminId);
+		if (updated <= 0) return false;
 
-		// 3. 更新数据库
-		int rows = enterpriseMapper.updateStatus(id, status);
-		return rows > 0;
+		// 2. 记录审核流水 (复用私有方法)
+		saveAuditRecord(id, status, auditOpinion, currentAdminId);
+
+		return true;
 	}
 
 	/**
@@ -204,6 +251,21 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	@Override
 	public boolean deleteById(Long id) {
 		return false;
+	}
+
+	/**
+	 * 获取审核历史
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Override
+	public List<EnterpriseAuditVO> getAuditHistory(Long id) {
+		if (id == null) {
+			return new ArrayList<>();
+		}
+		// 原生 MyBatis 直接调用接口
+		return enterpriseAuditMapper.selectByEnterpriseId(id);
 	}
 
 	/**
