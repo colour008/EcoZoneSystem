@@ -103,13 +103,21 @@
             <if test="legalPerson != null">legal_person = #{legalPerson},</if>
             <if test="registeredCapital != null">registered_capital = #{registeredCapital},</if>
             <if test="buildingNo != null">building_no = #{buildingNo},</if>
+
             <if test="rentArea != null">rent_area = #{rentArea},</if>
+
             <if test="industry != null">industry = #{industry},</if>
             <if test="contactPerson != null">contact_person = #{contactPerson},</if>
             <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
             <if test="licenseUrl != null">license_url = #{licenseUrl},</if>
             <if test="leaseStartDate != null">lease_start_date = #{leaseStartDate},</if>
             <if test="leaseEndDate != null">lease_end_date = #{leaseEndDate},</if>
+
+            <if test="status != null">status = #{status},</if>
+            audit_opinion = #{auditOpinion},
+            auditor_id = #{auditorId},
+            audit_time = #{auditTime},
+
             update_time = NOW()
         </set>
         WHERE id = #{id}
@@ -123,8 +131,12 @@
         WHERE e.id = #{id}
     </select>
 
-    <delete id="deleteById">
-        DELETE FROM biz_enterprise WHERE id = #{id}
+    <delete id="deleteByIds">
+        DELETE FROM biz_enterprise
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </delete>
 
     <select id="countByCreditCode" resultType="int">
@@ -141,4 +153,9 @@
         FROM biz_enterprise
         WHERE user_id = #{userId}
     </select>
+
+    <select id="countPendingApplications" resultType="int">
+        SELECT COUNT(*) FROM biz_enterprise WHERE status = 0
+    </select>
+
 </mapper>

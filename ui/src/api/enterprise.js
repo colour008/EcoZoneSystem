@@ -114,13 +114,24 @@ const enterpriseApi = {
     },
 
     /**
-     * 删除企业记录
-     * 注意：后端定义为 @DeleteMapping("/{id}")，故传参放在 URL 中
+     * 删除企业记录 (支持单个ID或ID数组)
+     * @param {Number|Array} ids - 企业ID或ID数组
      */
-    delete(id) {
+    delete(ids) {
         return request({
-            url: `/enterprise/${id}`,
+            url: `/enterprise/${ids}`,
             method: 'delete'
+        })
+    },
+
+    /**
+     * 获取待审核数量
+     * @returns {Promise<axios.AxiosResponse<any>>}
+     */
+    getPendingCount() {
+        return request({
+            url: '/enterprise/pending/count',
+            method: 'get'
         })
     }
 }

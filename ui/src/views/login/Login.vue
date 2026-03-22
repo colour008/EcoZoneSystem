@@ -58,7 +58,11 @@
             </el-form-item>
             <el-form-item class="custom-input-item">
               <el-input v-model="password" type="password" placeholder="请输入密码" show-password>
-                <template #prefix><el-icon><Lock /></el-icon></template>
+                <template #prefix>
+                  <el-icon>
+                    <Lock/>
+                  </el-icon>
+                </template>
               </el-input>
             </el-form-item>
           </template>
@@ -233,37 +237,54 @@ const onSliderEnd = () => {
   window.removeEventListener('touchend', onSliderEnd)
 }
 
-// --- 登录业务逻辑 ---
 const handleLogin = async () => {
+  // 1. 增加非空校验
+  if (!username.value || !password.value) {
+    ElMessage.warning('请输入账号和密码')
+    return
+  }
+
   if (!isPassed.value || loginLoading.value) return
 
   loginLoading.value = true
   try {
+    // 2. 修正：将 ref 的值传给接口
     const res = await loginApi({
-      username: username.value,
-      password: password.value,
+      username: username.value, // 必须传这个
+      password: password.value, // 必须传这个
       mode: loginMode.value
     })
 
-    const { token, user, roles, permissions } = res.data
+    const {token, user, roles, permissions} = res.data
 
-    // 1. 存储 Token
+    // 存储用户信息
     userStore.setToken(token)
+    userStore.setUserInfo(user)
+    userStore.setRoles(roles)
+    userStore.setPermissions(permissions)
 
-    // 2. 存储用户信息
-    if (user) {
-      userStore.setUserInfo(user)
-      userStore.setRoles(roles)
-      userStore.setPermissions(permissions)
-    }
+    ElMessage.success('欢迎回来')
 
-    ElMessage.success(res.msg || '登录成功')
-
+    // 3. 完善分流跳转逻辑
     setTimeout(() => {
-      router.push('/index')
+      const redirectPath = router.currentRoute.value.query.redirect
+
+      // 如果有重定向地址（且不是去根目录），则返回原页面
+      if (redirectPath && redirectPath !== '/') {
+        router.push(redirectPath)
+      }
+      // 根据角色分流
+      else if (roles.includes('ROLE_ENTERPRISE')) {
+        router.push('/my-enterprise') // 企业用户去前台“我的企业”
+      } else if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')) {
+        router.push('/index/dashboard') // 管理员去后台
+      } else {
+        router.push('/home') // 普通用户去首页
+      }
     }, 200)
 
   } catch (error) {
+    // 登录失败重置滑块状态
     isPassed.value = false
     sliderWidth.value = 0
     console.error('登录异常:', error)

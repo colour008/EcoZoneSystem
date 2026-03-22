@@ -7,22 +7,31 @@
           <el-breadcrumb-item>我的入驻</el-breadcrumb-item>
         </el-breadcrumb>
         <div class="title-row">
-          <h1>企业入驻管理</h1>
-          <el-tag :type="statusMap[enterpriseInfo.status]?.tagType" effect="dark" round>
-            {{ statusMap[enterpriseInfo.status]?.text || '未申请' }}
-          </el-tag>
+          <div class="title-left">
+            <h1>企业入驻管理</h1>
+            <el-tag :type="statusMap[enterpriseInfo.status]?.tagType" effect="dark" round>
+              {{ statusMap[enterpriseInfo.status]?.text || '未申请' }}
+            </el-tag>
+          </div>
+
+          <div class="title-right" v-if="(enterpriseInfo.status === 2 || enterpriseInfo.status === 3) && !isReApplying">
+            <el-button type="warning" plain icon="Refresh" @click="handleReApply">
+              再次申请入驻
+            </el-button>
+          </div>
         </div>
       </div>
     </header>
 
     <main class="main-content">
-      <section v-if="enterpriseInfo.status !== null" class="status-steps card-style">
-        <el-steps :active="stepActive" finish-status="success" align-center>
-          <el-step title="提交申请" :description="enterpriseInfo.createTime"></el-step>
+      <section v-if="enterpriseInfo.status !== null && (enterpriseInfo.status !== 3 || isReApplying)"
+               class="status-steps card-style">
+        <el-steps :active="isReApplying ? 0 : stepActive" finish-status="success" align-center>
+          <el-step title="提交申请" :description="isReApplying ? '' : enterpriseInfo.createTime"></el-step>
           <el-step
               title="平台审核"
-              :status="enterpriseInfo.status === 2 ? 'error' : ''"
-              :description="enterpriseInfo.status === 2 ? '审核未通过' : '人工核验中'"
+              :status="(enterpriseInfo.status === 2 && !isReApplying) ? 'error' : ''"
+              :description="(enterpriseInfo.status === 2 && !isReApplying) ? '审核未通过' : '人工核验中'"
           ></el-step>
           <el-step title="完成入驻" description="正式入驻园区"></el-step>
         </el-steps>
@@ -30,7 +39,7 @@
 
       <transition name="el-zoom-in-top">
         <el-alert
-            v-if="enterpriseInfo.status === 2"
+            v-if="enterpriseInfo.status === 2 && !isReApplying"
             title="您的入驻申请已被驳回"
             type="error"
             :closable="false"
@@ -39,17 +48,23 @@
         >
           <template #default>
             <p class="reject-reason">驳回理由：<strong>{{ enterpriseInfo.auditOpinion || '资料不全' }}</strong></p>
-            <p>请根据上述意见修改后重新提交，我们会尽快为您处理。</p>
+            <p>请点击右上角“再次申请”修改资料后重新提交。</p>
           </template>
         </el-alert>
       </transition>
 
-      <section class="form-section card-style" v-loading="loading">
+      <section v-if="enterpriseInfo.status === 3 && !isReApplying" class="moved-out-section card-style">
+        <el-empty description="您的企业已办理迁出，如需重新入驻请点击上方按钮">
+          <el-button type="primary" icon="Refresh" @click="handleReApply">立即重新申请</el-button>
+        </el-empty>
+      </section>
+
+      <section v-else class="form-section card-style" v-loading="loading">
         <div class="section-title">
           <el-icon>
             <InfoFilled/>
           </el-icon>
-          <span>基本入驻信息</span>
+          <span>{{ isReApplying ? '重新填报入驻信息' : '基本入驻信息' }}</span>
         </div>
 
         <el-form
@@ -136,7 +151,7 @@
                 @click="submitForm"
                 class="submit-btn"
             >
-              {{ enterpriseInfo.status === 2 ? '修改并重新提交' : '提交入驻申请' }}
+              {{ (enterpriseInfo.status === 2 || enterpriseInfo.status === 3) ? '修改并重新提交' : '提交入驻申请' }}
             </el-button>
           </div>
         </el-form>
@@ -170,11 +185,12 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 const loading = ref(true)
 const submitting = ref(false)
 const formRef = ref(null)
+const isReApplying = ref(false) // 是否正处于“再次申请”的可编辑状态
 
 // 初始企业状态信息
 const enterpriseInfo = ref({
   id: null,
-  status: null, // null:未申请, 0:待审, 1:通过, 2:驳回
+  status: null, // null:未申请, 0:待审, 1:通过, 2:驳回, 3:已迁出
   auditOpinion: '',
   createTime: ''
 })
@@ -203,20 +219,26 @@ const rules = {
 const statusMap = {
   0: {text: '资料审核中', tagType: 'warning'},
   1: {text: '正式入驻', tagType: 'success'},
-  2: {text: '审核驳回', tagType: 'danger'}
+  2: {text: '审核驳回', tagType: 'danger'},
+  3: {text: '已迁出', tagType: 'info'}
 }
 
 // 进度条控制
 const stepActive = computed(() => {
   if (enterpriseInfo.value.status === 0) return 1
   if (enterpriseInfo.value.status === 1) return 3
-  if (enterpriseInfo.value.status === 2) return 1 // 驳回回到第一步
+  if (enterpriseInfo.value.status === 2) return 1
   return 0
 })
 
-// 是否只读（只有状态为 null 或 2 时才允许编辑）
+// 是否只读逻辑完善
 const isReadOnly = computed(() => {
-  return enterpriseInfo.value.status !== null && enterpriseInfo.value.status !== 2
+  // 1. 如果用户点击了“再次申请”，则必须解锁
+  if (isReApplying.value) return false
+  // 2. 如果从未申请，解锁
+  if (enterpriseInfo.value.status === null) return false
+  // 3. 其他状态（待审核、已入驻、驳回未点再次申请、迁出未点再次申请）均只读
+  return true
 })
 
 const auditHistory = ref([])
@@ -228,10 +250,7 @@ const initData = async () => {
     const res = await enterpriseApi.getMyEnterprise()
     if (res.data) {
       enterpriseInfo.value = res.data
-      // 核心逻辑：如果是驳回或已提交，回显表单
       Object.assign(formData.value, res.data)
-
-      // 如果有记录，获取审核流水
       const historyRes = await enterpriseApi.getAuditHistory(res.data.id)
       auditHistory.value = historyRes.data
     }
@@ -242,6 +261,19 @@ const initData = async () => {
   }
 }
 
+// 处理再次申请的动作
+const handleReApply = () => {
+  ElMessageBox.confirm(
+      '重新申请将进入新的审核流程，确定继续吗？',
+      '提示',
+      {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'}
+  ).then(() => {
+    isReApplying.value = true
+    ElMessage.info('请更新您的入驻信息后点击提交')
+  }).catch(() => {
+  })
+}
+
 // 提交申请
 const submitForm = async () => {
   await formRef.value.validate(async (valid) => {
@@ -249,10 +281,11 @@ const submitForm = async () => {
       try {
         submitting.value = true
         await enterpriseApi.apply(formData.value)
-        ElMessage.success('申请提交成功！请耐心等待后台审核')
-        initData() // 刷新状态
+        ElMessage.success('申请提交成功！请等待审核')
+        isReApplying.value = false // 提交成功后重置编辑标识
+        await initData() // 刷新最新状态（变为待审核 0）
       } catch (err) {
-        // 错误已由 request.js 拦截
+        console.error(err)
       } finally {
         submitting.value = false
       }
@@ -279,7 +312,6 @@ onMounted(() => {
   padding-bottom: 50px;
 }
 
-/* 顶部 Header */
 .page-header {
   background: #fff;
   padding: 24px 10%;
@@ -288,7 +320,7 @@ onMounted(() => {
 }
 
 .header-content h1 {
-  margin: 12px 0 0;
+  margin: 0;
   font-size: 24px;
   color: #303133;
 }
@@ -296,10 +328,16 @@ onMounted(() => {
 .title-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
   gap: 15px;
 }
 
-/* 主内容布局 */
 .main-content {
   max-width: 1000px;
   margin: 0 auto;
@@ -327,24 +365,14 @@ onMounted(() => {
   color: #409eff;
 }
 
-/* 驳回提示 */
 .reject-alert {
   margin-bottom: 24px;
-  border: 1px solid #fde2e2;
 }
 
-.reject-reason {
-  font-size: 15px;
-  margin-bottom: 5px;
-}
-
-/* 上传组件定制 */
 .license-uploader {
   border: 1px dashed #d9d9d9;
   border-radius: 6px;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
   width: 178px;
   height: 240px;
   display: flex;
@@ -374,7 +402,6 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-/* 表单底部 */
 .form-actions {
   display: flex;
   justify-content: center;
@@ -389,10 +416,18 @@ onMounted(() => {
   padding-right: 40px;
 }
 
-/* 时间轴 */
 .auditor {
   font-size: 12px;
   color: #909399;
   margin-top: 4px;
+}
+
+.moved-out-section {
+  text-align: center;
+  padding: 60px 0;
+}
+
+:deep(.el-step.is-horizontal .el-step__line) {
+  height: 2px;
 }
 </style>

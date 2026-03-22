@@ -21,23 +21,19 @@ public interface EnterpriseMapper {
 
 	int insert(Enterprise enterprise); // 插入企业信息
 
-	/**
-	 * 根据信用代码查询企业（用于唯一性校验）
-	 *
-	 * @param creditCode 信用代码
-	 * @param excludeId  需要排除的企业ID (可为 null)
-	 * @return 匹配的企业数量
-	 */
-	int countByCreditCode(@Param("creditCode") String creditCode, @Param("excludeId") Long excludeId);
+	int countByCreditCode(@Param("creditCode") String creditCode, @Param("excludeId") Long excludeId); // 根据信用代码查询企业（用于唯一性校验）
 
-	int updateAuditStatus(@Param("id") Long id,
-	                      @Param("status") Integer status,
-	                      @Param("auditOpinion") String auditOpinion,
-	                      @Param("auditorId") Long auditorId);// 修改企业状态
+	int updateAuditStatus(@Param("id") Long id, @Param("status") Integer status, @Param("auditOpinion") String auditOpinion, @Param("auditorId") Long auditorId);// 修改企业状态
 
 	Page<EnterpriseVO> getEnterprisePage(EnterprisePageQueryDTO dto); // 获取企业分页列表
 
 	int updateById(Enterprise enterprise); // 修改企业信息
 
 	List<Enterprise> listAllByUserId(@Param("userId") Long userId); // 根据用户ID查询企业列表
+
+	EnterpriseVO getById(Long id); // 获取企业详情
+
+	int deleteByIds(@Param("ids") List<Long> ids); // 删除企业
+
+	int countPendingApplications();
 }

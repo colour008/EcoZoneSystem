@@ -2,6 +2,7 @@ import {resolvePath} from '@/utils/path'
 import router from '@/router/index'
 import menuApi from '@/api/menu'
 import {useUserStore} from '@/store/user'
+import {ElMessage} from "element-plus";
 
 // 1. 【修改】将门户的路径加入白名单，允许游客访问
 const whiteList = ['/login', '/register', '/404', '/home', '/policy']
@@ -12,9 +13,29 @@ router.beforeEach(async (to, from, next) => {
     const hasToken = localStorage.getItem('token')
 
     if (hasToken) {
+        const roles = userStore.roles
+        // 管理员不应该访问的 C 端路径列表
+        const adminForbiddenPaths = ['/home', '/policy', '/news']
+
+        if (roles.includes('ROLE_ADMIN') && adminForbiddenPaths.includes(to.path)) {
+            ElMessage.info('管理员已登录，已自动跳转至控制台')
+            next('/index/dashboard')
+            return
+        }
+        // 管理员自动分流逻辑，如果是管理员且当前要去“门户首页”，直接送去“后台工作台”
+        const isAdmin = userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')
+        if (to.path === '/' || to.path === '/home') {
+            if (isAdmin) {
+                return next({ path: '/index/dashboard' })
+            }
+        }
         if (to.path === '/login') {
-            // 已登录访问 login，直接跳转到控制台
-            next({path: '/index/dashboard'})
+            // 【完善】已登录用户访问登录页，根据角色分流
+            if (userStore.roles.includes('ROLE_ENTERPRISE')) {
+                next({ path: '/my-enterprise' }) // 企业用户去我的企业
+            } else {
+                next({ path: '/index/dashboard' }) // 管理员去控制台
+            }
         } else {
             if (userStore.routes.length === 0) {
                 try {

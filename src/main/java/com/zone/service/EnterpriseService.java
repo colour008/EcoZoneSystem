@@ -95,10 +95,10 @@ public interface EnterpriseService {
 	/**
 	 * 删除
 	 *
-	 * @param id
+	 * @param ids
 	 * @return
 	 */
-	boolean deleteById(Long id);
+	boolean deleteByIds(List<Long> ids);
 
 	/**
 	 * 获取审核历史
@@ -107,4 +107,11 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	List<EnterpriseAuditVO> getAuditHistory(Long id);
+
+	/**
+	 * 获取待审核数量
+	 *
+	 * @return
+	 */
+	int getPendingCount();
 }

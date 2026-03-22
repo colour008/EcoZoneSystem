@@ -143,14 +143,24 @@ public class EnterpriseController {
 		return success ? Result.success("更新成功") : Result.sysError("更新失败");
 	}
 
+
 	/**
-	 * 删除企业
+	 * 删除企业 (支持单个或批量)
 	 */
-	@DeleteMapping("/{id}")
-	@Operation(summary = "B端-删除企业记录")
-	public Result<String> delete(@PathVariable Long id) {
-		log.info("删除企业记录 ID: {}", id);
-		boolean success = enterpriseService.deleteById(id);
+	@DeleteMapping("/{ids}")
+	@Operation(summary = "B端-删除企业记录(支持批量)")
+	public Result<String> delete(@PathVariable List<Long> ids) {
+		log.info("删除企业记录 IDs: {}", ids);
+		boolean success = enterpriseService.deleteByIds(ids);
 		return success ? Result.success("删除成功") : Result.sysError("操作失败");
+	}
+
+	/**
+	 * 获取待审核数量
+	 */
+	@GetMapping("/pending/count")
+	@Operation(summary = "获取待审核数量")
+	public Result<Integer> getPendingCount() {
+		return Result.success(enterpriseService.getPendingCount());
 	}
 }

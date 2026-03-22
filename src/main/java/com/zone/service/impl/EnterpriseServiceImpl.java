@@ -86,12 +86,16 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 
 			// 更新旧记录
 			BeanUtils.copyProperties(enterpriseDTO, existing);
-			existing.setStatus(0);           // 状态回滚为：待审核
-			existing.setAuditOpinion("");    // 清空历史驳回理由
+			existing.setId(existing.getId()); // 确保 ID 不丢失
+			existing.setStatus(0);            // 状态：待审核
+			existing.setAuditOpinion(null);   // 必须清空！否则前端会因为有意见而显示“驳回”提示
+			existing.setAuditorId(null);      // 清空审核人
+			existing.setAuditTime(null);      // 清空审核时间
+			existing.setCreateTime(LocalDateTime.now());
 
 			boolean updated = enterpriseMapper.updateById(existing) > 0;
 			if (updated) {
-				// 记录“重新提交”流转日志
+				// 记录流水：这步很重要，前端时间轴会显示这一条
 				saveAuditRecord(existing.getId(), 0, "用户修改资料，重新发起入驻申请", currentUserId);
 			}
 			return updated;
@@ -117,7 +121,23 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	 */
 	@Override
 	public EnterpriseVO getMyEnterprise() {
-		return null;
+		Long currentUserId = SecurityUtils.getUserId();
+		// 1. 调用 Mapper 查询该用户关联的企业
+		List<Enterprise> list = enterpriseMapper.listAllByUserId(currentUserId);
+
+		if (list == null || list.isEmpty()) {
+			return null; // 返回空，前端会根据这个显示“立即申请”界面
+		}
+
+		// 2. 取最新的一条记录（通常一个用户对应一家企业）
+		Enterprise entity = list.get(0);
+
+		// 3. 转换成 VO，VO 包含了 applicant_name 等扩展字段
+		EnterpriseVO vo = new EnterpriseVO();
+		BeanUtils.copyProperties(entity, vo);
+
+		// 如果需要显示审核人的真实姓名，可以调用 getById (带 Join 查询的那个)
+		return getDetailById(entity.getId());
 	}
 
 	/**
@@ -201,8 +221,12 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	 */
 	@Override
 	public EnterpriseVO getDetailById(Long id) {
-		return null;
+		if (id == null) return null;
+		// 使用带有 sys_user 关联查询的 Mapper 方法
+		return enterpriseMapper.getById(id);
 	}
+
+
 
 	/**
 	 * 迁出企业
@@ -211,8 +235,15 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	 * @return
 	 */
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public boolean moveOut(Long id) {
-		return false;
+		Long currentAdminId = SecurityUtils.getUserId();
+		// 状态 3 代表已迁出
+		int rows = enterpriseMapper.updateAuditStatus(id, 3, "企业办理迁出手续", currentAdminId);
+		if (rows > 0) {
+			saveAuditRecord(id, 3, "管理员办理企业迁出", currentAdminId);
+		}
+		return rows > 0;
 	}
 
 	@Override
@@ -242,15 +273,24 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return rows > 0;
 	}
 
+
 	/**
-	 * 删除企业
+	 * 删除企业 (支持批量)
 	 *
-	 * @param id
+	 * @param ids 企业ID列表
 	 * @return
 	 */
 	@Override
-	public boolean deleteById(Long id) {
-		return false;
+	@Transactional(rollbackFor = Exception.class)
+	public boolean deleteByIds(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return false;
+		}
+		// 1. 先删除关联的审核流水记录
+		enterpriseAuditMapper.deleteByEnterpriseIds(ids);
+
+		// 2. 删除主表记录
+		return enterpriseMapper.deleteByIds(ids) > 0;
 	}
 
 	/**
@@ -288,4 +328,15 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 			throw new BusinessException(ResponseCodeEnum.ENTERPRISE_CREDIT_CODE_DUPLICATE);
 		}
 	}
+
+	/**
+	 * 获取待审核数量
+	 *
+	 * @return
+	 */
+	@Override
+	public int getPendingCount() {
+		return enterpriseMapper.countPendingApplications();
+	}
+
 }

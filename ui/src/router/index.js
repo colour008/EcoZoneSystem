@@ -1,34 +1,47 @@
-import {createRouter, createWebHistory} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/store/user'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+// 配置 NProgress（去掉加载圈，只留顶线）
+NProgress.configure({ showSpinner: false })
 
 const routes = [
     {
         path: '/login',
         name: 'Login',
-        component: () => import('@/views/login/Login.vue')
+        component: () => import('@/views/login/Login.vue'),
+        meta: { title: '用户登录' }
     },
     {
         path: '/register',
         name: 'Register',
-        component: () => import('@/views/login/Register.vue')
+        component: () => import('@/views/login/Register.vue'),
+        meta: { title: '企业注册' }
     },
-    // 1. 【新增】C端公共门户路由 (不需要登录)
+    {
+        path: '/404',
+        name: '404',
+        component: () => import('@/views/404.vue'),
+        meta: { title: '页面不存在' }
+    },
+    // 1. C端公共门户路由 (上下布局)
     {
         path: '/',
-        name: 'PortalLayout',
-        component: () => import('@/views/portal/layout/index.vue'), // 门户专用的上下布局外壳
+        component: () => import('@/views/portal/layout/index.vue'),
         redirect: '/home',
         children: [
             {
                 path: 'home',
                 name: 'PortalHome',
                 component: () => import('@/views/portal/Home.vue'),
-                meta: {title: '园区首页'}
+                meta: { title: '园区首页' }
             },
             {
                 path: 'policy',
                 name: 'PortalPolicy',
                 component: () => import('@/views/portal/Policy.vue'),
-                meta: {title: '政策法规'}
+                meta: { title: '政策法规' }
             },
             {
                 path: 'article/:id',
@@ -39,35 +52,72 @@ const routes = [
             {
                 path: 'my-enterprise',
                 name: 'MyEnterprise',
-                meta: { title: '我的入驻申请', requireAuth: true }, // C端需要登录
-                component: () => import('@/views/portal/MyEnterprise.vue')
+                component: () => import('@/views/portal/MyEnterprise.vue'),
+                // 需要登录才能访问
+                meta: { title: '我的入驻申请', requireAuth: true }
             }
         ]
     },
-    // 2. 【保留】B/C端登录后的控制台路由外壳 (侧边栏布局)
+    // 2. B/C端管理后台路由 (侧边栏布局)
     {
         path: '/index',
         name: 'Layout',
-        component: () => import('@/views/Index.vue'), // 你的侧边栏 Layout
+        component: () => import('@/views/Index.vue'),
         redirect: '/index/dashboard',
+        meta: { requireAuth: true }, // 整个后台目录都需要登录
         children: [
             {
                 path: 'dashboard',
                 name: 'Dashboard',
-                meta: {title: '工作台', icon: 'House'},
+                meta: { title: '工作台', icon: 'House' },
                 component: () => import('@/views/dashboard/Index.vue')
             }
         ]
-    },
-    {
-        path: '/404',
-        component: () => import('@/views/404.vue')
     }
 ]
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    // 切换页面自动回到顶部
+    scrollBehavior: () => ({ left: 0, top: 0 })
+})
+
+// --- 全局前置守卫 ---
+router.beforeEach((to, from, next) => {
+    NProgress.start()
+
+    // 1. 动态设置页面 Title
+    const baseTitle = '经济开发区管理平台'
+    document.title = to.meta.title ? `${to.meta.title} - ${baseTitle}` : baseTitle
+
+    // 2. 权限校验
+    const userStore = useUserStore()
+    const isAuthenticated = !!userStore.token
+
+    if (to.matched.some(record => record.meta.requireAuth)) {
+        if (!isAuthenticated) {
+            // 未登录，拦截并跳转到登录页，带上当前路径以便登录后跳回
+            next({
+                path: '/login',
+                query: { redirect: to.fullPath }
+            })
+        } else {
+            next()
+        }
+    } else {
+        // 不需要权限的页面，如果是已登录状态去 login，直接重定向到首页
+        if (to.path === '/login' && isAuthenticated) {
+            next({ path: '/' })
+        } else {
+            next()
+        }
+    }
+})
+
+// --- 全局后置守卫 ---
+router.afterEach(() => {
+    NProgress.done()
 })
 
 export default router

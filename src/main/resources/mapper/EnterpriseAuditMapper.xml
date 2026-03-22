@@ -10,21 +10,24 @@
         )
     </insert>
 
+    <delete id="deleteByEnterpriseIds">
+        DELETE FROM biz_enterprise_audit
+        WHERE enterprise_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
     <select id="selectByEnterpriseId" resultType="com.zone.domain.vo.EnterpriseAuditVO">
         SELECT
-        a.id,
-        a.enterprise_id,
-        a.status,
-        a.opinion,
-        a.auditor_id,
-        a.create_time,
+        a.*,
         u.real_name AS auditorName,
-        CASE a.status
-        WHEN 0 THEN '提交入驻申请'
-        WHEN 1 THEN '审核通过：准予入驻'
-        WHEN 2 THEN '审核驳回：退回修改'
-        WHEN 3 THEN '办理迁出：流程结束'
-        ELSE '变更状态'
+        CASE
+        WHEN a.status = 0 THEN '提交申请'
+        WHEN a.status = 1 THEN '审核通过'
+        WHEN a.status = 2 THEN '审核驳回'
+        WHEN a.status = 3 THEN '迁出注销'
+        ELSE '系统操作'
         END AS auditAction
         FROM biz_enterprise_audit a
         LEFT JOIN sys_user u ON a.auditor_id = u.id

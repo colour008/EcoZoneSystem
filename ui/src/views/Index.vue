@@ -45,9 +45,12 @@
             <FullScreen v-if="!isFullscreen"/>
             <Aim v-else/>
           </el-icon>
-          <el-icon title="通知">
-            <Bell/>
-          </el-icon>
+
+          <el-badge :value="pendingCount" :max="99" :hidden="pendingCount <= 0" class="notice-badge">
+            <el-icon title="通知" @click="handleNoticeClick" style="cursor: pointer;">
+              <Bell/>
+            </el-icon>
+          </el-badge>
         </div>
 
         <el-dropdown trigger="click">
@@ -137,33 +140,33 @@
             :collapse="isCollapse"
             :unique-opened="true"
         >
-        <template v-for="menu in userStore.routes" :key="menu.path">
-          <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
-            <template #title>
-              <svg-icon v-if="menu.icon" :name="menu.icon" />
-              <span>{{ menu.menuName }}</span>
-            </template>
+          <template v-for="menu in userStore.routes" :key="menu.path">
+            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+              <template #title>
+                <svg-icon v-if="menu.icon" :name="menu.icon"/>
+                <span>{{ menu.menuName }}</span>
+              </template>
+
+              <el-menu-item
+                  v-for="child in menu.children"
+                  :key="child.path"
+                  :index="resolvePath(menu.path, child.path)"
+                  @click="handleMenuClick(child, menu.path)"
+              >
+                <svg-icon v-if="child.icon" :name="child.icon"/>
+                <span>{{ child.menuName }}</span>
+              </el-menu-item>
+            </el-sub-menu>
 
             <el-menu-item
-                v-for="child in menu.children"
-                :key="child.path"
-                :index="resolvePath(menu.path, child.path)"
-            @click="handleMenuClick(child, menu.path)"
+                v-else
+                :index="menu.path"
+                @click="handleMenuClick(menu, '')"
             >
-              <svg-icon v-if="child.icon" :name="child.icon" />
-            <span>{{ child.menuName }}</span>
+              <svg-icon v-if="menu.icon" :name="menu.icon"/>
+              <span>{{ menu.menuName }}</span>
             </el-menu-item>
-          </el-sub-menu>
-
-          <el-menu-item
-              v-else
-              :index="menu.path"
-              @click="handleMenuClick(menu, '')"
-          >
-            <svg-icon v-if="menu.icon" :name="menu.icon" />
-            <span>{{ menu.menuName }}</span>
-          </el-menu-item>
-        </template>
+          </template>
         </el-menu>
       </aside>
 
@@ -181,7 +184,7 @@
 </template>
 
 <script setup>
-import {ref, watch, onMounted, computed} from 'vue'
+import {ref, watch, onMounted, onUnmounted, computed} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
@@ -192,6 +195,10 @@ import {
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
 import {resolvePath} from '@/utils/path'
+import enterpriseApi from '@/api/enterprise'
+
+const pendingCount = ref(0)
+let timer = null
 
 const route = useRoute()
 const router = useRouter()
@@ -205,8 +212,16 @@ const profileVisible = ref(false)
 const profileLoading = ref(false)
 const profileFormRef = ref(null)
 
+
 // 获取用户信息
 const userInfo = computed(() => userStore.userInfo)
+
+const handleNoticeClick = () => {
+  console.log('触发跳转，当前数量:', pendingCount.value)
+  if (pendingCount.value > 0) {
+    router.push('/business/enterprise/list')
+  }
+}
 
 const getBreadcrumb = () => {
   let matched = route.matched.filter(item => item.meta && item.meta.title)
@@ -217,7 +232,7 @@ const getBreadcrumb = () => {
     // 构造一个虚拟的父级节点
     const parentNode = {
       path: '', // 目录通常不可点击，所以路径设为空
-      meta: { title: current.meta.parentTitle }
+      meta: {title: current.meta.parentTitle}
     }
     // 插入到当前节点之前
     matched.splice(matched.length - 1, 0, parentNode)
@@ -225,6 +240,33 @@ const getBreadcrumb = () => {
 
   breadcrumbList.value = matched
 }
+
+// 获取待审核总数
+const fetchPendingCount = async () => {
+  const user = userStore.userInfo || {}
+  const roles = userStore.roles || []
+
+  console.log('【诊断】当前用户名:', user.username)
+  console.log('【诊断】当前角色列表:', roles)
+
+  // 判断逻辑保持不变，现在 roles 能拿到 ["ROLE_ADMIN"] 了
+  const isAdmin = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
+
+  if (!isAdmin && user.username !== 'admin') {
+    console.warn('【诊断】非管理权限')
+    return
+  }
+  try {
+    const res = await enterpriseApi.getPendingCount()
+    // 逻辑根据你的 API 结构调整
+    if (res && res.code === 200) {
+      pendingCount.value = res.data
+    }
+  } catch (error) {
+    console.error('获取通知数量失败', error)
+  }
+}
+
 
 // 增加菜单点击处理函数
 const handleMenuClick = (item, parentPath) => {
@@ -334,7 +376,7 @@ watch(
       activeMenu.value = newPath
       getBreadcrumb() // <--- 在这里调用，确保每次路由变化都重新生成面包屑
     },
-    { immediate: true }
+    {immediate: true}
 )
 
 
@@ -363,9 +405,24 @@ const toggleFullScreen = () => {
 
 onMounted(() => {
   activeMenu.value = route.path
-  // 如果登录后停在 /index 或 /，自动跳往主控台
   if (route.path === '/index' || route.path === '/') {
     router.push('/index/dashboard')
+  }
+
+  // 初始获取一次
+  fetchPendingCount()
+
+  // 每隔 1 分钟轮询一次
+  timer = setInterval(() => {
+    fetchPendingCount()
+  }, 60000)
+})
+
+// 新增：组件卸载时清理定时器
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
   }
 })
 </script>
@@ -542,22 +599,6 @@ onMounted(() => {
   background-color: #f0f2f5;
 }
 
-/* 切换动画 */
-.fade-transform-enter-active,
-.fade-transform-leave-active {
-  transition: all 0.3s;
-}
-
-.fade-transform-enter-from {
-  opacity: 0;
-  transform: translateX(-15px);
-}
-
-.fade-transform-leave-to {
-  opacity: 0;
-  transform: translateX(15px);
-}
-
 /* 修改个人资料对话框 */
 .profile-avatar {
   width: 100px;
@@ -583,5 +624,34 @@ onMounted(() => {
 .my-divider :deep(.el-divider__text) {
   font-size: 13px;
   color: #d54f4f;
+}
+
+.header-action-icons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow: visible !important;
+}
+
+.notice-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+:deep(.el-badge__content.is-fixed) {
+  top: 2px !important;
+  right: 1px !important;
+  transform: translateY(-50%) translateX(50%) scale(0.8);
+  border: none;
+  z-index: 10;
+}
+
+/* 针对图标大小的微调 */
+.header-action-icons .el-icon {
+  font-size: 28px;
+  color: #606266;
 }
 </style>

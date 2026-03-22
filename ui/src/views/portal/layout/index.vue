@@ -1,70 +1,52 @@
 <template>
-  <div class="portal-wrapper">
-    <header class="portal-header">
-      <div class="logo">经济开发区门户</div>
-      <nav class="nav-menu">
-        <router-link to="/home">首页</router-link>
-        <router-link to="/policy">政策法规</router-link>
-      </nav>
-      <div class="user-action">
-        <el-button v-if="!hasToken" type="primary" @click="$router.push('/login')">登录 / 注册</el-button>
-        <el-button v-else type="success" @click="$router.push('/index/dashboard')">进入控制台</el-button>
-      </div>
-    </header>
+  <div class="portal-layout">
+    <Header/>
 
     <main class="portal-main">
-      <router-view/>
+      <router-view v-slot="{ Component }">
+        <transition name="fade-transform" mode="out-in">
+          <component :is="Component"/>
+        </transition>
+      </router-view>
     </main>
 
-    <footer class="portal-footer">
-      <p>© 2026 经济开发区管理委员会 版权所有</p>
-    </footer>
+    <Footer/>
+
+    <el-backtop :right="40" :bottom="40"/>
   </div>
 </template>
 
 <script setup>
-import {computed} from 'vue'
-import {useUserStore} from '@/store/user'
-
-const userStore = useUserStore()
-const hasToken = computed(() => !!userStore.token)
+import Header from './Header.vue'
+import Footer from './Footer.vue'
 </script>
 
 <style scoped>
-.portal-header {
-  height: 60px;
+.portal-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 50px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 999;
-}
-
-.nav-menu a {
-  margin: 0 15px;
-  text-decoration: none;
-  color: #333;
-}
-
-.nav-menu a.router-link-active {
-  color: #409EFF;
-  font-weight: bold;
+  flex-direction: column;
+  min-height: 100vh; /* 保证页脚始终在最下面 */
 }
 
 .portal-main {
-  min-height: calc(100vh - 120px);
-  background: #f5f7fa;
+  flex: 1; /* 自动撑开剩余空间 */
+  padding-top: 70px; /* 留出 Header 的高度，防止内容被遮挡 */
+  background-color: #f5f7fa;
 }
 
-.portal-footer {
-  height: 60px;
-  line-height: 60px;
-  text-align: center;
-  background: #2b333e;
-  color: #a0a5ab;
+/* 页面切换动画：让交互更现代化 */
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 </style>

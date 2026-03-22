@@ -18,4 +18,9 @@ public interface EnterpriseAuditMapper {
 	 * 根据企业ID查询审核流水历史 (含审核人姓名)
 	 */
 	List<EnterpriseAuditVO> selectByEnterpriseId(@Param("enterpriseId") Long enterpriseId);
+
+	/**
+	 * 根据企业ID删除流水记录
+	 */
+	void deleteByEnterpriseIds(@Param("ids") List<Long> ids);
 }
