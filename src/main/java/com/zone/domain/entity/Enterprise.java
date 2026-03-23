@@ -33,6 +33,7 @@ public class Enterprise extends BaseEntity {
 	private String buildingNo;      // 建筑编号
 	private BigDecimal rentArea;    // 租用面积(㎡)
 	private String industry;        // 行业
+	private String introduction;     // 公司简介
 	private String contactPerson;   // 企业联系人
 	private String contactPhone;    // 联系方式
 	private String licenseUrl;      // 营业执照附件路径

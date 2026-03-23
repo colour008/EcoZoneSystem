@@ -26,6 +26,11 @@ public class BaseEntity implements Serializable {
 	private Long id;
 
 	/**
+	 * 更新人标识
+	 */
+	private String updateBy;
+
+	/**
 	 * 创建时间
 	 */
 	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

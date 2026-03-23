@@ -146,10 +146,43 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	 * @param enterpriseDTO
 	 * @return
 	 */
+	/**
+	 * 企业用户自主修改入驻信息（简介、联系方式等）
+	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean updateMyEnterprise(EnterpriseDTO enterpriseDTO) {
-		return false;
+		Long currentUserId = SecurityUtils.getUserId();
+
+		// 1. 获取该用户当前的企业记录
+		List<Enterprise> list = enterpriseMapper.listAllByUserId(currentUserId);
+		if (list == null || list.isEmpty()) {
+			throw new BusinessException("未找到您的企业信息，请先提交入驻申请");
+		}
+		Enterprise existing = list.get(0);
+
+		// 2. 状态校验：审核中(0)禁止修改，防止干扰审核逻辑
+		if (existing.getStatus() == 0) {
+			throw new BusinessException("您的申请正在审核中，暂时无法修改资料");
+		}
+
+		// 3. 业务逻辑：企业用户仅允许修改非核心字段（简介、联系人、电话、行业）
+		// 核心字段如公司名称、信用代码、租用面积等通常需要重新发起入驻流程（即走 apply 接口）
+		existing.setIntroduction(enterpriseDTO.getIntroduction());
+		existing.setContactPerson(enterpriseDTO.getContactPerson());
+		existing.setContactPhone(enterpriseDTO.getContactPhone());
+		existing.setIndustry(enterpriseDTO.getIndustry());
+		existing.setUpdateBy(currentUserId.toString());
+		existing.setUpdateTime(LocalDateTime.now());
+
+		log.info("企业用户自主更新资料 - 企业ID: {}, 更新字段: 简介/联系方式", existing.getId());
+
+		boolean updated = enterpriseMapper.updateById(existing) > 0;
+		if (updated) {
+			// 记录一条轻量级的流水，方便管理员在后台看到变更详情
+			saveAuditRecord(existing.getId(), existing.getStatus(), "用户自主更新了企业简介或联系信息", currentUserId);
+		}
+		return updated;
 	}
 
 	// ================== B端管控接口 ==================

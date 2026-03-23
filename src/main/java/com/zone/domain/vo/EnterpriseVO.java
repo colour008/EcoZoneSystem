@@ -28,6 +28,7 @@ public class EnterpriseVO extends BaseEntity {
 	private String buildingNo;
 	private BigDecimal rentArea;
 	private String industry;
+	private String introduction;
 	private String contactPerson;
 	private String contactPhone;
 	private String licenseUrl;

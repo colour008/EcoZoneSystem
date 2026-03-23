@@ -52,9 +52,9 @@ public class EnterpriseController {
 	 * 修改企业信息
 	 */
 	@PutMapping("/mine/update")
-	@Operation(summary = "C端-修改我的企业联系方式")
+	@Operation(summary = "C端-维护我的企业资料", description = "企业用户自主更新联系人、电话及企业简介等非核心审核字段")
 	public Result<String> updateMyEnterprise(@RequestBody EnterpriseDTO enterpriseDTO) {
-		log.info("企业自助更新信息");
+		log.info("企业用户[{}]自主更新资料", enterpriseDTO.getCompanyName());
 		boolean success = enterpriseService.updateMyEnterprise(enterpriseDTO);
 		return success ? Result.success("更新成功") : Result.sysError("更新失败");
 	}

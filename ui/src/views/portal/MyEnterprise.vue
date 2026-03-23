@@ -4,218 +4,228 @@
       <div class="header-content">
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>我的入驻</el-breadcrumb-item>
+          <el-breadcrumb-item>我的企业</el-breadcrumb-item>
         </el-breadcrumb>
         <div class="title-row">
           <div class="title-left">
-            <h1>企业入驻管理</h1>
+            <h1>{{ enterpriseInfo.companyName || '企业档案' }}</h1>
             <el-tag :type="statusMap[enterpriseInfo.status]?.tagType" effect="dark" round>
               {{ statusMap[enterpriseInfo.status]?.text || '未申请' }}
             </el-tag>
           </div>
 
-          <div class="title-right" v-if="(enterpriseInfo.status === 2 || enterpriseInfo.status === 3) && !isReApplying">
-            <el-button type="warning" plain icon="Refresh" @click="handleReApply">
-              再次申请入驻
+          <div class="title-right">
+            <el-button v-if="enterpriseInfo.status === null" type="primary" icon="Plus" @click="handleOpenApply">
+              立即申请入驻
+            </el-button>
+            <el-button v-else-if="enterpriseInfo.status === 2 || enterpriseInfo.status === 3" type="warning"
+                       icon="Refresh" @click="handleOpenApply">
+              重新提交入驻申请
+            </el-button>
+
+            <el-button v-else-if="enterpriseInfo.status === 1" type="success" icon="Promotion"
+                       @click="handleOpenDecoration">
+              装修企业风采
             </el-button>
           </div>
         </div>
       </div>
     </header>
 
-    <main class="main-content">
-      <section v-if="enterpriseInfo.status !== null && (enterpriseInfo.status !== 3 || isReApplying)"
-               class="status-steps card-style">
-        <el-steps :active="isReApplying ? 0 : stepActive" finish-status="success" align-center>
-          <el-step title="提交申请" :description="isReApplying ? '' : enterpriseInfo.createTime"></el-step>
-          <el-step
-              title="平台审核"
-              :status="(enterpriseInfo.status === 2 && !isReApplying) ? 'error' : ''"
-              :description="(enterpriseInfo.status === 2 && !isReApplying) ? '审核未通过' : '人工核验中'"
-          ></el-step>
-          <el-step title="完成入驻" description="正式入驻园区"></el-step>
-        </el-steps>
-      </section>
+    <main class="main-content" v-loading="loading">
+      <template v-if="enterpriseInfo.id">
+        <section class="status-steps card-style" v-if="enterpriseInfo.status === 0 || enterpriseInfo.status === 2">
+          <el-steps :active="stepActive" finish-status="success" align-center>
+            <el-step title="提交申请" :description="enterpriseInfo.createTime"></el-step>
+            <el-step
+                title="平台审核"
+                :status="enterpriseInfo.status === 2 ? 'error' : ''"
+                :description="enterpriseInfo.status === 2 ? '审核未通过' : '人工核验中'"
+            ></el-step>
+            <el-step title="完成入驻" description="正式入驻园区"></el-step>
+          </el-steps>
 
-      <transition name="el-zoom-in-top">
-        <el-alert
-            v-if="enterpriseInfo.status === 2 && !isReApplying"
-            title="您的入驻申请已被驳回"
-            type="error"
-            :closable="false"
-            show-icon
-            class="reject-alert"
-        >
-          <template #default>
-            <p class="reject-reason">驳回理由：<strong>{{ enterpriseInfo.auditOpinion || '资料不全' }}</strong></p>
-            <p>请点击右上角“再次申请”修改资料后重新提交。</p>
-          </template>
-        </el-alert>
-      </transition>
+          <el-alert
+              v-if="enterpriseInfo.status === 2"
+              title="审核未通过反馈"
+              type="error"
+              :closable="false"
+              show-icon
+              class="reject-alert-box"
+          >
+            <template #default>
+              <p class="reject-reason">驳回理由：{{ enterpriseInfo.auditOpinion || '资料需要完善，请核对后重新提交' }}</p>
+              <p class="reject-tip">提示：您可以点击右上角的“重新提交入驻申请”按钮来修正信息。</p>
+            </template>
+          </el-alert>
+        </section>
 
-      <section v-if="enterpriseInfo.status === 3 && !isReApplying" class="moved-out-section card-style">
-        <el-empty description="您的企业已办理迁出，如需重新入驻请点击上方按钮">
-          <el-button type="primary" icon="Refresh" @click="handleReApply">立即重新申请</el-button>
-        </el-empty>
-      </section>
+        <section class="intro-display-section card-style">
+          <div class="section-title">
+            <el-icon>
+              <Monitor/>
+            </el-icon>
+            <span>企业风采展示</span>
 
-      <section v-else class="form-section card-style" v-loading="loading">
-        <div class="section-title">
-          <el-icon>
-            <InfoFilled/>
-          </el-icon>
-          <span>{{ isReApplying ? '重新填报入驻信息' : '基本入驻信息' }}</span>
-        </div>
-
-        <el-form
-            ref="formRef"
-            :model="formData"
-            :rules="rules"
-            label-position="top"
-            :disabled="isReadOnly"
-        >
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="企业名称" prop="companyName">
-                <el-input v-model="formData.companyName" placeholder="请与营业执照保持一致"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="统一社会信用代码" prop="creditCode">
-                <el-input v-model="formData.creditCode" placeholder="18 位信用代码"/>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="40">
-            <el-col :span="8">
-              <el-form-item label="法人代表" prop="legalPerson">
-                <el-input v-model="formData.legalPerson"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="注册资本 (万元)" prop="registeredCapital">
-                <el-input-number v-model="formData.registeredCapital" :precision="2" :step="10" style="width:100%"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item label="所属行业" prop="industry">
-                <el-select v-model="formData.industry" placeholder="请选择行业" style="width:100%">
-                  <el-option label="信息技术" value="IT"/>
-                  <el-option label="生物医药" value="Bio"/>
-                  <el-option label="智能制造" value="Manufacturing"/>
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-divider content-position="left">联系人信息</el-divider>
-
-          <el-row :gutter="40">
-            <el-col :span="12">
-              <el-form-item label="经办人姓名" prop="contactPerson">
-                <el-input v-model="formData.contactPerson"/>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="联系电话" prop="contactPhone">
-                <el-input v-model="formData.contactPhone"/>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-form-item label="营业执照电子版" prop="licenseUrl">
-            <div class="upload-wrapper">
-              <el-upload
-                  class="license-uploader"
-                  action="/api/common/upload"
-                  :show-file-list="false"
-                  :on-success="handleUploadSuccess"
-                  :disabled="isReadOnly"
-              >
-                <img v-if="formData.licenseUrl" :src="formData.licenseUrl" class="license-img"/>
-                <el-icon v-else class="uploader-icon">
-                  <Plus/>
-                </el-icon>
-              </el-upload>
-              <div class="upload-tip" v-if="!isReadOnly">支持 jpg/png，大小不超过 5MB</div>
-            </div>
-          </el-form-item>
-
-          <div class="form-actions" v-if="!isReadOnly">
-            <el-button size="large" @click="resetForm">重置</el-button>
             <el-button
+                v-if="enterpriseInfo.id"
+                link
                 type="primary"
-                size="large"
-                :loading="submitting"
-                @click="submitForm"
-                class="submit-btn"
+                icon="Edit"
+                @click="handleOpenDecoration"
+                style="margin-left: auto"
             >
-              {{ (enterpriseInfo.status === 2 || enterpriseInfo.status === 3) ? '修改并重新提交' : '提交入驻申请' }}
+              编辑简介
             </el-button>
           </div>
-        </el-form>
-      </section>
 
-      <section v-if="auditHistory.length > 0" class="audit-timeline card-style">
-        <div class="section-title">审核历程</div>
-        <el-timeline>
-          <el-timeline-item
-              v-for="(log, index) in auditHistory"
-              :key="index"
-              :type="log.status === 1 ? 'success' : (log.status === 2 ? 'danger' : 'primary')"
-              :timestamp="log.createTime"
-          >
-            <h4>{{ log.auditAction }}</h4>
-            <p v-if="log.opinion">意见：{{ log.opinion }}</p>
-            <p v-if="log.auditorName" class="auditor">审核人：{{ log.auditorName }}</p>
-          </el-timeline-item>
-        </el-timeline>
-      </section>
+          <div class="rich-content-view" v-if="enterpriseInfo.introduction" v-html="enterpriseInfo.introduction"></div>
+          <el-empty v-else description="暂无图文简介，点击上方按钮装修企业风采">
+            <el-button v-if="enterpriseInfo.status === 1" type="primary" plain @click="handleOpenDecoration">
+              立即去装修
+            </el-button>
+          </el-empty>
+        </section>
+
+        <section class="info-grid card-style">
+          <div class="section-title">
+            <el-icon>
+              <InfoFilled/>
+            </el-icon>
+            <span>基础档案</span>
+          </div>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="信用代码">{{ enterpriseInfo.creditCode }}</el-descriptions-item>
+            <el-descriptions-item label="法人代表">{{ enterpriseInfo.legalPerson }}</el-descriptions-item>
+            <el-descriptions-item label="注册资本">{{ enterpriseInfo.registeredCapital }} 万元</el-descriptions-item>
+            <el-descriptions-item label="所属行业">{{ enterpriseInfo.industry }}</el-descriptions-item>
+            <el-descriptions-item label="联系人">{{ enterpriseInfo.contactPerson }}</el-descriptions-item>
+            <el-descriptions-item label="联系电话">{{ enterpriseInfo.contactPhone }}</el-descriptions-item>
+            <el-descriptions-item label="营业执照" :span="2">
+              <el-image v-if="enterpriseInfo.licenseUrl" style="width: 120px; border-radius: 4px;"
+                        :src="enterpriseInfo.licenseUrl" :preview-src-list="[enterpriseInfo.licenseUrl]" fit="contain"
+                        preview-teleported/>
+            </el-descriptions-item>
+          </el-descriptions>
+        </section>
+
+        <section v-if="auditHistory.length > 0" class="audit-timeline card-style">
+          <div class="section-title">流转记录</div>
+          <el-timeline>
+            <el-timeline-item v-for="(log, index) in auditHistory" :key="index"
+                              :type="log.status === 1 ? 'success' : (log.status === 2 ? 'danger' : 'primary')"
+                              :timestamp="log.createTime">
+              <h4>{{ log.auditAction }}</h4>
+              <p v-if="log.opinion" class="opinion-text">反馈：{{ log.opinion }}</p>
+            </el-timeline-item>
+          </el-timeline>
+        </section>
+      </template>
+
+      <el-empty v-else description="您尚未提交入驻申请">
+        <el-button type="primary" size="large" @click="handleOpenApply">立即申请入驻</el-button>
+      </el-empty>
     </main>
+
+    <el-dialog v-model="applyDialogVisible" title="填报入驻申请" width="700px" destroy-on-close>
+      <el-form ref="applyFormRef" :model="applyForm" :rules="rules" label-position="top">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="企业全称" prop="companyName">
+              <el-input v-model="applyForm.companyName"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="信用代码" prop="creditCode">
+              <el-input v-model="applyForm.creditCode"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="法人代表" prop="legalPerson">
+              <el-input v-model="applyForm.legalPerson"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="注册资本" prop="registeredCapital">
+              <el-input-number v-model="applyForm.registeredCapital" style="width:100%"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="所属行业" prop="industry">
+              <el-input v-model="applyForm.industry"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="营业执照" prop="licenseUrl">
+          <el-upload class="license-uploader" action="/api/common/upload" :show-file-list="false"
+                     :on-success="res => applyForm.licenseUrl = res.data.url">
+            <img v-if="applyForm.licenseUrl" :src="applyForm.licenseUrl" class="license-img" alt="营业执照"/>
+            <el-icon v-else class="uploader-icon">
+              <Plus/>
+            </el-icon>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="applyDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitApply">提交审核</el-button>
+      </template>
+    </el-dialog>
+
+    <el-drawer v-model="decoDrawerVisible" title="装修企业风采" size="850px" destroy-on-close>
+      <el-form :model="decoForm" label-position="top" style="padding: 20px">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="业务联系人">
+              <el-input v-model="decoForm.contactPerson"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="联系电话">
+              <el-input v-model="decoForm.contactPhone"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="企业风采简介 (支持图文视频)">
+          <WangEditor v-model="decoForm.introduction" height="500px"/>
+        </el-form-item>
+        <div style="margin-top: 30px">
+          <el-button type="primary" size="large" :loading="submitting" @click="submitDecoration" style="width: 100%">
+            保存并更新门户
+          </el-button>
+        </div>
+      </el-form>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import {ref, onMounted, computed} from 'vue'
-import {InfoFilled, Plus} from '@element-plus/icons-vue'
+import {InfoFilled, Plus, Monitor, Refresh, Promotion, Edit} from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
+import WangEditor from '@/components/WangEditor/index.vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 
 const loading = ref(true)
 const submitting = ref(false)
-const formRef = ref(null)
-const isReApplying = ref(false) // 是否正处于“再次申请”的可编辑状态
+const applyDialogVisible = ref(false)
+const decoDrawerVisible = ref(false)
+const applyFormRef = ref(null)
 
-// 初始企业状态信息
-const enterpriseInfo = ref({
-  id: null,
-  status: null, // null:未申请, 0:待审, 1:通过, 2:驳回, 3:已迁出
-  auditOpinion: '',
-  createTime: ''
-})
+const enterpriseInfo = ref({id: null, status: null, introduction: ''})
 
-// 表单数据
-const formData = ref({
+const applyForm = ref({
   companyName: '',
   creditCode: '',
   legalPerson: '',
   registeredCapital: 0,
   industry: '',
-  contactPerson: '',
-  contactPhone: '',
   licenseUrl: ''
 })
+const decoForm = ref({contactPerson: '', contactPhone: '', introduction: ''})
 
-// 校验规则
-const rules = {
-  companyName: [{required: true, message: '请输入企业名称', trigger: 'blur'}],
-  creditCode: [{required: true, pattern: /^[A-Z0-9]{18}$/, message: '请输入18位信用代码', trigger: 'blur'}],
-  contactPhone: [{required: true, pattern: /^1[3-9]\d{9}$/, message: '手机号格式错误', trigger: 'blur'}],
-  licenseUrl: [{required: true, message: '请上传营业执照', trigger: 'change'}]
-}
-
-// 状态字典
 const statusMap = {
   0: {text: '资料审核中', tagType: 'warning'},
   1: {text: '正式入驻', tagType: 'success'},
@@ -223,82 +233,78 @@ const statusMap = {
   3: {text: '已迁出', tagType: 'info'}
 }
 
-// 进度条控制
-const stepActive = computed(() => {
-  if (enterpriseInfo.value.status === 0) return 1
-  if (enterpriseInfo.value.status === 1) return 3
-  if (enterpriseInfo.value.status === 2) return 1
-  return 0
-})
+const stepActive = computed(() => enterpriseInfo.value.status === 0 ? 1 : (enterpriseInfo.value.status === 1 ? 3 : 1))
 
-// 是否只读逻辑完善
-const isReadOnly = computed(() => {
-  // 1. 如果用户点击了“再次申请”，则必须解锁
-  if (isReApplying.value) return false
-  // 2. 如果从未申请，解锁
-  if (enterpriseInfo.value.status === null) return false
-  // 3. 其他状态（待审核、已入驻、驳回未点再次申请、迁出未点再次申请）均只读
-  return true
-})
+const rules = {
+  companyName: [{required: true, message: '请输入企业名称', trigger: 'blur'}],
+  creditCode: [{required: true, pattern: /^[A-Z0-9]{18}$/, message: '18位信用代码格式错误', trigger: 'blur'}],
+  licenseUrl: [{required: true, message: '请上传营业执照', trigger: 'change'}]
+}
 
 const auditHistory = ref([])
 
-// 初始化：获取数据
 const initData = async () => {
   loading.value = true
   try {
     const res = await enterpriseApi.getMyEnterprise()
     if (res.data) {
       enterpriseInfo.value = res.data
-      Object.assign(formData.value, res.data)
       const historyRes = await enterpriseApi.getAuditHistory(res.data.id)
       auditHistory.value = historyRes.data
     }
   } catch (err) {
-    console.error('获取信息失败', err)
+    console.error(err)
   } finally {
     loading.value = false
   }
 }
 
-// 处理再次申请的动作
-const handleReApply = () => {
-  ElMessageBox.confirm(
-      '重新申请将进入新的审核流程，确定继续吗？',
-      '提示',
-      {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'}
-  ).then(() => {
-    isReApplying.value = true
-    ElMessage.info('请更新您的入驻信息后点击提交')
-  }).catch(() => {
-  })
+const handleOpenApply = () => {
+  Object.assign(applyForm.value, enterpriseInfo.value)
+  if (enterpriseInfo.value.status === 2 || enterpriseInfo.value.status === 3) {
+    ElMessageBox.confirm('重新提交将进入新审核流程', '提示', {type: 'warning'}).then(() => {
+      applyDialogVisible.value = true
+    })
+  } else {
+    applyDialogVisible.value = true
+  }
 }
 
-// 提交申请
-const submitForm = async () => {
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        submitting.value = true
-        await enterpriseApi.apply(formData.value)
-        ElMessage.success('申请提交成功！请等待审核')
-        isReApplying.value = false // 提交成功后重置编辑标识
-        await initData() // 刷新最新状态（变为待审核 0）
-      } catch (err) {
-        console.error(err)
-      } finally {
-        submitting.value = false
-      }
+const submitApply = async () => {
+  await applyFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    try {
+      submitting.value = true
+      await enterpriseApi.apply(applyForm.value)
+      ElMessage.success('入驻申请已提交，请等待审核')
+      applyDialogVisible.value = false
+      await initData()
+    } finally {
+      submitting.value = false
     }
   })
 }
 
-// 图片上传成功
-const handleUploadSuccess = (res) => {
-  formData.value.licenseUrl = res.data.url
+const handleOpenDecoration = () => {
+  decoForm.value = {
+    contactPerson: enterpriseInfo.value.contactPerson,
+    contactPhone: enterpriseInfo.value.contactPhone,
+    introduction: enterpriseInfo.value.introduction
+  }
+  decoDrawerVisible.value = true
 }
 
-const resetForm = () => formRef.value.resetFields()
+const submitDecoration = async () => {
+  try {
+    submitting.value = true
+    await enterpriseApi.updateMyEnterprise(decoForm.value)
+    ElMessage.success('风采维护成功，已即时更新')
+    decoDrawerVisible.value = false
+    await initData()
+  } finally {
+    submitting.value = false
+  }
+}
 
 onMounted(() => {
   initData()
@@ -319,12 +325,6 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.header-content h1 {
-  margin: 0;
-  font-size: 24px;
-  color: #303133;
-}
-
 .title-row {
   display: flex;
   align-items: center;
@@ -339,7 +339,7 @@ onMounted(() => {
 }
 
 .main-content {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -351,38 +351,70 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
+/* 驳回反馈框美化 */
+.reject-alert-box {
+  margin-top: 20px;
+  border: 1px solid #fde2e2;
+  border-radius: 8px;
+}
+
+.reject-reason {
+  font-weight: bold;
+  margin: 5px 0;
+  font-size: 15px;
+}
+
+.reject-tip {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.8;
+}
+
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   color: #303133;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
+  border-left: 4px solid #409eff;
+  padding-left: 12px;
 }
 
-.section-title .el-icon {
-  color: #409eff;
+.rich-content-view {
+  line-height: 1.8;
+  color: #444;
 }
 
-.reject-alert {
-  margin-bottom: 24px;
+.rich-content-view :deep(img) {
+  display: block;
+  margin: 16px auto;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.rich-content-view :deep(video),
+.rich-content-view :deep([data-w-e-type="video"]) {
+  display: block;
+  margin: 0 auto;
+  padding: 5px;
+  max-width: 800px;
+  width: 100% !important;
+  height: auto !important;
+  background: rgba(23, 23, 23, 0.94);
+  border: 1px solid rgba(48, 48, 48, 0.89);
+  border-radius: 5px;
 }
 
 .license-uploader {
   border: 1px dashed #d9d9d9;
   border-radius: 6px;
-  cursor: pointer;
-  width: 178px;
-  height: 240px;
+  width: 140px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.3s;
-}
-
-.license-uploader:hover {
-  border-color: #409eff;
 }
 
 .license-img {
@@ -396,38 +428,11 @@ onMounted(() => {
   color: #8c939d;
 }
 
-.upload-tip {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 8px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #f0f2f5;
-}
-
-.submit-btn {
-  padding-left: 40px;
-  padding-right: 40px;
-}
-
-.auditor {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-.moved-out-section {
-  text-align: center;
-  padding: 60px 0;
-}
-
-:deep(.el-step.is-horizontal .el-step__line) {
-  height: 2px;
+.opinion-text {
+  color: #f56c6c;
+  font-size: 13px;
+  background: #fff5f5;
+  padding: 8px;
+  border-radius: 4px;
 }
 </style>

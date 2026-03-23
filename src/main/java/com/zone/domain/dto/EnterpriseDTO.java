@@ -1,5 +1,6 @@
 package com.zone.domain.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,8 @@ public class EnterpriseDTO {
 	private String buildingNo;      // 建筑编号
 	private BigDecimal rentArea;    // 租用面积
 	private String industry;        // 行业
+	@Size(max = 20000, message = "企业介绍内容过长")
+	private String introduction;     // 公司简介
 	private String contactPerson;   // 企业联系人
 	private String contactPhone;    // 联系方式
 	private String licenseUrl;      // 营业执照附件（文件上传后的路径）

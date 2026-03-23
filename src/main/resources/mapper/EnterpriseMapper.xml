@@ -6,7 +6,7 @@
 
     <sql id="Base_Column_List">
         id, user_id, company_name, credit_code, legal_person, registered_capital,
-        building_no, rent_area, industry, contact_person, contact_phone,
+        building_no, rent_area, industry, introduction, contact_person, contact_phone,
         license_url, status, audit_opinion, auditor_id, audit_time,
         lease_start_date, lease_end_date, create_time, update_time
     </sql>
@@ -21,6 +21,7 @@
         <result column="building_no" property="buildingNo"/>
         <result column="rent_area" property="rentArea"/>
         <result column="industry" property="industry"/>
+        <result column="introduction" property="introduction"/>
         <result column="contact_person" property="contactPerson"/>
         <result column="contact_phone" property="contactPhone"/>
         <result column="license_url" property="licenseUrl"/>
@@ -40,7 +41,8 @@
     </resultMap>
 
     <select id="listAll" resultMap="EnterpriseResultMap">
-        select <include refid="Base_Column_List"/>
+        select
+        <include refid="Base_Column_List"/>
         from biz_enterprise
         <where>
             <if test="userId != null">and user_id = #{userId}</if>
@@ -53,7 +55,7 @@
         u.real_name AS applicant_name,
         au.real_name AS auditor_name
         FROM biz_enterprise e
-        LEFT JOIN sys_user u ON e.user_id = u.id      -- 关联申请人
+        LEFT JOIN sys_user u ON e.user_id = u.id -- 关联申请人
         LEFT JOIN sys_user au ON e.auditor_id = au.id -- 关联审核人
         <where>
             <if test="companyName != null and companyName != ''">
@@ -75,11 +77,11 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO biz_enterprise (
         user_id, company_name, credit_code, legal_person, registered_capital,
-        building_no, rent_area, industry, contact_person, contact_phone,
+        building_no, rent_area, industry, introduction, contact_person, contact_phone,
         license_url, status, create_time, update_time
         ) VALUES (
         #{userId}, #{companyName}, #{creditCode}, #{legalPerson}, #{registeredCapital},
-        #{buildingNo}, #{rentArea}, #{industry}, #{contactPerson}, #{contactPhone},
+        #{buildingNo}, #{rentArea}, #{industry}, #{introduction}, #{contactPerson}, #{contactPhone},
         #{licenseUrl}, 0, NOW(), NOW()
         )
     </insert>
@@ -103,10 +105,11 @@
             <if test="legalPerson != null">legal_person = #{legalPerson},</if>
             <if test="registeredCapital != null">registered_capital = #{registeredCapital},</if>
             <if test="buildingNo != null">building_no = #{buildingNo},</if>
-
             <if test="rentArea != null">rent_area = #{rentArea},</if>
-
             <if test="industry != null">industry = #{industry},</if>
+
+            <if test="introduction != null">introduction = #{introduction},</if>
+
             <if test="contactPerson != null">contact_person = #{contactPerson},</if>
             <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
             <if test="licenseUrl != null">license_url = #{licenseUrl},</if>
@@ -114,9 +117,9 @@
             <if test="leaseEndDate != null">lease_end_date = #{leaseEndDate},</if>
 
             <if test="status != null">status = #{status},</if>
-            audit_opinion = #{auditOpinion},
-            auditor_id = #{auditorId},
-            audit_time = #{auditTime},
+            <if test="auditOpinion != null">audit_opinion = #{auditOpinion},</if>
+            <if test="auditorId != null">auditor_id = #{auditorId},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
 
             update_time = NOW()
         </set>
@@ -149,7 +152,8 @@
     </select>
 
     <select id="listAllByUserId" resultMap="EnterpriseResultMap">
-        SELECT <include refid="Base_Column_List"/>
+        SELECT
+        <include refid="Base_Column_List"/>
         FROM biz_enterprise
         WHERE user_id = #{userId}
     </select>

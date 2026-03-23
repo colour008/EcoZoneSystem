@@ -186,7 +186,7 @@
       <el-dialog
           v-model="detailVisible"
           title="企业入驻电子档案"
-          width="700px"
+          width="800px"
           class="enterprise-detail-dialog"
           destroy-on-close
       >
@@ -316,6 +316,15 @@
               />
             </div>
             <span v-else style="color: #909399; font-size: 12px">未上传附件</span>
+          </el-descriptions-item>
+          <el-descriptions-item label-class-name="desc-label" :span="2">
+            <template #label>
+              <el-icon>
+                <InfoFilled/>
+              </el-icon>
+              企业概况
+            </template>
+            <div class="rich-content-view" v-html="enterpriseDetail.introduction || '暂无详细介绍'"></div>
           </el-descriptions-item>
         </el-descriptions>
 
@@ -491,6 +500,19 @@
             </el-col>
           </el-row>
         </div>
+
+        <div class="form-section mt-4">
+          <h4 class="section-title">
+            <el-icon>
+              <Tickets/>
+            </el-icon>
+            企业简介 (图文详情)
+          </h4>
+          <el-form-item label-width="0" prop="introduction">
+            <Editor v-model="form.introduction" placeholder="请输入企业的详细介绍、主营业务及企业风采..."/>
+          </el-form-item>
+        </div>
+
         <div class="form-section  mt-2">
           <h4 class="section-title">
             <el-icon>
@@ -604,9 +626,10 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Search, Refresh, Plus, Check, Close, View, Delete,
   InfoFilled, Location, Phone, Postcard, OfficeBuilding, FullScreen, Calendar, Tools, Money, User, EditPen, ZoomIn,
-  Picture, Timer, ChatDotSquare
+  Picture, Timer, ChatDotSquare, Tickets
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
+import Editor from '@/components/WangEditor/index.vue'
 import {uploadFile} from "@/utils/upload.js";
 
 // 1. 状态映射配置 (严格匹配 tinyint 0-3)
@@ -683,6 +706,7 @@ const form = ref({
   buildingNo: '',
   rentArea: 0,
   industry: '',
+  introduction: '',
   contactPerson: '',
   contactPhone: '',
   licenseUrl: '',
@@ -770,6 +794,7 @@ const handleAdd = () => {
     buildingNo: '',
     rentArea: 0,
     industry: '',
+    introduction: '',
     contactPerson: '',
     contactPhone: '',
     licenseUrl: '',
@@ -1396,4 +1421,46 @@ onMounted(() => {
   padding: 10px;
   border-radius: 4px;
 }
+
+/* 详情页富文本展示容器 */
+.rich-content-view {
+  padding: 12px;
+  background-color: #fcfcfc; /* 给个微灰背景区分内容区 */
+  border: 1px inset #f2f6fc;
+  border-radius: 4px;
+  line-height: 1.6;
+  color: #606266;
+  max-height: 600px; /* 防止内容过长撑开整个弹窗 */
+  overflow-y: auto;
+}
+
+/* 核心修复：强制约束 v-html 下的所有视频 */
+.rich-content-view :deep(video),
+.rich-content-view :deep([data-w-e-type="video"]),
+.rich-content-view :deep(.w-e-video-container) {
+  /* 建议宽度设为 400px 或 100% 以适应 Descriptions 容器 */
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin: 10px 0;
+  background-color: #000 !important;
+  border-radius: 4px;
+}
+
+/* 修正图片自适应 */
+.rich-content-view :deep(img) {
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain;
+  display: block;
+  margin: 10px 0;
+}
+
+/* 兼容处理编辑器生成的段落间距 */
+.rich-content-view :deep(p) {
+  margin: 8px 0;
+  word-break: break-all; /* 防止长单词/链接撑开 */
+}
+
 </style>

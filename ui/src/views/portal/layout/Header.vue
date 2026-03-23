@@ -20,7 +20,7 @@
           <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/news">园区动态</el-menu-item>
           <el-menu-item index="/policy">政策中心</el-menu-item>
-          <el-menu-item index="/my-enterprise">我的入驻</el-menu-item>
+          <el-menu-item index="/my-enterprise">入驻园区</el-menu-item>
           <el-menu-item index="/about">关于我们</el-menu-item>
         </el-menu>
       </nav>
