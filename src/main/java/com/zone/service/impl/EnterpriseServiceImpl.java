@@ -185,6 +185,38 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return updated;
 	}
 
+	/**
+	 * 迁出
+	 *
+	 * @param reason
+	 * @return
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean applyMoveOut(String reason) {
+		Long currentUserId = SecurityUtils.getUserId();
+		List<Enterprise> list = enterpriseMapper.listAllByUserId(currentUserId);
+		if (list == null || list.isEmpty()) {
+			throw new BusinessException("未找到企业信息");
+		}
+		Enterprise enterprise = list.get(0);
+
+		// 只有在【已入驻(1)】状态下才能申请迁出
+		if (enterprise.getStatus() != 1) {
+			throw new BusinessException("当前状态无法办理迁出申请");
+		}
+
+		// 更新状态为 4 (迁出待审核)
+		enterprise.setStatus(4);
+		enterprise.setAuditOpinion(reason); // 临时借用该字段存储迁出原因，或在流水中记录
+
+		boolean updated = enterpriseMapper.updateById(enterprise) > 0;
+		if (updated) {
+			saveAuditRecord(enterprise.getId(), 4, "企业主动申请迁出，原因：" + reason, currentUserId);
+		}
+		return updated;
+	}
+
 	// ================== B端管控接口 ==================
 	/**
 	 * 获取所有企业列表
@@ -259,10 +291,8 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return enterpriseMapper.getById(id);
 	}
 
-
-
 	/**
-	 * 迁出企业
+	 * 迁出企业办理
 	 *
 	 * @param id
 	 * @return
@@ -279,6 +309,12 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return rows > 0;
 	}
 
+	/**
+	 * 修改
+	 *
+	 * @param enterpriseDTO
+	 * @return
+	 */
 	@Override
 	public boolean updateEnterprise(EnterpriseDTO enterpriseDTO) {
 		// 1. 基础校验
@@ -372,4 +408,30 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		return enterpriseMapper.countPendingApplications();
 	}
 
+	/**
+	 * 迁出申请审核
+	 *
+	 * @param id
+	 * @param status
+	 * @param opinion
+	 * @return
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean auditMoveOut(Long id, Integer status, String opinion) {
+		Long adminId = SecurityUtils.getUserId();
+
+		// 校验：目标状态必须是 3(已迁出) 或 1(恢复正常状态)
+		if (status != 3 && status != 1) {
+			throw new BusinessException("非法审核状态");
+		}
+
+		// 更新企业状态
+		int rows = enterpriseMapper.updateAuditStatus(id, status, opinion, adminId);
+		if (rows > 0) {
+			String logMsg = status == 3 ? "准予迁出：" + opinion : "驳回迁出申请：" + opinion;
+			saveAuditRecord(id, status, logMsg, adminId);
+		}
+		return rows > 0;
+	}
 }

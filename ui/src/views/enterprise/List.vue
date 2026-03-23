@@ -62,19 +62,16 @@
       >
         <el-table-column type="selection" width="50" align="center"/>
 
-        <el-table-column label="企业基本信息" min-width="180" align="center">
+        <el-table-column label="企业基本信息" min-width="250" align="center">
           <template #default="scope">
             <div style="font-weight: 200; color: #303133">{{ scope.row.companyName }}</div>
             <div
                 style="font-size: 12px; color: #6d96e6; margin-top: 4px; display: flex; align-items: center; justify-content: center;">
-              <el-icon style="margin-right: 4px">
-                <Postcard/>
-              </el-icon>
               信用代码：{{ scope.row.creditCode }}
 
               <el-tooltip content="点击预览营业执照" placement="top" v-if="scope.row.licenseUrl">
                 <el-image
-                    style="width: 30px; height: 20px; margin-left: 8px; cursor: pointer; color: #409EFF; border: rgba(170,189,205,0.87) 1px groove"
+                    style="width: 30px; height: 20px; margin-left: 10px; cursor: pointer; color: #409EFF; border: rgba(170,189,205,0.87) 1px groove"
                     :src="scope.row.licenseUrl"
                     :preview-src-list="[scope.row.licenseUrl]"
                     preview-teleported
@@ -113,6 +110,18 @@
               </el-icon>
               {{ scope.row.buildingNo || '未分配' }} ({{ scope.row.rentArea || 0 }}㎡)
             </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="关联账号" width="120" align="center">
+          <template #default="scope">
+            <el-text v-if="scope.row.userName" class="mx-1" type="primary">
+              <el-icon style="margin-left: 4px">
+                <User/>
+              </el-icon>
+              {{ scope.row.userName }}
+            </el-text>
+            <span v-else style="color: #909399; font-size: 12px">未关联</span>
           </template>
         </el-table-column>
 
@@ -299,6 +308,17 @@
             </template>
             {{ enterpriseDetail.contactPhone }}
           </el-descriptions-item>
+
+          <el-descriptions-item label-class-name="desc-label">
+            <template #label>
+              <el-icon>
+                <User/>
+              </el-icon>
+              申请账号
+            </template>
+            {{ enterpriseDetail.userName || '未知账号' }}
+          </el-descriptions-item>
+
           <el-descriptions-item label-class-name="desc-label" :span="2">
             <template #label>
               <el-icon>

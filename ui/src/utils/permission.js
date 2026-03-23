@@ -2,47 +2,35 @@ import {resolvePath} from '@/utils/path'
 import router from '@/router/index'
 import menuApi from '@/api/menu'
 import {useUserStore} from '@/store/user'
-import {ElMessage} from "element-plus";
+import NProgress from 'nprogress'
 
-// 1. 【修改】将门户的路径加入白名单，允许游客访问
+// 1. 门户路径白名单，允许游客访问
 const whiteList = ['/login', '/register', '/404', '/home', '/policy']
 const modules = import.meta.glob('../views/**/*.vue')
 
+// --- 全局前置守卫 ---
 router.beforeEach(async (to, from, next) => {
+    NProgress.start()
+
+    // 动态设置页面 Title
+    const baseTitle = '经济开发区管理平台'
+    document.title = to.meta.title ? `${to.meta.title} - ${baseTitle}` : baseTitle
+
     const userStore = useUserStore()
     const hasToken = localStorage.getItem('token')
 
     if (hasToken) {
-        const roles = userStore.roles
-        // 管理员不应该访问的 C 端路径列表
-        const adminForbiddenPaths = ['/home', '/policy', '/news']
-
-        if (roles.includes('ROLE_ADMIN') && adminForbiddenPaths.includes(to.path)) {
-            ElMessage.info('管理员已登录，已自动跳转至控制台')
-            next('/index/dashboard')
-            return
-        }
-        // 管理员自动分流逻辑，如果是管理员且当前要去“门户首页”，直接送去“后台工作台”
-        const isAdmin = userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')
-        if (to.path === '/' || to.path === '/home') {
-            if (isAdmin) {
-                return next({ path: '/index/dashboard' })
-            }
-        }
+        // 如果已登录用户访问登录页，统一跳转到门户首页，不再区分角色
         if (to.path === '/login') {
-            // 【完善】已登录用户访问登录页，根据角色分流
-            if (userStore.roles.includes('ROLE_ENTERPRISE')) {
-                next({ path: '/my-enterprise' }) // 企业用户去我的企业
-            } else {
-                next({ path: '/index/dashboard' }) // 管理员去控制台
-            }
+            next({path: '/home'})
         } else {
+            // 判断是否已经加载过动态路由
             if (userStore.routes.length === 0) {
                 try {
                     const res = await menuApi.getRouters()
                     const rewriteRoutes = filterAsyncRouter(res.data)
 
-                    // 2. 【增强】根据角色动态判断工作台的名称
+                    // 根据角色动态判断工作台的名称
                     const isEnterprise = userStore.roles.includes('ROLE_ENTERPRISE')
                     const dashboardTitle = isEnterprise ? '企业工作台' : '系统主控台'
 
@@ -76,11 +64,13 @@ router.beforeEach(async (to, from, next) => {
                         }
                     })
 
+                    // 动态路由加载完毕后，追加 404 捕获
                     router.addRoute({
                         path: '/:pathMatch(.*)*',
                         redirect: '/404'
                     })
 
+                    // hack方法 确保addRoute已完成
                     next({...to, replace: true})
                 } catch (error) {
                     console.error('路由加载失败', error)
@@ -88,22 +78,28 @@ router.beforeEach(async (to, from, next) => {
                     next(`/login`)
                 }
             } else {
+                // 路由已存在，直接放行
                 next()
             }
         }
     } else {
-        // 3. 【修改】判断白名单的逻辑
+        // 未登录状态
         if (whiteList.includes(to.path) || to.path === '/') {
+            // 在白名单内，直接放行
             next()
         } else {
-            // 未登录且不在白名单，跳转到登录页，并记录原本想去的路径
+            // 不在白名单，跳转到登录页，并记录原本想去的路径
             next(`/login?redirect=${to.path}`)
         }
     }
 })
 
+// --- 全局后置守卫 ---
+router.afterEach(() => {
+    NProgress.done()
+})
+
 function filterAsyncRouter(asyncRouterMap) {
-    // ... 保持原有逻辑不变
     return asyncRouterMap.filter(route => {
         if (route.path && !route.path.startsWith('/') && !route.path.startsWith('http')) {
             route.path = '/' + route.path
@@ -123,7 +119,6 @@ function filterAsyncRouter(asyncRouterMap) {
 }
 
 function loadView(view) {
-    // ... 保持原有逻辑不变
     let path = view.replace(/^\//, '').replace(/\.vue$/, '')
     const filePath = `../views/${path}.vue`
     if (modules[filePath]) {

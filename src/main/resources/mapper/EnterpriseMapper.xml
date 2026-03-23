@@ -52,8 +52,8 @@
     <select id="getEnterprisePage" resultMap="EnterpriseVOResultMap">
         SELECT
         e.*,
-        u.real_name AS applicant_name,
-        au.real_name AS auditor_name
+        u.username AS applicant_name,
+        au.username AS auditor_name
         FROM biz_enterprise e
         LEFT JOIN sys_user u ON e.user_id = u.id -- 关联申请人
         LEFT JOIN sys_user au ON e.auditor_id = au.id -- 关联审核人
@@ -159,7 +159,9 @@
     </select>
 
     <select id="countPendingApplications" resultType="int">
-        SELECT COUNT(*) FROM biz_enterprise WHERE status = 0
+        SELECT COUNT(*)
+        FROM biz_enterprise
+        WHERE status = 0 OR status = 4
     </select>
 
 </mapper>

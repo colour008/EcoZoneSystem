@@ -59,6 +59,16 @@ public class EnterpriseController {
 		return success ? Result.success("更新成功") : Result.sysError("更新失败");
 	}
 
+	/**
+	 * 提交迁出申请
+	 */
+	@PutMapping("/mine/move-out/apply")
+	@Operation(summary = "C端-提交迁出申请")
+	public Result<String> applyMoveOut(@RequestParam String reason) {
+		log.info("企业申请迁出，原因: {}", reason);
+		boolean success = enterpriseService.applyMoveOut(reason);
+		return success ? Result.success("迁出申请已提交，请等待管理员审核") : Result.sysError("操作失败");
+	}
 
 	// ================== B端管控接口 ==================
 
@@ -124,12 +134,16 @@ public class EnterpriseController {
 	/**
 	 * 迁出办理
 	 */
-	@PutMapping("/move-out/{id}")
-	@Operation(summary = "B端-企业迁出办理")
-	public Result<String> moveOut(@PathVariable Long id) {
-		log.info("办理企业迁出 ID: {}", id);
-		boolean success = enterpriseService.moveOut(id);
-		return success ? Result.success("迁出办理成功") : Result.sysError("操作失败");
+	@PutMapping("/audit-move-out/{id}")
+	@Operation(summary = "B端-审核迁出申请")
+	public Result<String> auditMoveOut(
+			@PathVariable Long id,
+			@RequestParam Integer status, // 3:同意迁出, 1:驳回申请(恢复正常)
+			@RequestParam(required = false) String opinion
+	) {
+		log.info("审核迁出申请 - ID: {}, 结果: {}", id, status);
+		boolean success = enterpriseService.auditMoveOut(id, status, opinion);
+		return success ? Result.success("操作成功") : Result.sysError("操作失败");
 	}
 
 	/**

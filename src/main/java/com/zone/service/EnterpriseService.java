@@ -41,6 +41,13 @@ public interface EnterpriseService {
 	 */
 	boolean updateMyEnterprise(EnterpriseDTO enterpriseDTO);
 
+	/**
+	 * 迁出申请
+	 *
+	 * @param reason
+	 * @return
+	 */
+	boolean applyMoveOut(String reason);
 
 	// ================== B端管控接口 ==================
 
@@ -114,4 +121,14 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	int getPendingCount();
+
+	/**
+	 * 迁出审核
+	 *
+	 * @param id
+	 * @param status
+	 * @param opinion
+	 * @return
+	 */
+	boolean auditMoveOut(Long id, Integer status, String opinion);
 }

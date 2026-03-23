@@ -20,7 +20,7 @@
           <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/news">园区动态</el-menu-item>
           <el-menu-item index="/policy">政策中心</el-menu-item>
-          <el-menu-item index="/my-enterprise">入驻园区</el-menu-item>
+          <el-menu-item v-if="isAdmin || isStaff" index="/my-enterprise">入驻园区</el-menu-item>
           <el-menu-item index="/about">关于我们</el-menu-item>
         </el-menu>
       </nav>
@@ -46,24 +46,26 @@
                 <ArrowDown/>
               </el-icon>
             </div>
-
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item
-                    v-if="isAdmin"
+                    v-if="isAdmin || isStaff"
                     command="dashboard"
                     icon="Monitor"
-                    style="color: #409EFF; font-weight: bold;"
+                    style="color: #409EFF;"
                 >
                   进入管理后台
                 </el-dropdown-item>
 
-                <el-dropdown-item command="profile" icon="User">个人中心</el-dropdown-item>
-
-                <el-dropdown-item v-if="isEnterprise" command="enterprise" icon="OfficeBuilding">
-                  我的企业
+                <el-dropdown-item
+                    v-if="isEnterprise"
+                    command="enterprise"
+                    icon="Memo"
+                    style="color: #67C23A;"
+                >
+                  企业工作台
                 </el-dropdown-item>
-
+                <el-dropdown-item command="profile" icon="User">个人中心</el-dropdown-item>
                 <el-dropdown-item divided command="logout" icon="SwitchButton">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -137,6 +139,11 @@ const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 
+// 角色判断的计算属性
+const isAdmin = computed(() => userStore.roles.includes('ROLE_ADMIN'))
+const isStaff = computed(() => userStore.roles.includes('ROLE_STAFF'))
+const isEnterprise = computed(() => userStore.roles.includes('ROLE_ENTERPRISE'))
+
 const profileVisible = ref(false)
 const profileLoading = ref(false)
 const profileFormRef = ref(null)
@@ -170,12 +177,6 @@ const profileRules = {
 
 const isScrolled = ref(false)
 const activeMenu = computed(() => route.path)
-
-
-// 增加角色判断的计算属性
-const isAdmin = computed(() => userStore.roles.includes('ROLE_ADMIN'))
-const isEnterprise = computed(() => userStore.roles.includes('ROLE_ENTERPRISE'))
-
 
 // 监听页面滚动，改变 Header 样式
 const handleScroll = () => {
@@ -244,13 +245,14 @@ const submitProfile = async () => {
 const handleCommand = (command) => {
   switch (command) {
     case 'profile':
-      openProfile() // 这里改为打开弹窗
+      openProfile()
       break
     case 'dashboard':
-      // 管理员去后台控制台，企业用户去前台“我的企业”
-      router.push(isAdmin.value ? '/index/dashboard' : '/my-enterprise')
+      // 管理员/员工去后台
+      router.push('/index/dashboard')
       break
     case 'enterprise':
+      // 企业用户去“我的申请/工作台”
       router.push('/my-enterprise')
       break
     case 'logout':
@@ -274,17 +276,6 @@ const confirmLogout = () => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
-
-  // 完善：如果是管理员误入前台首页，自动引导回后台
-  const isAdmin = userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')
-  if (isAdmin && route.path === '/home') {
-    ElMessage({
-      message: '检测到管理员身份，正在跳转至管理后台...',
-      type: 'info',
-      duration: 2000
-    })
-    router.push('/index/dashboard')
-  }
 })
 
 onUnmounted(() => {

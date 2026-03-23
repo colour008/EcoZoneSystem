@@ -265,21 +265,15 @@ const handleLogin = async () => {
 
     ElMessage.success('欢迎回来')
 
-    // 3. 完善分流跳转逻辑
+    // 3. 统一跳转逻辑
     setTimeout(() => {
       const redirectPath = router.currentRoute.value.query.redirect
 
-      // 如果有重定向地址（且不是去根目录），则返回原页面
+      // 如果有被拦截前想去的地址（且不是根目录），则返回原页面；否则所有人统一去门户首页
       if (redirectPath && redirectPath !== '/') {
         router.push(redirectPath)
-      }
-      // 根据角色分流
-      else if (roles.includes('ROLE_ENTERPRISE')) {
-        router.push('/my-enterprise') // 企业用户去前台“我的企业”
-      } else if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')) {
-        router.push('/index/dashboard') // 管理员去后台
       } else {
-        router.push('/home') // 普通用户去首页
+        router.push('/home')
       }
     }, 200)
 

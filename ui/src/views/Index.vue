@@ -38,9 +38,13 @@
 
       <div class="header-right">
         <div class="header-action-icons">
-          <el-icon title="搜索">
-            <Search/>
-          </el-icon>
+
+          <el-tooltip content="返回门户首页" placement="bottom">
+            <el-icon @click="router.push('/home')" style="color: #409EFF;">
+              <Monitor />
+            </el-icon>
+          </el-tooltip>
+
           <el-icon title="全屏" @click="toggleFullScreen">
             <FullScreen v-if="!isFullscreen"/>
             <Aim v-else/>
@@ -190,7 +194,7 @@ import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
-  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus, UserFilled
+  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus, UserFilled, Monitor
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
@@ -526,7 +530,7 @@ onUnmounted(() => {
 .header-action-icons {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-right: 16px;
   color: #666;
   font-size: 30px;
@@ -653,5 +657,16 @@ onUnmounted(() => {
 .header-action-icons .el-icon {
   font-size: 28px;
   color: #606266;
+}
+
+/* 让返回门户的图标稍微特殊一点（可选） */
+.header-action-icons .el-icon:first-child {
+  margin-right: 4px; /* 和搜索图标拉开一点点距离 */
+}
+
+/* 悬浮时的缩放效果 */
+.header-action-icons .el-icon:hover {
+  transform: scale(1.1);
+  color: #409EFF; /* 悬浮时变蓝 */
 }
 </style>
