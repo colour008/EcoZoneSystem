@@ -35,6 +35,18 @@ const enterpriseApi = {
         })
     },
 
+    /**
+     * C端提交迁出申请 (新增)
+     * @param {String} reason - 迁出理由
+     */
+    applyMoveOut(reason) {
+        return request({
+            url: '/enterprise/mine/move-out/apply',
+            method: 'put',
+            params: {reason}
+        })
+    },
+
     // ================== B端管控接口 ==================
 
     /**
@@ -69,16 +81,33 @@ const enterpriseApi = {
     },
 
     /**
-     * 审核入驻申请
-     * @param id 企业ID
-     * @param status 1:通过, 2:驳回
-     * @param auditOpinion 审核意见 (驳回时必填)
+     * 审核入驻申请 (0 -> 1或2)
      */
     audit(id, status, auditOpinion) {
         return request({
             url: `/enterprise/audit/${id}`,
             method: 'put',
-            params: { status, auditOpinion }
+            params: {
+                status,
+                auditOpinion
+            }
+        })
+    },
+
+    /**
+     * 审核迁出申请 (4 -> 3或1) (修正)
+     * @param id 企业ID
+     * @param status 3:同意迁出, 1:驳回申请恢复正常
+     * @param opinion 审核意见
+     */
+    auditMoveOut(id, status, opinion) {
+        return request({
+            url: `/enterprise/audit-move-out/${id}`,
+            method: 'put',
+            params: {
+                status,
+                opinion
+            }
         })
     },
 
@@ -104,18 +133,7 @@ const enterpriseApi = {
     },
 
     /**
-     * 办理企业迁出
-     */
-    moveOut(id) {
-        return request({
-            url: `/enterprise/move-out/${id}`,
-            method: 'put'
-        })
-    },
-
-    /**
-     * 删除企业记录 (支持单个ID或ID数组)
-     * @param {Number|Array} ids - 企业ID或ID数组
+     * 删除企业记录
      */
     delete(ids) {
         return request({
@@ -125,8 +143,7 @@ const enterpriseApi = {
     },
 
     /**
-     * 获取待审核数量
-     * @returns {Promise<axios.AxiosResponse<any>>}
+     * 获取待审核数量 (包含 status 0 和 4)
      */
     getPendingCount() {
         return request({

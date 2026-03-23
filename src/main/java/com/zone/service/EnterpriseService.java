@@ -84,14 +84,6 @@ public interface EnterpriseService {
 	EnterpriseVO getDetailById(Long id);
 
 	/**
-	 * 迁出
-	 *
-	 * @param id
-	 * @return
-	 */
-	boolean moveOut(Long id);
-
-	/**
 	 * 修改
 	 *
 	 * @param enterpriseDTO

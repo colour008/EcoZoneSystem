@@ -23,10 +23,11 @@
         a.*,
         u.real_name AS auditorName,
         CASE
-        WHEN a.status = 0 THEN '提交申请'
-        WHEN a.status = 1 THEN '审核通过'
-        WHEN a.status = 2 THEN '审核驳回'
-        WHEN a.status = 3 THEN '迁出注销'
+        WHEN a.status = 0 THEN '入驻申请'
+        WHEN a.status = 1 THEN '准予入驻'
+        WHEN a.status = 2 THEN '入驻驳回'
+        WHEN a.status = 4 THEN '申请迁出'
+        WHEN a.status = 3 THEN '准予迁出'
         ELSE '系统操作'
         END AS auditAction
         FROM biz_enterprise_audit a

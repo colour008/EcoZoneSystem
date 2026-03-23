@@ -162,21 +162,32 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="310" fixed="right">
+        <el-table-column label="操作" align="center" width="220" fixed="right">
           <template #default="scope">
-            <template v-if="scope.row.status === 0">
+            <div v-if="scope.row.status === 0" style="margin: 12px 0 15px 0">
               <el-button link type="success" size="small" :icon="Check" @click="handleAudit(scope.row, 1)">通过
               </el-button>
               <el-button link type="danger" size="small" :icon="Close" @click="handleAudit(scope.row, 2)">驳回
               </el-button>
-            </template>
+            </div>
 
-            <el-button link type="primary" size="small" :icon="View" @click="handleDetail(scope.row)">详情</el-button>
-
-            <el-button link type="warning" size="small" :icon="EditPen" @click="handleEdit(scope.row)">修改</el-button>
-
-            <el-button link type="danger" size="small" :icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
+            <div v-if="scope.row.status === 4" style="margin: 12px 0 15px 0">
+              <el-button link type="primary" size="small" :icon="Check" @click="handleMoveOutAudit(scope.row, 3)">
+                准予迁出
+              </el-button>
+              <el-button link type="warning" size="small" :icon="Close" @click="handleMoveOutAudit(scope.row, 1)">
+                驳回迁出
+              </el-button>
+            </div>
+            <div>
+              <el-button link type="primary" size="small" :icon="View" @click="handleDetail(scope.row)">详情</el-button>
+              <el-button link type="warning" size="small" :icon="EditPen" @click="handleEdit(scope.row)">修改
+              </el-button>
+              <el-button link type="danger" size="small" :icon="Delete" @click="handleDelete(scope.row)">删除
+              </el-button>
+            </div>
           </template>
+
         </el-table-column>
       </el-table>
 
@@ -319,6 +330,10 @@
             {{ enterpriseDetail.userName || '未知账号' }}
           </el-descriptions-item>
 
+          <el-descriptions-item label="申请备注/理由" :span="2" v-if="enterpriseDetail.applyReason">
+            <el-tag type="warning" effect="plain">{{ enterpriseDetail.applyReason }}</el-tag>
+          </el-descriptions-item>
+
           <el-descriptions-item label-class-name="desc-label" :span="2">
             <template #label>
               <el-icon>
@@ -353,7 +368,7 @@
             <el-icon>
               <Timer/>
             </el-icon>
-            入驻申请记录
+            入驻 / 迁出记录
           </div>
 
           <div class="timeline-wrapper">
@@ -368,14 +383,10 @@
                 <el-card shadow="never" class="timeline-card" :status="activity.status">
                   <div class="timeline-card-header">
                     <span class="action-text">
-                      <el-icon :color="activity.status === 2 ? '#F56C6C' : '#409EFF'"
-                               style="vertical-align: middle; margin-right: 6px">
-                        <component :is="getActionIcon(activity.status)"/>
-                      </el-icon>
                       {{ activity.auditAction }}
                     </span>
                     <span class="auditor-tag">
-                      <el-icon><User/></el-icon> {{ activity.auditorName || '系统管理员' }}
+                      <el-icon><User/></el-icon> {{ activity.auditorName || '申请人' }}
                     </span>
                   </div>
 
@@ -384,7 +395,7 @@
                       <el-icon style="margin-right: 4px">
                         <ChatDotSquare/>
                       </el-icon>
-                      “ {{ activity.opinion || (activity.status === 1 ? '准予入驻' : '暂无说明') }} ”
+                      “ {{ activity.opinion }} ”
                     </div>
                   </div>
 
@@ -596,7 +607,7 @@
 
     <el-dialog
         v-model="auditDialogVisible"
-        :title="auditForm.status === 1 ? '审批通过' : '审批驳回'"
+        :title="getAuditDialogTitle()"
         width="450px"
         destroy-on-close
     >
@@ -618,7 +629,7 @@
           <div style="font-size: 12px; color: #909399; margin-bottom: 8px;">快捷回复：</div>
           <el-space wrap>
             <el-tag
-                v-for="item in commonOpinions[auditForm.status]"
+                v-for="item in (auditForm.isMoveOut ? moveOutCommonOpinions[auditForm.status] : commonOpinions[auditForm.status])"
                 :key="item"
                 class="opinion-tag"
                 effect="plain"
@@ -632,8 +643,8 @@
 
       <template #footer>
         <el-button @click="auditDialogVisible = false">取 消</el-button>
-        <el-button :type="auditForm.status === 1 ? 'success' : 'danger'" @click="submitAudit">
-          确认{{ auditForm.status === 1 ? '通过' : '驳回' }}
+        <el-button :type="getAuditButtonType()" @click="submitAudit">
+          {{ getAuditButtonText() }}
         </el-button>
       </template>
     </el-dialog>
@@ -652,12 +663,13 @@ import enterpriseApi from '@/api/enterprise'
 import Editor from '@/components/WangEditor/index.vue'
 import {uploadFile} from "@/utils/upload.js";
 
-// 1. 状态映射配置 (严格匹配 tinyint 0-3)
+// 1. 状态映射配置
 const statusMap = {
   0: {label: '待审核', type: 'warning'},
   1: {label: '已入驻', type: 'success'},
   2: {label: '已驳回', type: 'danger'},
-  3: {label: '已迁出', type: 'info'}
+  3: {label: '已迁出', type: 'info'},
+  4: {label: '迁出待审', type: 'warning'}
 }
 
 // 2. 响应式变量
@@ -671,15 +683,17 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const showViewer = ref(false)
 const auditHistory = ref([])
+const applyReason = ref([])
 
 // 审批弹窗控制
 const auditDialogVisible = ref(false)
 const auditFormRef = ref(null)
 const auditForm = ref({
   id: null,
-  status: 1, // 1-通过，2-驳回
+  status: 1,
   companyName: '',
-  opinion: ''
+  opinion: '',
+  isMoveOut: false  // 增加默认值
 })
 
 // 快捷审批语配置
@@ -688,11 +702,16 @@ const commonOpinions = {
   2: ['资料不全，请补全后重新申请。', '信用代码有误，请核实。', '所属行业不符合本园区准入标准。']
 }
 
+// ====================== ✅ 修复点 1：迁出常用语键名修正 ======================
+const moveOutCommonOpinions = {
+  3: ['准予迁出，请于3日内办理物业交接。', '合同期满，准予迁出。'],
+  1: ['租金未结清，请处理后再申请迁出。', '资料填写有误，请核实迁出原因。']
+}
+
 const auditRules = {
   opinion: [{required: true, message: '请填写审批意见', trigger: 'blur'}]
 }
 
-// 定义详情弹窗控制
 const detailVisible = ref(false)
 const enterpriseDetail = ref({})
 
@@ -701,12 +720,13 @@ const getActionIcon = (status) => {
     0: 'DocumentAdd',
     1: 'CircleCheckFilled',
     2: 'CircleCloseFilled',
-    3: 'InfoFilled'
+    3: 'InfoFilled',
+    4: 'Promotion'
   }
-  return icons[status] || 'Promotion'
+  return icons[status] || 'Edit'
 }
 
-// 3. 查询参数 (对应 EnterprisePageQueryDTO)
+// 3. 查询参数
 const queryParams = ref({
   pageNum: 1,
   pageSize: 10,
@@ -716,7 +736,7 @@ const queryParams = ref({
   status: null
 })
 
-// 4. 表单模型 (对应 EnterpriseDTO)
+// 4. 表单模型
 const form = ref({
   id: null,
   companyName: '',
@@ -730,29 +750,20 @@ const form = ref({
   contactPerson: '',
   contactPhone: '',
   licenseUrl: '',
-  // --- 租约字段 ---
   leaseStartDate: '',
-  leaseEndDate: ''
+  leaseEndDate: '',
+  applyReason: ''
 })
 
-// 租约日期校验逻辑
+// 租约日期校验
 const validateLeaseDates = (rule, value, callback) => {
   const {leaseStartDate, leaseEndDate} = form.value
-
-  // 如果两个都有值，才进行逻辑判断
   if (leaseStartDate && leaseEndDate) {
     const start = new Date(leaseStartDate)
     const end = new Date(leaseEndDate)
-
-    if (end < start) {
-      return callback(new Error('结束日期不能早于开始日期'))
-    }
+    if (end < start) return callback(new Error('结束日期不能早于开始日期'))
   }
-
-  if (leaseStartDate && !leaseEndDate) {
-    return callback(new Error('请选择结束日期'))
-  }
-  // 校验通过
+  if (leaseStartDate && !leaseEndDate) return callback(new Error('请选择结束日期'))
   callback()
 }
 
@@ -771,12 +782,8 @@ const rules = {
   buildingNo: [{required: true, message: '意向楼宇不能为空', trigger: 'blur'}],
   rentArea: [{required: true, message: '租用面积不能为空', trigger: 'blur'}],
   licenseUrl: [{required: true, message: '请上传营业执照照片附件', trigger: 'change'}],
-  // 租约日期校验
-  leaseEndDate: [
-    {required: true, validator: validateLeaseDates, trigger: 'change'}
-  ]
+  leaseEndDate: [{required: true, validator: validateLeaseDates, trigger: 'change'}]
 }
-
 
 // 6. 核心业务方法
 const getList = async () => {
@@ -806,202 +813,201 @@ const handleSelectionChange = (val) => {
 
 const handleAdd = () => {
   form.value = {
-    id: null,
-    companyName: '',
-    creditCode: '',
-    legalPerson: '',
-    registeredCapital: 0,
-    buildingNo: '',
-    rentArea: 0,
-    industry: '',
-    introduction: '',
-    contactPerson: '',
-    contactPhone: '',
-    licenseUrl: '',
-    leaseStartDate: '',
-    leaseEndDate: ''
+    id: null, companyName: '', creditCode: '', legalPerson: '', registeredCapital: 0,
+    buildingNo: '', rentArea: 0, industry: '', introduction: '', contactPerson: '', contactPhone: '',
+    licenseUrl: '', leaseStartDate: '', leaseEndDate: ''
   }
-  if (formRef.value) formRef.value.clearValidate();
-  dialogVisible.value = true;
+  if (formRef.value) formRef.value.clearValidate()
+  dialogVisible.value = true
 }
 
-// --- 营业执照上传前校验 ---
+// ✅ 新增：动态计算审批弹窗标题
+const getAuditDialogTitle = () => {
+  const { isMoveOut, status } = auditForm.value
+  if (isMoveOut) {
+    return status === 3 ? '准予迁出确认' : '驳回迁出确认'
+  }
+  return status === 1 ? '审批通过' : '审批驳回'
+}
+
+// ✅ 新增：动态计算审批按钮样式
+const getAuditButtonType = () => {
+  const { isMoveOut, status } = auditForm.value
+  if (isMoveOut) {
+    return status === 3 ? 'primary' : 'warning'
+  }
+  return status === 1 ? 'success' : 'danger'
+}
+
+// ✅ 新增：动态计算审批按钮文字
+const getAuditButtonText = () => {
+  const { isMoveOut, status } = auditForm.value
+  if (isMoveOut) {
+    return status === 3 ? '确认准予迁出' : '确认驳回迁出'
+  }
+  return status === 1 ? '确认通过' : '确认驳回'
+}
+
+// 营业执照上传
 const beforeLicenseUpload = (rawFile) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
   if (!allowedTypes.includes(rawFile.type)) {
-    ElMessage.error('上传营业执照图片只能是 JPG/JPEG/PNG/GIF 格式!')
+    ElMessage.error('只能上传 JPG/JPEG/PNG/GIF 格式')
     return false
   }
-  const isLt5M = rawFile.size / 1024 / 1024 < 5
-  if (!isLt5M) {
-    ElMessage.error('上传营业执照图片大小不能超过 5MB!')
+  if (rawFile.size / 1024 / 1024 > 5) {
+    ElMessage.error('图片大小不能超过 5MB')
     return false
   }
   return true
 }
 
-// --- 核心：处理上传逻辑 ---
 const handleImageUpload = async (options) => {
   try {
-    // 调用你 utils/upload.js 中的上传工具
     const url = await uploadFile(options.file)
-    // 赋值给表单，这样预览图 <img> 标签就能通过 :src="form.licenseUrl" 显示出来
     form.value.licenseUrl = url
     formRef.value.validateField('licenseUrl')
     ElMessage.success('执照上传成功')
   } catch (error) {
-    ElMessage.error('上传失败，请稍后重试')
+    ElMessage.error('上传失败')
   }
 }
 
-// 预览大图
-const handlePreview = () => {
-  if (!form.value.licenseUrl) return
-  showViewer.value = true
-}
-
-// 删除图片
+const handlePreview = () => showViewer.value = true
 const handleRemove = () => {
-  ElMessageBox.confirm('确定要删除已上传的执照图片吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
+  ElMessageBox.confirm('确定删除执照图片？', '提示', {type: 'warning'}).then(() => {
     form.value.licenseUrl = ''
     ElMessage.success('已移除')
   })
 }
 
-// 修改企业信息
+// 修改
 const handleEdit = (row) => {
-  // 1. 重置表单校验
-  if (formRef.value) formRef.value.clearValidate();
+  if (formRef.value) formRef.value.clearValidate()
+  form.value = {...row}
+  dialogVisible.value = true
+}
 
-  // 2. 将行数据深拷贝到表单对象中
-  form.value = {...row};
-
-  // 3. 打开弹窗
-  dialogVisible.value = true;
-};
-
+// 提交
 const submitForm = async () => {
-  if (!formRef.value) return;
-
+  if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitLoading.value = true;
-      try {
-        if (form.value.id) {
-          // 场景：更新
-          await enterpriseApi.update(form.value);
-          ElMessage.success('企业信息已成功更新');
-        } else {
-          // 场景：新增申请
-          await enterpriseApi.apply(form.value);
-          ElMessage.success('入驻申请已提交，请等待审核');
-        }
-        dialogVisible.value = false;
-        getList(); // 刷新列表
-      } catch (error) {
-        // 后端抛出的 BusinessException (如信用代码重复)
-        // 通常会被响应拦截器捕获并报错，这里可以根据需要做特殊处理
-        console.error("提交失败:", error);
-      } finally {
-        submitLoading.value = false;
-      }
+    if (!valid) return
+    submitLoading.value = true
+    try {
+      form.value.id ? await enterpriseApi.update(form.value) : await enterpriseApi.apply(form.value)
+      ElMessage.success(form.value.id ? '修改成功' : '申请提交成功')
+      dialogVisible.value = false
+      getList()
+    } finally {
+      submitLoading.value = false
     }
-  });
-};
+  })
+}
 
-
+// 入驻审批
 const handleAudit = (row, status) => {
   auditForm.value = {
     id: row.id,
     status: status,
     companyName: row.companyName,
-    opinion: commonOpinions[status][0] // 默认选中第一条常用语
+    opinion: commonOpinions[status][0],
+    isMoveOut: false
   }
   auditDialogVisible.value = true
 }
 
-// 提交审批结果
+// 迁出审批方法，直接使用传入的目标状态
+const handleMoveOutAudit = (row, targetStatus) => {
+  // targetStatus 3=准予迁出，1=驳回迁出
+  auditForm.value = {
+    id: row.id,
+    status: targetStatus,
+    isMoveOut: true,
+    companyName: row.companyName,
+    opinion: moveOutCommonOpinions[targetStatus][0]
+  }
+  auditDialogVisible.value = true
+}
+
+// ====================== 提交审批（统一处理入驻/迁出） ======================
+// ✅ 修复：提交审批的文案和逻辑
 const submitAudit = async () => {
   await auditFormRef.value.validate(async (valid) => {
-    if (valid) {
-      // 1. 根据当前状态定义提示文字和类型
-      const isPass = auditForm.value.status === 1
-      const confirmTitle = isPass ? '确认通过审批？' : '确认驳回申请？'
-      const confirmMessage = isPass
-          ? `确认准予 "${auditForm.value.companyName}" 入驻园区吗？`
-          : `确定要驳回 "${auditForm.value.companyName}" 的入驻申请吗？`
-      const confirmType = isPass ? 'success' : 'warning'
+    if (!valid) return
 
-      // 2. 调起二次确认弹窗
-      ElMessageBox.confirm(confirmMessage, confirmTitle, {
-        confirmButtonText: '确定提交',
-        cancelButtonText: '再检查下',
-        type: confirmType,
-        dangerouslyUseHTMLString: true,
-        center: true // 居中显示更显正式
-      }).then(async () => {
-        // 3. 用户确认后才执行提交接口
-        try {
-          await enterpriseApi.audit(auditForm.value.id, auditForm.value.status, auditForm.value.opinion)
-          ElMessage({
-            type: 'success',
-            message: `${isPass ? '通过' : '驳回'}操作已成功执行`
-          })
-          auditDialogVisible.value = false
-          getList() // 刷新列表
-        } catch (error) {
-          console.error("审批提交失败:", error)
-        }
-      }).catch(() => {
-        // 用户点击取消，不做任何处理，保留当前审批窗口
-      })
+    const {id, status, isMoveOut, companyName, opinion} = auditForm.value
+    let confirmTitle, confirmMessage, confirmType
+
+    if (isMoveOut) {
+      if (status === 3) {
+        confirmTitle = '准予迁出确认'
+        confirmMessage = `确认准予 <b>${companyName}</b> 迁出吗？<br>操作后状态变为：已迁出`
+        confirmType = 'primary'
+      } else {
+        confirmTitle = '驳回迁出确认'
+        confirmMessage = `确定驳回 <b>${companyName}</b> 的迁出申请吗？<br>操作后状态回到：已入驻`
+        confirmType = 'warning'
+      }
+    } else {
+      confirmTitle = status === 1 ? '入驻通过' : '入驻驳回'
+      confirmMessage = status === 1
+          ? `确认通过 <b>${companyName}</b> 入驻申请？`
+          : `确定驳回 <b>${companyName}</b> 入驻申请？`
+      confirmType = status === 1 ? 'success' : 'danger'
     }
+
+    ElMessageBox.confirm(confirmMessage, confirmTitle, {
+      type: confirmType,
+      dangerouslyUseHTMLString: true,
+      center: true
+    }).then(async () => {
+      try {
+        isMoveOut
+            ? await enterpriseApi.auditMoveOut(id, status, opinion)
+            : await enterpriseApi.audit(id, status, opinion)
+        ElMessage.success('审批操作已成功执行')
+        auditDialogVisible.value = false
+        getList()
+      } catch (e) {
+        console.error(e)
+      }
+    })
   })
 }
 
+// 删除
 const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要彻底删除 "${row.companyName}" 的档案吗？`, '警告', {type: 'error'})
-      .then(async () => {
-        await enterpriseApi.delete([row.id])
-        ElMessage.success('删除成功')
-        getList()
-      }).catch(() => {
+  ElMessageBox.confirm(`确定删除 ${row.companyName}？`, '警告', {type: 'error'}).then(async () => {
+    await enterpriseApi.delete([row.id])
+    ElMessage.success('删除成功')
+    getList()
   })
 }
 
+// 批量删除
 const handleBatchDelete = () => {
-  const ids = multipleSelection.value.map(item => item.id)
-  ElMessageBox.confirm(`确定要批量删除选中的 ${ids.length} 家企业记录吗？`, '重大警告', {type: 'error'})
-      .then(async () => {
-        await enterpriseApi.delete(ids)
-        ElMessage.success('批量删除成功')
-        getList()
-      }).catch(() => {
+  const ids = multipleSelection.value.map(i => i.id)
+  ElMessageBox.confirm(`确定删除 ${ids.length} 条记录？`, '重大警告', {type: 'error'}).then(async () => {
+    await enterpriseApi.delete(ids)
+    ElMessage.success('批量删除成功')
+    getList()
   })
 }
 
-// 详情展示弹窗
+// 详情
 const handleDetail = async (row) => {
   enterpriseDetail.value = row
   detailVisible.value = true
-
-  // 异步获取审核流水
   try {
     const res = await enterpriseApi.getAuditHistory(row.id)
     auditHistory.value = res.data || []
-  } catch (error) {
-    console.error("获取审核历史失败", error)
+  } catch (e) {
     auditHistory.value = []
   }
 }
 
-onMounted(() => {
-  getList()
-})
+onMounted(() => getList())
 </script>
 
 <style scoped>
@@ -1353,16 +1359,20 @@ onMounted(() => {
 }
 
 /* 针对不同状态改变侧边条颜色 */
-.el-timeline-item__node--success + .el-timeline-item__wrapper .timeline-card {
+:deep(.el-timeline-item__node--success + .el-timeline-item__wrapper .timeline-card) {
   border-left-color: #67C23A;
 }
 
-.el-timeline-item__node--danger + .el-timeline-item__wrapper .timeline-card {
+:deep(.el-timeline-item__node--danger + .el-timeline-item__wrapper .timeline-card) {
   border-left-color: #F56C6C;
 }
 
-.el-timeline-item__node--info + .el-timeline-item__wrapper .timeline-card {
+:deep(.el-timeline-item__node--info + .el-timeline-item__wrapper .timeline-card) {
   border-left-color: #909399;
+}
+
+:deep(.el-timeline-item__node--warning + .el-timeline-item__wrapper .timeline-card) {
+  border-left-color: #E6A23C;
 }
 
 .opinion-box {
@@ -1444,11 +1454,11 @@ onMounted(() => {
 
 /* 详情页富文本展示容器 */
 .rich-content-view {
-  padding: 12px;
-  background-color: #fcfcfc; /* 给个微灰背景区分内容区 */
-  border: 1px inset #f2f6fc;
+  padding: 4px;
+  background-color: transparent; /* 给个微灰背景区分内容区 */
   border-radius: 4px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.4;
   color: #606266;
   max-height: 600px; /* 防止内容过长撑开整个弹窗 */
   overflow-y: auto;

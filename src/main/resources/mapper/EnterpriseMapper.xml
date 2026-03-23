@@ -127,7 +127,15 @@
     </update>
 
     <select id="getById" resultMap="EnterpriseVOResultMap">
-        SELECT e.*, u.real_name AS applicant_name, au.real_name AS auditor_name
+        SELECT
+        e.*,
+        u.real_name AS applicant_name,
+        au.real_name AS auditor_name,
+        (SELECT opinion
+        FROM biz_enterprise_audit
+        WHERE enterprise_id = e.id
+        AND (status = 0 OR status = 4)
+        ORDER BY create_time DESC LIMIT 1) as apply_reason
         FROM biz_enterprise e
         LEFT JOIN sys_user u ON e.user_id = u.id
         LEFT JOIN sys_user au ON e.auditor_id = au.id

@@ -201,20 +201,21 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		}
 		Enterprise enterprise = list.get(0);
 
-		// 只有在【已入驻(1)】状态下才能申请迁出
+		// 1. 状态校验：只有【已入驻(1)】状态下才能申请迁出
 		if (enterprise.getStatus() != 1) {
 			throw new BusinessException("当前状态无法办理迁出申请");
 		}
 
-		// 更新状态为 4 (迁出待审核)
-		enterprise.setStatus(4);
-		enterprise.setAuditOpinion(reason); // 临时借用该字段存储迁出原因，或在流水中记录
+		// 2. 修正：仅更新主表状态为 4，不要借用/覆盖 audit_opinion 字段
+		// 传入 null 代表不修改原有的审核意见
+		int updated = enterpriseMapper.updateAuditStatus(enterprise.getId(), 4, null, null);
 
-		boolean updated = enterpriseMapper.updateById(enterprise) > 0;
-		if (updated) {
-			saveAuditRecord(enterprise.getId(), 4, "企业主动申请迁出，原因：" + reason, currentUserId);
+		if (updated > 0) {
+			// 3. 将理由记录在流水表中，auditorId 传入申请人 ID
+			saveAuditRecord(enterprise.getId(), 4, reason, currentUserId);
+			log.info("企业 {} 提交迁出申请成功", enterprise.getCompanyName());
 		}
-		return updated;
+		return updated > 0;
 	}
 
 	// ================== B端管控接口 ==================
@@ -289,24 +290,6 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 		if (id == null) return null;
 		// 使用带有 sys_user 关联查询的 Mapper 方法
 		return enterpriseMapper.getById(id);
-	}
-
-	/**
-	 * 迁出企业办理
-	 *
-	 * @param id
-	 * @return
-	 */
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public boolean moveOut(Long id) {
-		Long currentAdminId = SecurityUtils.getUserId();
-		// 状态 3 代表已迁出
-		int rows = enterpriseMapper.updateAuditStatus(id, 3, "企业办理迁出手续", currentAdminId);
-		if (rows > 0) {
-			saveAuditRecord(id, 3, "管理员办理企业迁出", currentAdminId);
-		}
-		return rows > 0;
 	}
 
 	/**
@@ -421,16 +404,19 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 	public boolean auditMoveOut(Long id, Integer status, String opinion) {
 		Long adminId = SecurityUtils.getUserId();
 
-		// 校验：目标状态必须是 3(已迁出) 或 1(恢复正常状态)
+		// 1. 状态合法性校验 (3:同意迁出, 1:驳回申请恢复正常)
 		if (status != 3 && status != 1) {
-			throw new BusinessException("非法审核状态");
+			throw new BusinessException("非法审核状态操作");
 		}
 
-		// 更新企业状态
+		// 2. 更新主表状态及管理员意见
 		int rows = enterpriseMapper.updateAuditStatus(id, status, opinion, adminId);
+
 		if (rows > 0) {
-			String logMsg = status == 3 ? "准予迁出：" + opinion : "驳回迁出申请：" + opinion;
-			saveAuditRecord(id, status, logMsg, adminId);
+			// 3. 记录流水
+			String actionDesc = (status == 3) ? "准予迁出审批" : "驳回迁出申请";
+			saveAuditRecord(id, status, actionDesc + "：" + opinion, adminId);
+			log.info("管理员审核迁出申请完成 - ID: {}, 结果: {}", id, status);
 		}
 		return rows > 0;
 	}
