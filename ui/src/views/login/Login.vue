@@ -9,13 +9,10 @@
           </el-icon>
         </div>
         <span class="brand-name">经济开发区管理平台</span>
-
-        <el-tooltip content="返回门户首页" placement="bottom">
-          <el-icon @click="router.push('/home')" style="color: #24486c;margin-left: 20px; font-size: 20px; cursor: pointer">
-            <Back/>
-          </el-icon>
-        </el-tooltip>
-        <span @click="router.push('/home')" style="color: #24486c; border-bottom: #24486c 1px solid; cursor: pointer">返回首页</span>
+        <el-button type="primary" size="default" icon="Back" @click="router.push('/home')"
+                   class="back-btn">
+          返回首页
+        </el-button>
       </div>
 
       <div class="illustration-content">
@@ -26,7 +23,23 @@
     </div>
 
     <div class="login-right">
-      <div class="top-actions">
+      <!-- 移动端顶部品牌栏 -->
+      <div class="mobile-top-bar">
+        <el-button type="primary" size="small" icon="Back" @click="router.push('/home')"
+                   class="mobile-back-btn">
+          返回首页
+        </el-button>
+        <span class="mobile-brand-name">经济开发区管理平台</span>
+        <div class="action-icon mobile-theme-toggle" @click="isDark = !isDark">
+          <el-icon :size="16">
+            <Sunny v-if="!isDark"/>
+            <Moon v-else/>
+          </el-icon>
+        </div>
+      </div>
+
+      <!-- 桌面端顶部操作栏 -->
+      <div class="desktop-top-actions">
         <div class="action-pill">
           <div class="action-icon" @click="isDark = !isDark">
             <el-icon :size="16">
@@ -35,15 +48,6 @@
             </el-icon>
           </div>
         </div>
-      </div>
-
-      <div class="responsive-title">
-        <div class="logo-icon">
-          <el-icon :size="20">
-            <OfficeBuilding/>
-          </el-icon>
-        </div>
-        <span class="brand-name">经济开发区管理平台</span>
       </div>
 
       <div class="form-wrapper">
@@ -190,7 +194,7 @@ import {
   Sunny,
   Moon,
   User,
-  Lock, Monitor, Back
+  Lock, Back
 } from '@element-plus/icons-vue'
 
 const loginMode = ref('account')
@@ -356,13 +360,15 @@ onUnmounted(() => onSliderEnd())
 }
 
 .login-right {
-  width: 700px;
+  width: 55%;
+  max-width: 700px;
   background-color: var(--bg-right);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   transition: background-color 0.3s ease;
+  padding: 30px 0;
 }
 
 /* ================== 左侧品牌与插画 ================== */
@@ -373,17 +379,20 @@ onUnmounted(() => onSliderEnd())
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.logo-section img {
-  width: 32px;
-  height: 32px;
-  background: #1677ff;
-  border-radius: 8px;
+.logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+}
+
+.back-btn {
+  margin-left: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 6px;
 }
 
 .brand-name {
@@ -434,8 +443,41 @@ onUnmounted(() => onSliderEnd())
   margin: 0;
 }
 
-/* ================== 右侧表单区域布局 ================== */
-.top-actions {
+/* ================== 顶部操作栏 ================== */
+/* 移动端顶部栏 */
+.mobile-top-bar {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.mobile-back-btn {
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.mobile-brand-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.mobile-theme-toggle {
+  width: 32px;
+  height: 32px;
+  background: var(--tool-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 桌面端顶部操作栏 */
+.desktop-top-actions {
+  display: flex;
   position: absolute;
   top: 30px;
   right: 40px;
@@ -464,6 +506,7 @@ onUnmounted(() => onSliderEnd())
   color: var(--text-main);
 }
 
+/* ================== 表单区域布局 ================== */
 .form-wrapper {
   flex: 1;
   width: 100%;
@@ -471,6 +514,8 @@ onUnmounted(() => onSliderEnd())
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .welcome-text {
@@ -510,20 +555,15 @@ onUnmounted(() => onSliderEnd())
   border: #637a9c 1px solid !important;
 }
 
-
-/* 1. 基础自动填充覆盖：利用内阴影覆盖背景色 */
+/* 自动填充样式覆盖 */
 :deep(.el-input__inner:-webkit-autofill) {
-  /* 强制文本颜色，防止在暗色下文字变成黑色看不见 */
   -webkit-text-fill-color: var(--text-main) !important;
 }
 
-/* 2. 针对暗色主题的特殊处理 */
 .dark-theme :deep(.el-input__inner:-webkit-autofill) {
-  /* 使用内阴影将背景色填满，颜色建议与输入框背景或容器背景一致 */
   -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
 }
 
-/* 3. 针对亮色主题的处理 */
 .light-theme :deep(.el-input__inner:-webkit-autofill) {
   -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
 }
@@ -531,7 +571,6 @@ onUnmounted(() => onSliderEnd())
 :deep(.el-input__inner::placeholder) {
   color: var(--text-sub);
 }
-
 
 :deep(.el-input-group__append) {
   background-color: var(--input-bg) !important;
@@ -572,7 +611,6 @@ onUnmounted(() => onSliderEnd())
   background: #31dd77;
   opacity: 0.5;
   z-index: 1;
-
 }
 
 .slider-text {
@@ -616,12 +654,14 @@ onUnmounted(() => onSliderEnd())
   border-right: none;
 }
 
-/* ================== 其他操作项 ================== */
+/* ================== 表单操作项 ================== */
 .form-footer-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 :deep(.custom-checkbox .el-checkbox__label) {
@@ -708,32 +748,133 @@ onUnmounted(() => onSliderEnd())
 }
 
 .footer-copyright {
-  position: absolute;
-  bottom: 20px;
   font-size: 12px;
   color: var(--text-sub);
+  margin-top: auto;
+  padding-bottom: 10px;
 }
 
-/* ================== 响应式小屏幕适配 ================== */
-.responsive-title {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 360px;
+/* ================== 响应式适配 ================== */
+/* 平板端适配 768px - 1200px */
+@media (max-width: 1200px) {
+  .login-left {
+    flex: 0.8;
+  }
+
+  .login-right {
+    width: 50%;
+  }
+
+  .login-3d-img {
+    max-width: 320px;
+  }
+
+  .illustration-title {
+    font-size: 20px;
+  }
+
+  .illustration-desc {
+    font-size: 14px;
+  }
+
+  .form-wrapper {
+    max-width: 400px;
+  }
 }
 
-@media (max-width: 900px) {
+/* 移动端适配 <768px */
+@media (max-width: 768px) {
   .login-left {
     display: none !important;
   }
 
   .login-right {
     width: 100%;
+    max-width: 100%;
+    padding: 20px 0;
+    height: 100dvh; /* 适配移动端动态视口高度 */
   }
 
-  .responsive-title {
+  .mobile-top-bar {
     display: flex;
+  }
+
+  .desktop-top-actions {
+    display: none;
+  }
+
+  .form-wrapper {
+    max-width: 100%;
+    padding: 0 24px;
+    margin-top: 20px;
+  }
+
+  .welcome-text h2 {
+    font-size: 28px;
+  }
+
+  .welcome-text p {
+    font-size: 14px;
+  }
+
+  /* 触摸尺寸优化 */
+  :deep(.el-input__wrapper) {
+    height: 48px;
+  }
+
+  .slider-track {
+    height: 48px;
+  }
+
+  .slider-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .slider-text {
+    line-height: 46px;
+    font-size: 14px;
+  }
+
+  .submit-btn {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .alt-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  /* 图标触摸区域放大 */
+  .social-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .social-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* 底部安全距离适配 */
+  .footer-copyright {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 超小屏适配 <375px */
+@media (max-width: 375px) {
+  .welcome-text h2 {
+    font-size: 24px;
+  }
+
+  .form-wrapper {
+    padding: 0 20px;
+  }
+
+  .mobile-brand-name {
+    font-size: 14px;
   }
 }
 </style>

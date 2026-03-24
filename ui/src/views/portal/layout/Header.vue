@@ -21,6 +21,7 @@
           <el-menu-item index="/news">园区动态</el-menu-item>
           <el-menu-item index="/policy">政策中心</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
+          <el-menu-item v-if="isAdmin || isStaff" index="/my-enterprise">我的企业</el-menu-item>
           <el-menu-item index="/contact">联系我们</el-menu-item>
         </el-menu>
       </nav>
@@ -284,22 +285,24 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ====== 基础导航栏样式优化 ====== */
 .portal-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 70px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.85); /* 降低透明度，增强毛玻璃感 */
+  backdrop-filter: blur(12px) saturate(180%);
   z-index: 1000;
-  transition: all 0.3s;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
 }
 
 .header-scroll {
   height: 60px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .header-container {
@@ -334,15 +337,64 @@ onUnmounted(() => {
   flex: 1;
 }
 
+/* ====== 导航菜单深度美化 ====== */
 :deep(.el-menu--horizontal) {
-  border-bottom: none;
-  background: transparent;
+  border-bottom: none !important;
+  background: transparent !important;
+  display: flex;
+  justify-content: flex-start;
+  height: 100%;
 }
 
 :deep(.el-menu-item) {
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563 !important; /* 更高级的深灰色 */
   height: 70px !important;
   line-height: 70px !important;
+  padding: 0 22px !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  background: transparent !important;
+}
+
+/* 隐藏 Element 默认的下划线 */
+:deep(.el-menu--horizontal .el-menu-item.is-active) {
+  border-bottom: none !important;
+  color: #1677ff !important;
+  font-weight: 600;
+}
+
+
+/* 自定义高级感“短下划线” */
+:deep(.el-menu-item)::after {
+  content: "";
+  position: absolute;
+  bottom: 15px; /* 距离底部的距离 */
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #1677ff, #409eff);
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+/* Hover 状态：文字颜色变深，下划线轻微显现 */
+:deep(.el-menu-item:hover) {
+  color: #1677ff !important;
+  background: transparent !important;
+}
+
+:deep(.el-menu-item:hover)::after {
+  width: 20px; /* 悬浮时下划线宽度 */
+  opacity: 0.6;
+}
+
+/* Active 状态：文字渐变，下划线加宽 */
+:deep(.el-menu-item.is-active)::after {
+  width: 32px; /* 选中时下划线宽度 */
+  opacity: 1;
 }
 
 .header-scroll :deep(.el-menu-item) {
@@ -350,33 +402,44 @@ onUnmounted(() => {
   line-height: 60px !important;
 }
 
-/* 右侧 */
-.header-right {
-  display: flex;
-  align-items: center;
+.header-scroll :deep(.el-menu-item)::after {
+  bottom: 10px; /* 滚动后调整位置 */
 }
 
+/* ====== 右侧用户区美化 ====== */
 .user-avatar-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  padding: 6px 12px;
+  border-radius: 50px; /* 胶囊形状 */
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
 }
 
-
 .user-avatar-wrapper:hover {
-  background: #f5f7fa;
+  background: rgba(22, 119, 255, 0.05);
+  border-color: rgba(22, 119, 255, 0.1);
 }
 
 .nickname {
   font-size: 14px;
-  color: #606266;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* “立即入驻”按钮增加微光效果 */
+.auth-btns .el-button--primary {
+  padding: 8px 20px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.2);
+  transition: all 0.3s;
+}
+
+.auth-btns .el-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(22, 119, 255, 0.3);
 }
 
 .auth-btns .el-button--link {

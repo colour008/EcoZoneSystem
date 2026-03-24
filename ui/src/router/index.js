@@ -56,6 +56,12 @@ const routes = [
                 meta: { title: '企业风采'}
             },
             {
+                path: 'my-enterprise',
+                name: 'PortalMyEnterprise',
+                component: () => import('@/views/portal/MyEnterprise.vue'),
+                meta: { title: '我的企业'}
+            },
+            {
                 path: 'contact',
                 name: 'PortalContact',
                 component: () => import('@/views/portal/Contact.vue'),

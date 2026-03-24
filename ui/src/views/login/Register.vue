@@ -18,14 +18,32 @@
     </div>
 
     <div class="login-right">
-      <div class="top-actions">
+      <!-- 移动端顶部品牌栏 -->
+      <div class="mobile-top-bar">
+        <el-button type="primary" size="small" icon="Back" @click="goToLogin"
+                   class="mobile-back-btn">
+          返回登录
+        </el-button>
+
+        <span class="mobile-brand-name">
+          经济开发区管理平台
+        </span>
+        <div class="action-icon mobile-theme-toggle" @click="isDark = !isDark">
+          <el-icon :size="16">
+            <Sunny v-if="!isDark"/>
+            <Moon v-else/>
+          </el-icon>
+        </div>
+      </div>
+
+      <!-- 桌面端顶部操作栏 -->
+      <div class="desktop-top-actions">
         <div class="action-pill">
           <div class="action-icon" @click="goToLogin" title="返回登录">
             <el-icon :size="16">
               <Back/>
             </el-icon>
           </div>
-
           <div class="action-icon" @click="isDark = !isDark">
             <el-icon :size="16">
               <Sunny v-if="!isDark"/>
@@ -35,14 +53,6 @@
         </div>
       </div>
 
-      <div class="responsive-title">
-        <div class="logo-icon">
-          <el-icon :size="20">
-            <OfficeBuilding/>
-          </el-icon>
-        </div>
-        <span class="brand-name">经济开发区管理平台</span>
-      </div>
 
       <div class="form-wrapper">
         <div class="welcome-text">
@@ -287,13 +297,16 @@ const goToLogin = () => {
 }
 
 .login-right {
-  width: 700px;
+  width: 55%;
+  max-width: 700px;
   background-color: var(--bg-right);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   transition: background-color 0.3s ease;
+  padding: 30px 0;
+  overflow-y: auto; /* 注册页内容较多，允许小屏垂直滚动 */
 }
 
 /* ================== 左侧品牌与插画 ================== */
@@ -304,17 +317,13 @@ const goToLogin = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.logo-section img {
-  width: 32px;
-  height: 32px;
-  background: #1677ff;
-  border-radius: 8px;
+.logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
 }
 
 .brand-name {
@@ -365,8 +374,42 @@ const goToLogin = () => {
   margin: 0;
 }
 
-/* ================== 右侧表单区域布局 ================== */
-.top-actions {
+/* ================== 顶部操作栏 ================== */
+/* 移动端顶部栏 */
+.mobile-top-bar {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.mobile-back-btn {
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.mobile-brand-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.mobile-theme-toggle {
+  width: 32px;
+  height: 32px;
+  background: var(--tool-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 桌面端顶部操作栏 */
+.desktop-top-actions {
+  display: flex;
   position: absolute;
   top: 30px;
   right: 40px;
@@ -395,6 +438,7 @@ const goToLogin = () => {
   color: var(--text-main);
 }
 
+/* ================== 表单区域布局 ================== */
 .form-wrapper {
   flex: 1;
   width: 100%;
@@ -402,6 +446,8 @@ const goToLogin = () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .welcome-text {
@@ -422,7 +468,6 @@ const goToLogin = () => {
 }
 
 /* ================== 输入框复写 ================== */
-
 :deep(.el-input__wrapper) {
   background-color: transparent !important;
   background-image: none !important;
@@ -438,20 +483,15 @@ const goToLogin = () => {
   border: #637a9c 1px solid !important;
 }
 
-
-/* 1. 基础自动填充覆盖：利用内阴影覆盖背景色 */
+/* 自动填充样式覆盖 */
 :deep(.el-input__inner:-webkit-autofill) {
-  /* 强制文本颜色，防止在暗色下文字变成黑色看不见 */
   -webkit-text-fill-color: var(--text-main) !important;
 }
 
-/* 2. 针对暗色主题的特殊处理 */
 .dark-theme :deep(.el-input__inner:-webkit-autofill) {
-  /* 使用内阴影将背景色填满，颜色建议与输入框背景或容器背景一致 */
   -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
 }
 
-/* 3. 针对亮色主题的处理 */
 .light-theme :deep(.el-input__inner:-webkit-autofill) {
   -webkit-box-shadow: 0 0 0 1000px var(--bg-right) inset !important;
 }
@@ -460,35 +500,20 @@ const goToLogin = () => {
   color: var(--text-sub);
 }
 
-:deep(.el-input-group__append) {
-  background-color: var(--input-bg) !important;
-  box-shadow: 0 0 0 1px var(--input-border) inset !important;
-  border-left: none !important;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  padding: 0 15px;
-}
-
-.register-link {
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-sub);
-}
-
 /* ================== 浮动标签核心样式 ================== */
 .floating-group {
   position: relative;
-  margin-bottom: 20px; /* 调整间距 */
+  margin-bottom: 20px;
 }
 
 .floating-label {
   position: absolute;
-  left: 38px; /* 避开左侧 prefix 图标的位置 */
+  left: 38px;
   top: 12px;
   font-size: 14px;
   color: var(--text-sub);
   transition: all 0.2s ease;
-  pointer-events: none; /* 重要：点击穿透到 input */
+  pointer-events: none;
   z-index: 10;
 }
 
@@ -498,8 +523,8 @@ const goToLogin = () => {
   top: -10px;
   left: 8px;
   font-size: 12px;
-  color: var(--text-sub); /* 激活时的颜色 */
-  background-color: var(--bg-right); /* 背景遮盖边框线 */
+  color: var(--text-sub);
+  background-color: var(--bg-right);
   padding: 0 4px;
 }
 
@@ -512,8 +537,8 @@ const goToLogin = () => {
 :deep(.el-form-item__error) {
   position: absolute;
   top: 100%;
-  padding-top: 4px; /* 增加一点与输入框的距离 */
-  line-height: 1; /* 压缩行高，防止占用太多垂直空间 */
+  padding-top: 4px;
+  line-height: 1;
 }
 
 .custom-input-item {
@@ -523,14 +548,6 @@ const goToLogin = () => {
 /* 修改图标颜色，使其更柔和 */
 :deep(.el-input__prefix-inner) {
   font-size: 16px;
-  color: var(--text-sub);
-}
-
-/* 页脚 */
-.footer-copyright {
-  position: absolute;
-  bottom: 20px;
-  font-size: 12px;
   color: var(--text-sub);
 }
 
@@ -544,26 +561,126 @@ const goToLogin = () => {
   transition: all 0.3s;
 }
 
-/* ================== 响应式小屏幕适配 ================== */
-.responsive-title {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 360px;
+.register-link {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-sub);
 }
 
-@media (max-width: 900px) {
+/* 页脚 */
+.footer-copyright {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: auto;
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+/* ================== 响应式适配 ================== */
+/* 平板端适配 768px - 1200px */
+@media (max-width: 1200px) {
+  .login-left {
+    flex: 0.8;
+  }
+
+  .login-right {
+    width: 50%;
+  }
+
+  .login-3d-img {
+    max-width: 320px;
+  }
+
+  .illustration-title {
+    font-size: 20px;
+  }
+
+  .illustration-desc {
+    font-size: 14px;
+  }
+
+  .form-wrapper {
+    max-width: 400px;
+  }
+}
+
+/* 移动端适配 <768px */
+@media (max-width: 768px) {
   .login-left {
     display: none !important;
   }
 
   .login-right {
     width: 100%;
+    max-width: 100%;
+    padding: 20px 0;
+    height: 100dvh;
   }
 
-  .responsive-title {
+  .mobile-top-bar {
     display: flex;
+  }
+
+  .desktop-top-actions {
+    display: none;
+  }
+
+  .form-wrapper {
+    max-width: 100%;
+    padding: 0 24px;
+    margin-top: 20px;
+  }
+
+  .welcome-text h2 {
+    font-size: 28px;
+  }
+
+  .welcome-text p {
+    font-size: 14px;
+  }
+
+  /* 触摸尺寸优化 */
+  :deep(.el-input__wrapper) {
+    height: 48px;
+  }
+
+  .submit-btn {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  /* 浮动标签小屏微调 */
+  .floating-label {
+    font-size: 13px;
+  }
+
+  .floating-group:focus-within .floating-label,
+  .floating-group.is-floating .floating-label {
+    font-size: 11px;
+  }
+
+  /* 底部安全距离适配 */
+  .footer-copyright {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 超小屏适配 <375px */
+@media (max-width: 375px) {
+  .welcome-text h2 {
+    font-size: 24px;
+  }
+
+  .form-wrapper {
+    padding: 0 20px;
+  }
+
+  .mobile-brand-name {
+    font-size: 14px;
+  }
+
+  .custom-input-item {
+    margin-bottom: 30px !important;
   }
 }
 </style>
