@@ -217,17 +217,38 @@
           </el-col>
         </el-row>
         <el-form-item label="营业执照" prop="licenseUrl">
-          <el-upload class="license-uploader-pro" action="/api/common/upload" :show-file-list="false"
-                     :on-success="res => infoForm.licenseUrl = res.data.url">
-            <img v-if="infoForm.licenseUrl" :src="infoForm.licenseUrl" class="license-img-pro"/>
+          <el-upload class="license-uploader-pro"  action="#"
+                     :show-file-list="false"
+                     :http-request="handleImageUpload"
+                     :before-upload="beforeLicenseUpload"
+                     accept=".jpg,.jpeg,.png,.gif">
+            <div v-if="infoForm.licenseUrl" class="image-preview-container">
+              <img :src="infoForm.licenseUrl" class="license-img-pro" alt="营业执照附件"/>
+              <div class="image-actions">
+                    <span class="action-item" @click.stop="handlePreview">
+                      <el-icon><ZoomIn/></el-icon>
+                      <span>预览</span>
+                    </span>
+                <span class="action-item" @click.stop="handleRemove">
+                      <el-icon><Delete/></el-icon>
+                      <span>删除</span>
+                    </span>
+              </div>
+            </div>
             <div v-else class="uploader-placeholder">
-              <el-icon>
+              <el-icon class="license-icon">
                 <Plus/>
               </el-icon>
-              <span>点击上传</span>
+              <span class="license-text">上传营业执照</span>
             </div>
           </el-upload>
+          <div class="upload-tip">请上传清晰的营业执照扫描件 (支持 JPG/JPEG/PNG/GIF，小于 5MB)</div>
         </el-form-item>
+        <el-image-viewer
+            v-if="showViewer"
+            :url-list="[infoForm.licenseUrl]"
+            @close="showViewer = false"
+        />
       </el-form>
       <template #footer>
         <el-button @click="infoDialogVisible = false">取消</el-button>
@@ -269,11 +290,12 @@ import {
   OfficeBuilding,
   Timer,
   Loading,
-  Promotion, User
+  Promotion, User, Delete, ZoomIn
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
 import WangEditor from '@/components/WangEditor/index.vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
+import {uploadFile} from "@/utils/upload.js";
 
 // 状态控制
 const loading = ref(true)
@@ -282,6 +304,7 @@ const infoDialogVisible = ref(false)
 const introDrawerVisible = ref(false)
 const isEdit = ref(false)
 const infoFormRef = ref(null)
+const showViewer = ref(false)
 
 // 数据模型
 const enterpriseInfo = ref({id: null, status: null, introduction: ''})
@@ -350,6 +373,39 @@ const handleOpenApply = () => {
   } else {
     infoDialogVisible.value = true
   }
+}
+
+// 营业执照上传
+const beforeLicenseUpload = (rawFile) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+  if (!allowedTypes.includes(rawFile.type)) {
+    ElMessage.error('只能上传 JPG/JPEG/PNG/GIF 格式')
+    return false
+  }
+  if (rawFile.size / 1024 / 1024 > 5) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+  return true
+}
+
+const handleImageUpload = async (options) => {
+  try {
+    const url = await uploadFile(options.file)
+    infoForm.value.licenseUrl = url
+    infoFormRef.value.validateField('licenseUrl')
+    ElMessage.success('执照上传成功')
+  } catch (error) {
+    ElMessage.error('上传失败')
+  }
+}
+
+const handlePreview = () => showViewer.value = true
+const handleRemove = () => {
+  ElMessageBox.confirm('确定删除执照图片？', '提示', {type: 'warning'}).then(() => {
+    infoForm.value.licenseUrl = ''
+    ElMessage.success('已移除')
+  })
 }
 
 // 打开“修改企业资料”弹窗 (所有字段)
@@ -644,5 +700,60 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   margin-left: 0;
+}
+
+/* 4. 辅助提示文字 */
+.upload-tip {
+  font-size: 13px;
+  color: #ff6c6c;
+  margin-top: 10px;
+  margin-left: 15px;
+  line-height: 1.4;
+}
+
+/* 核心：遮罩层样式 */
+.image-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 21%;
+  height: 100%;
+  cursor: default;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑背景 */
+  opacity: 0; /* 初始隐藏 */
+  transition: opacity 0.3s; /* 平滑过渡 */
+  gap: 15px;
+}
+
+/* 鼠标悬停容器时，遮罩层显示 */
+.image-preview-container:hover .image-actions {
+  opacity: 1;
+}
+
+/* 单个按钮样式 */
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.action-item:hover {
+  color: #409EFF; /* 悬停变蓝色 */
+}
+
+.action-item .el-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.action-item span {
+  font-size: 12px;
 }
 </style>

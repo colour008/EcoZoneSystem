@@ -683,7 +683,6 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const showViewer = ref(false)
 const auditHistory = ref([])
-const applyReason = ref([])
 
 // 审批弹窗控制
 const auditDialogVisible = ref(false)
