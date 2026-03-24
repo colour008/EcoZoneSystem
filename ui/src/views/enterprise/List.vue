@@ -715,17 +715,6 @@ const auditRules = {
 const detailVisible = ref(false)
 const enterpriseDetail = ref({})
 
-const getActionIcon = (status) => {
-  const icons = {
-    0: 'DocumentAdd',
-    1: 'CircleCheckFilled',
-    2: 'CircleCloseFilled',
-    3: 'InfoFilled',
-    4: 'Promotion'
-  }
-  return icons[status] || 'Edit'
-}
-
 // 3. 查询参数
 const queryParams = ref({
   pageNum: 1,

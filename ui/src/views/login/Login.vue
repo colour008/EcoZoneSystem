@@ -9,6 +9,13 @@
           </el-icon>
         </div>
         <span class="brand-name">经济开发区管理平台</span>
+
+        <el-tooltip content="返回门户首页" placement="bottom">
+          <el-icon @click="router.push('/home')" style="color: #24486c;margin-left: 20px; font-size: 20px; cursor: pointer">
+            <Back/>
+          </el-icon>
+        </el-tooltip>
+        <span @click="router.push('/home')" style="color: #24486c; border-bottom: #24486c 1px solid; cursor: pointer">返回首页</span>
       </div>
 
       <div class="illustration-content">
@@ -183,7 +190,7 @@ import {
   Sunny,
   Moon,
   User,
-  Lock
+  Lock, Monitor, Back
 } from '@element-plus/icons-vue'
 
 const loginMode = ref('account')

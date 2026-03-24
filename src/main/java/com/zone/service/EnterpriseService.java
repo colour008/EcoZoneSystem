@@ -5,6 +5,7 @@ import com.zone.domain.dto.EnterpriseDTO;
 import com.zone.domain.dto.EnterprisePageQueryDTO;
 import com.zone.domain.entity.EnterpriseAudit;
 import com.zone.domain.vo.EnterpriseAuditVO;
+import com.zone.domain.vo.EnterpriseShowVO;
 import com.zone.domain.vo.EnterpriseVO;
 
 import java.util.List;
@@ -123,4 +124,12 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	boolean auditMoveOut(Long id, Integer status, String opinion);
+
+	/**
+	 * 获取企业展示列表
+	 *
+	 * @param dto
+	 * @return
+	 */
+	PageResult<EnterpriseShowVO> getEnterpriseShowPage(EnterprisePageQueryDTO dto);
 }

@@ -10,6 +10,7 @@ import com.zone.domain.dto.EnterprisePageQueryDTO;
 import com.zone.domain.entity.Enterprise;
 import com.zone.domain.entity.EnterpriseAudit;
 import com.zone.domain.vo.EnterpriseAuditVO;
+import com.zone.domain.vo.EnterpriseShowVO;
 import com.zone.domain.vo.EnterpriseVO;
 import com.zone.mapper.EnterpriseAuditMapper;
 import com.zone.mapper.EnterpriseMapper;
@@ -216,6 +217,26 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 			log.info("企业 {} 提交迁出申请成功", enterprise.getCompanyName());
 		}
 		return updated > 0;
+	}
+
+	/**
+	 * 获取展示企业列表
+	 *
+	 * @param dto
+	 * @return
+	 */
+	@Override
+	public PageResult<EnterpriseShowVO> getEnterpriseShowPage(EnterprisePageQueryDTO dto) {
+		PageHelper.startPage(dto.getPageNum(), dto.getPageSize());
+		Page<EnterpriseVO> rawPage = enterpriseMapper.getEnterprisePage(dto);
+
+		List<EnterpriseShowVO> showList = rawPage.getResult().stream().map(item -> {
+			EnterpriseShowVO vo = new EnterpriseShowVO();
+			BeanUtils.copyProperties(item, vo);
+			return vo;
+		}).collect(Collectors.toList());
+
+		return new PageResult<>(rawPage.getTotal(), showList);
 	}
 
 	// ================== B端管控接口 ==================

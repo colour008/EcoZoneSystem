@@ -6,6 +6,7 @@ import com.zone.domain.dto.EnterpriseDTO;
 import com.zone.domain.dto.EnterprisePageQueryDTO;
 import com.zone.domain.entity.EnterpriseAudit;
 import com.zone.domain.vo.EnterpriseAuditVO;
+import com.zone.domain.vo.EnterpriseShowVO;
 import com.zone.domain.vo.EnterpriseVO;
 import com.zone.service.EnterpriseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,6 +69,18 @@ public class EnterpriseController {
 		log.info("企业申请迁出，原因: {}", reason);
 		boolean success = enterpriseService.applyMoveOut(reason);
 		return success ? Result.success("迁出申请已提交，请等待管理员审核") : Result.sysError("操作失败");
+	}
+
+	/**
+	 * 展示企业风采
+	 */
+	@GetMapping("/show/page")
+	@Operation(summary = "C端-展示页分页查询", description = "仅公开已入驻企业的非敏感信息")
+	public Result<PageResult<EnterpriseShowVO>> getShowPage(EnterprisePageQueryDTO dto) {
+		// 强制设置状态为“已入驻”
+		dto.setStatus(1);
+		PageResult<EnterpriseShowVO> result = enterpriseService.getEnterpriseShowPage(dto);
+		return Result.success(result);
 	}
 
 	// ================== B端管控接口 ==================

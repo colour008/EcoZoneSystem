@@ -5,7 +5,7 @@ import {useUserStore} from '@/store/user'
 import NProgress from 'nprogress'
 
 // 1. 门户路径白名单，允许游客访问
-const whiteList = ['/login', '/register', '/404', '/home', '/policy']
+const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact']
 const modules = import.meta.glob('../views/**/*.vue')
 
 // --- 全局前置守卫 ---

@@ -20,8 +20,8 @@
           <el-menu-item index="/home">首页</el-menu-item>
           <el-menu-item index="/news">园区动态</el-menu-item>
           <el-menu-item index="/policy">政策中心</el-menu-item>
-          <el-menu-item v-if="isAdmin || isStaff" index="/my-enterprise">入驻园区</el-menu-item>
-          <el-menu-item index="/about">关于我们</el-menu-item>
+          <el-menu-item index="/enterprise">企业风采</el-menu-item>
+          <el-menu-item index="/contact">联系我们</el-menu-item>
         </el-menu>
       </nav>
 

@@ -47,6 +47,19 @@ const enterpriseApi = {
         })
     },
 
+    /**
+     * 企业风采
+     * @param params
+     * @returns {*}
+     */
+    getEnterpriseShowPage(params) {
+        return request({
+            url: '/enterprise/show/page',
+            method: 'get',
+            params: params
+        })
+    },
+
     // ================== B端管控接口 ==================
 
     /**

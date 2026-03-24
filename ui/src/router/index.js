@@ -44,17 +44,22 @@ const routes = [
                 meta: { title: '政策法规' }
             },
             {
-                path: 'article/:id',
-                name: 'PortalArticle',
-                component: () => import('@/views/portal/Article.vue'),
-                meta: { title: '文章详情' }
+                path: 'news',
+                name: 'PortalNews',
+                component: () => import('@/views/portal/News.vue'),
+                meta: { title: '园区动态' }
             },
             {
-                path: 'my-enterprise',
-                name: 'MyEnterprise',
-                component: () => import('@/views/portal/MyEnterprise.vue'),
-                // 需要登录才能访问
-                meta: { title: '我的入驻申请', requireAuth: true }
+                path: 'enterprise',
+                name: 'PortalEnterprise',
+                component: () => import('@/views/portal/Enterprise.vue'),
+                meta: { title: '企业风采'}
+            },
+            {
+                path: 'contact',
+                name: 'PortalContact',
+                component: () => import('@/views/portal/Contact.vue'),
+                meta: { title: '联系我们'}
             }
         ]
     },
