@@ -31,11 +31,38 @@
           <el-button link @click="handleLogin">登录</el-button>
           <el-divider direction="vertical"/>
           <el-button type="primary" round size="small" @click="router.push('/register')">
-            立即入驻
+            立即注册
           </el-button>
         </div>
 
         <div v-else class="user-info">
+          <div class="status-guide-area" style="margin-right: 20px;">
+            <el-button
+                v-if="enterpriseStatus === null || enterpriseStatus === 3"
+                type="primary"
+                size="small"
+                plain
+                round
+                icon="Plus"
+                class="guide-btn"
+                @click="router.push('/my-enterprise')"
+            >
+              立即入驻
+            </el-button>
+
+            <el-tag
+                v-else-if="statusConfig[enterpriseStatus]"
+                :type="statusConfig[enterpriseStatus].type"
+                size="small"
+                effect="light"
+                round
+                class="status-tag"
+                @click="router.push('/my-enterprise')"
+            >
+              {{ statusConfig[enterpriseStatus].text }}
+            </el-tag>
+          </div>
+
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-avatar-wrapper">
               <el-avatar :size="32" :src="userStore.userInfo?.avatar"
@@ -75,6 +102,7 @@
       </div>
     </div>
   </header>
+
   <el-dialog
       v-model="profileVisible"
       title="个人资料修改"
@@ -128,17 +156,45 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, computed} from 'vue'
+import {ref, onMounted, onUnmounted, computed, watch} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 import {useUserStore} from '@/store/user'
 import {OfficeBuilding, ArrowDown, Plus} from '@element-plus/icons-vue'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import userApi from '@/api/user'
+import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from '@/utils/upload'
 
 const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
+
+// --- 企业状态逻辑开始 ---
+const enterpriseStatus = ref(null) // 0待审核 1已入驻 2已驳回 3已迁出 4迁出待审核
+
+const statusConfig = {
+  0: {text: '入驻审核中', type: 'warning'},
+  1: {text: '已入驻', type: 'success'},
+  2: {text: '入驻已驳回', type: 'danger'},
+  4: {text: '迁出待审核', type: 'info'}
+}
+
+const fetchStatus = async () => {
+  if (!userStore.token) return
+  try {
+    const res = await enterpriseApi.getMyEnterprise()
+    enterpriseStatus.value = res.data ? res.data.status : null
+  } catch (err) {
+    enterpriseStatus.value = null
+  }
+}
+
+// 监听登录状态变化，登录后查询企业信息
+watch(() => userStore.token, (val) => {
+  if (val) fetchStatus()
+  else enterpriseStatus.value = null
+}, {immediate: true})
+// --- 企业状态逻辑结束 ---
 
 // 角色判断的计算属性
 const isAdmin = computed(() => userStore.roles.includes('ROLE_ADMIN'))
@@ -179,12 +235,10 @@ const profileRules = {
 const isScrolled = ref(false)
 const activeMenu = computed(() => route.path)
 
-// 监听页面滚动，改变 Header 样式
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 50
 }
 
-// 登录跳转逻辑（核心：带上 redirect）
 const handleLogin = () => {
   router.push({
     path: '/login',
@@ -225,7 +279,6 @@ const submitProfile = async () => {
         await userApi.updateProfile(updateData)
         ElMessage.success('个人资料更新成功')
 
-        // 同步状态到 Pinia
         userStore.setUserInfo({
           ...userStore.userInfo,
           realName: updateData.realName,
@@ -242,18 +295,15 @@ const submitProfile = async () => {
   })
 }
 
-// 下拉菜单命令处理
 const handleCommand = (command) => {
   switch (command) {
     case 'profile':
       openProfile()
       break
     case 'dashboard':
-      // 管理员/员工去后台
       router.push('/index/dashboard')
       break
     case 'enterprise':
-      // 企业用户去“我的申请/工作台”
       router.push('/my-enterprise')
       break
     case 'logout':
@@ -262,14 +312,13 @@ const handleCommand = (command) => {
   }
 }
 
-// 退出登录
 const confirmLogout = () => {
   ElMessageBox.confirm('确定要退出登录吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    userStore.logout() // 假设你的 store 里有清除 token 和缓存的方法
+    userStore.logout()
     ElMessage.success('已安全退出')
     router.push('/home')
   })
@@ -292,7 +341,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 70px;
-  background: rgba(255, 255, 255, 0.85); /* 降低透明度，增强毛玻璃感 */
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px) saturate(180%);
   z-index: 1000;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -314,7 +363,6 @@ onUnmounted(() => {
   padding: 0 20px;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -332,12 +380,10 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* 导航 */
 .nav-menu {
   flex: 1;
 }
 
-/* ====== 导航菜单深度美化 ====== */
 :deep(.el-menu--horizontal) {
   border-bottom: none !important;
   background: transparent !important;
@@ -349,7 +395,7 @@ onUnmounted(() => {
 :deep(.el-menu-item) {
   font-size: 15px;
   font-weight: 500;
-  color: #4b5563 !important; /* 更高级的深灰色 */
+  color: #4b5563 !important;
   height: 70px !important;
   line-height: 70px !important;
   padding: 0 22px !important;
@@ -358,19 +404,16 @@ onUnmounted(() => {
   background: transparent !important;
 }
 
-/* 隐藏 Element 默认的下划线 */
 :deep(.el-menu--horizontal .el-menu-item.is-active) {
   border-bottom: none !important;
   color: #1677ff !important;
   font-weight: 600;
 }
 
-
-/* 自定义高级感“短下划线” */
 :deep(.el-menu-item)::after {
   content: "";
   position: absolute;
-  bottom: 15px; /* 距离底部的距离 */
+  bottom: 15px;
   left: 50%;
   width: 0;
   height: 3px;
@@ -380,20 +423,18 @@ onUnmounted(() => {
   transform: translateX(-50%);
 }
 
-/* Hover 状态：文字颜色变深，下划线轻微显现 */
 :deep(.el-menu-item:hover) {
   color: #1677ff !important;
   background: transparent !important;
 }
 
 :deep(.el-menu-item:hover)::after {
-  width: 20px; /* 悬浮时下划线宽度 */
+  width: 20px;
   opacity: 0.6;
 }
 
-/* Active 状态：文字渐变，下划线加宽 */
 :deep(.el-menu-item.is-active)::after {
-  width: 32px; /* 选中时下划线宽度 */
+  width: 32px;
   opacity: 1;
 }
 
@@ -403,17 +444,48 @@ onUnmounted(() => {
 }
 
 .header-scroll :deep(.el-menu-item)::after {
-  bottom: 10px; /* 滚动后调整位置 */
+  bottom: 10px;
 }
 
-/* ====== 右侧用户区美化 ====== */
+/* ====== 右侧用户区与状态引导美化 ====== */
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+/* 立即入驻引导按钮样式 */
+.guide-btn {
+  border-style: dashed !important;
+  background: rgba(64, 158, 255, 0.05) !important;
+  transition: all 0.3s ease;
+}
+
+.guide-btn:hover {
+  border-style: solid !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+  color: #0f4780;
+}
+
+/* 状态标签样式 */
+.status-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0 12px;
+}
+
+.status-tag:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
 .user-avatar-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   padding: 6px 12px;
-  border-radius: 50px; /* 胶囊形状 */
+  border-radius: 50px;
   transition: all 0.3s ease;
   border: 1px solid transparent;
 }
@@ -429,7 +501,6 @@ onUnmounted(() => {
   color: #374151;
 }
 
-/* “立即入驻”按钮增加微光效果 */
 .auth-btns .el-button--primary {
   padding: 8px 20px;
   font-weight: 500;
@@ -446,7 +517,6 @@ onUnmounted(() => {
   color: #606266;
 }
 
-/* 个人资料对话框样式 */
 .profile-avatar {
   width: 100px;
   height: 100px;

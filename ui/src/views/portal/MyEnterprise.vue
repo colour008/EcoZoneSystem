@@ -39,10 +39,6 @@
               <el-button type="primary" size="large" icon="Edit" @click="handleOpenUpdateInfo">
                 修改企业资料
               </el-button>
-              <el-button type="success" size="large" icon="Promotion" @click="handleOpenUpdateIntro"
-                         class="gradient-btn-success">
-                编辑企业简介
-              </el-button>
               <el-button
                   type="danger"
                   plain
@@ -105,16 +101,22 @@
             <div class="info-item"><span class="label">法人代表</span><span class="value">{{
                 enterpriseInfo.legalPerson
               }}</span></div>
-            <div class="info-item"><span class="label">注册资本</span><span
-                class="value">{{ enterpriseInfo.registeredCapital }} 万</span></div>
-            <div class="info-item"><span class="label">所属行业</span><span class="value">{{
-                enterpriseInfo.industry
+            <div class="info-item"><span class="label">入驻楼宇</span><span class="value">{{
+                enterpriseInfo.buildingNo || '待分配'
               }}</span></div>
+            <div class="info-item"><span class="label">租用面积</span><span class="value">{{
+                enterpriseInfo.rentArea || 0
+              }} ㎡</span></div>
           </div>
 
           <el-descriptions :column="2" border class="custom-descriptions">
+            <el-descriptions-item label="所属行业">{{ enterpriseInfo.industry || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="注册资本">{{ enterpriseInfo.registeredCapital }} 万</el-descriptions-item>
             <el-descriptions-item label="业务联系人">{{ enterpriseInfo.contactPerson || '-' }}</el-descriptions-item>
             <el-descriptions-item label="联系电话">{{ enterpriseInfo.contactPhone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="计划租约" :span="2">
+              {{ enterpriseInfo.leaseStartDate || '-' }} 至 {{ enterpriseInfo.leaseEndDate || '-' }}
+            </el-descriptions-item>
             <el-descriptions-item label="营业执照预览" :span="2">
               <div class="license-preview-box">
                 <el-image v-if="enterpriseInfo.licenseUrl" :src="enterpriseInfo.licenseUrl"
@@ -131,15 +133,11 @@
               <Monitor/>
             </el-icon>
             <span>企业简介</span>
-            <el-button v-if="enterpriseInfo.status === 1" link type="primary" icon="Edit" @click="handleOpenUpdateIntro"
-                       class="edit-link">
-              编辑简介
-            </el-button>
           </div>
           <div class="decoration-container">
             <div class="rich-content-view" v-if="enterpriseInfo.introduction"
                  v-html="enterpriseInfo.introduction"></div>
-            <el-empty v-else description="暂无简介，点击上方按钮进行编辑"/>
+            <el-empty v-else description="暂无简介"/>
           </div>
         </section>
 
@@ -172,9 +170,10 @@
       </el-empty>
     </main>
 
-    <el-dialog v-model="infoDialogVisible" :title="isEdit ? '修改企业资料' : '填报入驻申请'" width="800px"
-               destroy-on-close>
+    <el-dialog v-model="infoDialogVisible" :title="isEdit ? '修改企业资料' : '填报入驻申请'" width="900px"
+               top="5vh" destroy-on-close>
       <el-form ref="infoFormRef" :model="infoForm" :rules="rules" label-position="top">
+        <el-divider content-position="left">基础工商信息</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="企业名称" prop="companyName">
@@ -200,13 +199,42 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="所属行业" prop="industry">
-              <el-input v-model="infoForm.industry"/>
+              <el-input v-model="infoForm.industry" placeholder="例如：软件开发"/>
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-divider content-position="left">入驻意向信息</el-divider>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="意向楼宇/编号" prop="buildingNo">
+              <el-input v-model="infoForm.buildingNo" placeholder="如：A座 302"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="申请租用面积 (㎡)" prop="rentArea">
+              <el-input-number v-model="infoForm.rentArea" :precision="2" :min="0" style="width:100%"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="计划租期" prop="leaseRange">
+              <el-date-picker
+                  v-model="infoForm.leaseRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  format="YYYY-MM-DD"
+                  value-format="YYYY-MM-DD"
+                  style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="联系人" prop="contactPerson">
+            <el-form-item label="业务联系人" prop="contactPerson">
               <el-input v-model="infoForm.contactPerson"/>
             </el-form-item>
           </el-col>
@@ -216,8 +244,15 @@
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-form-item label="企业介绍 (支持图文展示)" prop="introduction">
+          <div style="border: 1px solid #dcdfe6; border-radius: 4px; overflow: hidden">
+            <WangEditor v-model="infoForm.introduction" height="300px"/>
+          </div>
+        </el-form-item>
+
         <el-form-item label="营业执照" prop="licenseUrl">
-          <el-upload class="license-uploader-pro"  action="#"
+          <el-upload class="license-uploader-pro" action="#"
                      :show-file-list="false"
                      :http-request="handleImageUpload"
                      :before-upload="beforeLicenseUpload"
@@ -242,7 +277,7 @@
               <span class="license-text">上传营业执照</span>
             </div>
           </el-upload>
-          <div class="upload-tip">请上传清晰的营业执照扫描件 (支持 JPG/JPEG/PNG/GIF，小于 5MB)</div>
+          <div class="upload-tip">请上传清晰的营业执照扫描件 (支持图片格式，小于 5MB)</div>
         </el-form-item>
         <el-image-viewer
             v-if="showViewer"
@@ -253,29 +288,10 @@
       <template #footer>
         <el-button @click="infoDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitInfoForm" class="gradient-btn">
-          {{ isEdit ? '确认修改' : '确认提交申请' }}
+          {{ isEdit ? '确认保存' : '提交入驻申请' }}
         </el-button>
       </template>
     </el-dialog>
-
-    <el-drawer v-model="introDrawerVisible" title="编辑企业详细简介" size="850px" destroy-on-close>
-      <div class="drawer-content">
-        <el-form :model="introForm" label-position="top">
-          <div class="deco-section">
-            <h3 class="deco-title">企业风采介绍 (支持图文视频)</h3>
-            <el-form-item label-width="0">
-              <WangEditor v-model="introForm.introduction" height="600px"/>
-            </el-form-item>
-          </div>
-          <div class="drawer-footer">
-            <el-button type="primary" size="large" :loading="submitting" @click="submitIntroUpdate"
-                       class="full-btn gradient-btn-success">
-              保存并发布简介
-            </el-button>
-          </div>
-        </el-form>
-      </div>
-    </el-drawer>
   </div>
 </template>
 
@@ -301,7 +317,6 @@ import {uploadFile} from "@/utils/upload.js";
 const loading = ref(true)
 const submitting = ref(false)
 const infoDialogVisible = ref(false)
-const introDrawerVisible = ref(false)
 const isEdit = ref(false)
 const infoFormRef = ref(null)
 const showViewer = ref(false)
@@ -310,7 +325,7 @@ const showViewer = ref(false)
 const enterpriseInfo = ref({id: null, status: null, introduction: ''})
 const auditHistory = ref([])
 
-// 表单数据
+// 表单数据模型
 const infoForm = ref({
   id: null,
   companyName: '',
@@ -318,11 +333,16 @@ const infoForm = ref({
   legalPerson: '',
   registeredCapital: 0,
   industry: '',
+  buildingNo: '',          // 新增：建筑编号
+  rentArea: 0,             // 新增：租用面积
+  leaseRange: [],          // 新增：租期范围数组（前端展示用）
+  leaseStartDate: '',      // 新增：租期开始（提交后端）
+  leaseEndDate: '',        // 新增：租期结束（提交后端）
   contactPerson: '',
   contactPhone: '',
-  licenseUrl: ''
+  licenseUrl: '',
+  introduction: ''         // 新增：企业简介
 })
-const introForm = ref({introduction: ''})
 
 const statusMap = {
   0: {text: '资料审核中', tagType: 'warning'},
@@ -340,10 +360,19 @@ const stepActive = computed(() => {
   return 0;
 });
 
+// 表单规则（全必填增强）
 const rules = {
   companyName: [{required: true, message: '请输入企业全称', trigger: 'blur'}],
   creditCode: [{required: true, pattern: /^[A-Z0-9]{18}$/, message: '请输入18位大写信用代码', trigger: 'blur'}],
-  licenseUrl: [{required: true, message: '请上传营业执照', trigger: 'change'}]
+  legalPerson: [{required: true, message: '请输入法人代表', trigger: 'blur'}],
+  industry: [{required: true, message: '请输入所属行业', trigger: 'blur'}],
+  buildingNo: [{required: true, message: '请输入意向楼宇或编号', trigger: 'blur'}],
+  rentArea: [{required: true, message: '请输入租用面积', trigger: 'blur'}],
+  leaseRange: [{required: true, message: '请选择计划租期', trigger: 'change'}],
+  contactPerson: [{required: true, message: '请输入联系人', trigger: 'blur'}],
+  contactPhone: [{required: true, pattern: /^1[0-9]\d{9}$/, message: '请输入11位手机号', trigger: 'blur'}],
+  licenseUrl: [{required: true, message: '请上传营业执照', trigger: 'change'}],
+  introduction: [{required: true, message: '请编写企业简介（支持图文）', trigger: 'blur'}]
 }
 
 const initData = async () => {
@@ -362,12 +391,20 @@ const initData = async () => {
   }
 }
 
-// 打开入驻申请弹窗
+// 打开申请/修改
 const handleOpenApply = () => {
   isEdit.value = false
-  Object.assign(infoForm.value, enterpriseInfo.value)
+  resetForm()
+  if (enterpriseInfo.value.id) {
+    Object.assign(infoForm.value, enterpriseInfo.value)
+    // 处理日期回显
+    if (enterpriseInfo.value.leaseStartDate && enterpriseInfo.value.leaseEndDate) {
+      infoForm.value.leaseRange = [enterpriseInfo.value.leaseStartDate, enterpriseInfo.value.leaseEndDate]
+    }
+  }
+
   if (enterpriseInfo.value.status === 2 || enterpriseInfo.value.status === 3) {
-    ElMessageBox.confirm('重新提交将进入新一轮人工审核流程，确认继续？', '重申提示', {type: 'warning'}).then(() => {
+    ElMessageBox.confirm('重申将进入人工审核，确认继续？', '提示', {type: 'warning'}).then(() => {
       infoDialogVisible.value = true
     })
   } else {
@@ -375,15 +412,34 @@ const handleOpenApply = () => {
   }
 }
 
-// 营业执照上传
+const handleOpenUpdateInfo = () => {
+  isEdit.value = true
+  Object.assign(infoForm.value, enterpriseInfo.value)
+  if (enterpriseInfo.value.leaseStartDate && enterpriseInfo.value.leaseEndDate) {
+    infoForm.value.leaseRange = [enterpriseInfo.value.leaseStartDate, enterpriseInfo.value.leaseEndDate]
+  }
+  infoDialogVisible.value = true
+}
+
+const resetForm = () => {
+  infoForm.value = {
+    registeredCapital: 0,
+    rentArea: 0,
+    leaseRange: [],
+    introduction: '',
+    licenseUrl: ''
+  }
+}
+
+// 图片处理逻辑
 const beforeLicenseUpload = (rawFile) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-  if (!allowedTypes.includes(rawFile.type)) {
-    ElMessage.error('只能上传 JPG/JPEG/PNG/GIF 格式')
+  const isImg = rawFile.type.startsWith('image/')
+  if (!isImg) {
+    ElMessage.error('只能上传图片格式文件')
     return false
   }
   if (rawFile.size / 1024 / 1024 > 5) {
-    ElMessage.error('图片大小不能超过 5MB')
+    ElMessage.error('图片不能超过 5MB')
     return false
   }
   return true
@@ -402,43 +458,29 @@ const handleImageUpload = async (options) => {
 
 const handlePreview = () => showViewer.value = true
 const handleRemove = () => {
-  ElMessageBox.confirm('确定删除执照图片？', '提示', {type: 'warning'}).then(() => {
-    infoForm.value.licenseUrl = ''
-    ElMessage.success('已移除')
-  })
+  infoForm.value.licenseUrl = ''
+  ElMessage.success('已移除')
 }
 
-// 打开“修改企业资料”弹窗 (所有字段)
-const handleOpenUpdateInfo = () => {
-  isEdit.value = true
-  infoForm.value = {
-    id: enterpriseInfo.value.id,
-    companyName: enterpriseInfo.value.companyName,
-    creditCode: enterpriseInfo.value.creditCode,
-    legalPerson: enterpriseInfo.value.legalPerson,
-    registeredCapital: enterpriseInfo.value.registeredCapital,
-    industry: enterpriseInfo.value.industry,
-    contactPerson: enterpriseInfo.value.contactPerson,
-    contactPhone: enterpriseInfo.value.contactPhone,
-    licenseUrl: enterpriseInfo.value.licenseUrl
-  }
-  infoDialogVisible.value = true
-}
-
-// 提交企业资料表单 (包含入驻申请和常规修改)
+// 提交表单
 const submitInfoForm = async () => {
   await infoFormRef.value.validate(async (valid) => {
     if (!valid) return
+
+    // 拆分日期数组给后端
+    if (infoForm.value.leaseRange && infoForm.value.leaseRange.length === 2) {
+      infoForm.value.leaseStartDate = infoForm.value.leaseRange[0]
+      infoForm.value.leaseEndDate = infoForm.value.leaseRange[1]
+    }
+
     try {
       submitting.value = true
       if (isEdit.value) {
-        // 调用修改接口
         await enterpriseApi.updateMyEnterprise(infoForm.value)
-        ElMessage.success('企业资料已更新')
+        ElMessage.success('企业资料更新成功')
       } else {
-        // 调用入驻申请接口
         await enterpriseApi.apply(infoForm.value)
-        ElMessage.success('申请提交成功，请等待审核')
+        ElMessage.success('申请提交成功，请等待管理员审核')
       }
       infoDialogVisible.value = false
       await initData()
@@ -448,28 +490,7 @@ const submitInfoForm = async () => {
   })
 }
 
-// 打开“编辑企业简介”抽屉
-const handleOpenUpdateIntro = () => {
-  introForm.value = {
-    id: enterpriseInfo.value.id,
-    introduction: enterpriseInfo.value.introduction
-  }
-  introDrawerVisible.value = true
-}
-
-// 提交简介修改
-const submitIntroUpdate = async () => {
-  try {
-    submitting.value = true
-    await enterpriseApi.updateMyEnterprise(introForm.value)
-    ElMessage.success('简介更新成功')
-    introDrawerVisible.value = false
-    await initData()
-  } finally {
-    submitting.value = false
-  }
-}
-
+// 迁出申请逻辑
 const handleApplyMoveOut = () => {
   ElMessageBox.prompt('请输入申请迁出的原因', '迁出园区申请', {
     confirmButtonText: '提交申请',
@@ -480,7 +501,7 @@ const handleApplyMoveOut = () => {
     try {
       loading.value = true
       await enterpriseApi.applyMoveOut(value)
-      ElMessage.success('迁出申请已送达管理员')
+      ElMessage.success('迁出申请已送达')
       await initData()
     } finally {
       loading.value = false
@@ -645,6 +666,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
 }
 
 .license-img-pro {
@@ -659,93 +681,43 @@ onMounted(() => {
   color: #94a3b8;
 }
 
-.deco-section {
-  margin-bottom: 30px;
-}
-
-.deco-title {
-  font-size: 17px;
-  margin-bottom: 20px;
-  padding-left: 12px;
-  border-left: 4px solid #3b82f6;
-}
-
-.drawer-content {
-  padding: 0 30px 40px;
-}
-
-.drawer-footer {
-  margin-top: 20px;
-}
-
-.full-btn {
-  width: 100%;
-}
-
-.reject-alert-box {
-  margin-top: 20px;
-  border-radius: 10px;
-}
-
-.opinion-text {
-  color: #ef4444;
-  font-size: 13px;
-}
-
-.auditor-tag {
-  font-size: 13px;
-  display: flex;
-  color: #0a65c5;
-  padding: 5px 0;
-  align-items: center;
-  gap: 8px;
-  margin-left: 0;
-}
-
-/* 4. 辅助提示文字 */
 .upload-tip {
-  font-size: 13px;
-  color: #ff6c6c;
-  margin-top: 10px;
-  margin-left: 15px;
-  line-height: 1.4;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 8px;
 }
 
-/* 核心：遮罩层样式 */
+.image-preview-container {
+  width: 100%;
+  height: 100%;
+}
+
 .image-actions {
   position: absolute;
   top: 0;
   left: 0;
-  width: 21%;
+  width: 100%;
   height: 100%;
-  cursor: default;
-  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑背景 */
-  opacity: 0; /* 初始隐藏 */
-  transition: opacity 0.3s; /* 平滑过渡 */
-  gap: 15px;
+  gap: 20px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 10px;
 }
 
-/* 鼠标悬停容器时，遮罩层显示 */
 .image-preview-container:hover .image-actions {
   opacity: 1;
 }
 
-/* 单个按钮样式 */
 .action-item {
+  color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #fff;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.action-item:hover {
-  color: #409EFF; /* 悬停变蓝色 */
+  font-size: 12px;
 }
 
 .action-item .el-icon {
@@ -753,7 +725,30 @@ onMounted(() => {
   margin-bottom: 4px;
 }
 
-.action-item span {
-  font-size: 12px;
+.action-item:hover {
+  color: #409eff;
+}
+
+.reject-alert-box {
+  margin-top: 20px;
+}
+
+.log-card h4 {
+  margin: 0 0 10px;
+  color: #1e293b;
+}
+
+.opinion-text {
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+:deep(.el-divider__text) {
+  background-color: #fff;
+  font-weight: bold;
+  color: #4f46e5;
 }
 </style>

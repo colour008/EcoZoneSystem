@@ -78,11 +78,11 @@
         INSERT INTO biz_enterprise (
         user_id, company_name, credit_code, legal_person, registered_capital,
         building_no, rent_area, industry, introduction, contact_person, contact_phone,
-        license_url, status, create_time, update_time
+        license_url, lease_start_date, lease_end_date, status, create_time, update_time
         ) VALUES (
         #{userId}, #{companyName}, #{creditCode}, #{legalPerson}, #{registeredCapital},
         #{buildingNo}, #{rentArea}, #{industry}, #{introduction}, #{contactPerson}, #{contactPhone},
-        #{licenseUrl}, 0, NOW(), NOW()
+        #{licenseUrl}, #{leaseStartDate}, #{leaseEndDate}, 0, NOW(), NOW()
         )
     </insert>
 
