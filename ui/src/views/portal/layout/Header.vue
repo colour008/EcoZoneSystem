@@ -7,7 +7,7 @@
             <OfficeBuilding/>
           </el-icon>
         </div>
-        <span class="logo-text">经济开发区管理平台</span>
+        <span class="logo-text">经济开发区管理委员会</span>
       </div>
 
       <nav class="nav-menu">

@@ -223,7 +223,7 @@ const submitForm = async () => {
   position: relative;
   width: 100%;
   height: 280px;
-  background: url('http://192.168.5.229:9000/myproject/contact_hero_bg.jpg') no-repeat center center; /* 替换为一张园区的全景商务图 */
+  background: url('@/assets/contact-banner.jpg') no-repeat center center; /* 替换为一张园区的全景商务图 */
   background-size: cover;
   display: flex;
   align-items: center;

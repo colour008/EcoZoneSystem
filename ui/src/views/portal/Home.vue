@@ -13,7 +13,7 @@
 
     <div class="service-hall">
       <div class="hall-inner">
-        <div class="service-card" @click="goTo('/register')">
+        <div class="service-card" @click="goTo('/my-enterprise')">
           <el-icon class="icon">
             <OfficeBuilding/>
           </el-icon>
@@ -27,14 +27,14 @@
           <h3>政策申报</h3>
           <p>精准匹配，直达企业</p>
         </div>
-        <div class="service-card" @click="goTo('/index/dashboard')">
+        <div class="service-card" @click="goTo('/contact')">
           <el-icon class="icon">
             <Service/>
           </el-icon>
           <h3>园区服务</h3>
           <p>在线提单，极速响应</p>
         </div>
-        <div class="service-card" @click="goTo('/index/dashboard')">
+        <div class="service-card" @click="goTo('/contact')">
           <el-icon class="icon">
             <ChatLineSquare/>
           </el-icon>

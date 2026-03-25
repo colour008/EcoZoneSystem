@@ -17,8 +17,8 @@
 
       <div class="illustration-content">
         <img src="@/assets/ILLUSTRATION.png" alt="illustration" class="login-3d-img"/>
-        <h2 class="illustration-title">开箱即用的大型中后台管理系统</h2>
-        <p class="illustration-desc">工程化、高性能、跨组件库的前端模版</p>
+        <h2 class="illustration-title">数字赋能园区，智慧连接未来</h2>
+        <p class="illustration-desc">数字化赋能政务，让企业服务更高效</p>
       </div>
     </div>
 
@@ -52,8 +52,8 @@
 
       <div class="form-wrapper">
         <div class="welcome-text">
-          <h2>欢迎回来 👋</h2>
-          <p>请输入您的账户信息以开始管理您的项目</p>
+          <h2>欢迎加入经济开发区 👋</h2>
+          <p style="font-size: 15px">请登录账号后提交申请入驻资料</p>
         </div>
 
         <el-form label-width="0" size="large" class="custom-form">
@@ -322,6 +322,7 @@ onUnmounted(() => onSliderEnd())
   --divider-color: #e2e8f0;
   --tool-bg: #f1f5f9;
   --tool-icon: #64748b;
+  --bg-img: url('@/assets/light-img.jpg');
 }
 
 .dark-theme {
@@ -339,6 +340,7 @@ onUnmounted(() => onSliderEnd())
   --divider-color: #2e3338;
   --tool-bg: #22262b;
   --tool-icon: #8a99a0;
+  --bg-img: url('@/assets/dark-img.jpg');
 }
 
 /* ================== 基础整体布局 ================== */
@@ -352,11 +354,31 @@ onUnmounted(() => onSliderEnd())
 
 .login-left {
   flex: 1;
-  background: var(--bg-left);
+  background: var(--bg-img)no-repeat center center;
+  background-size: cover;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: background 0.3s ease;
+}
+
+
+.login-left::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+/* 确保内容在伪元素之上 */
+.brand-logo, .illustration-content {
+  position: relative;
+  z-index: 2;
 }
 
 .login-right {
@@ -380,6 +402,7 @@ onUnmounted(() => onSliderEnd())
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  z-index: 10;
 }
 
 .logo-icon {

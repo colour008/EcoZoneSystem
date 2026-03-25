@@ -12,8 +12,8 @@
 
       <div class="illustration-content">
         <img src="@/assets/ILLUSTRATION.png" alt="illustration" class="login-3d-img"/>
-        <h2 class="illustration-title">开箱即用的大型中后台管理系统</h2>
-        <p class="illustration-desc">工程化、高性能、跨组件库的前端模版</p>
+        <h2 class="illustration-title">数字赋能园区，智慧连接未来</h2>
+        <p class="illustration-desc">数字化赋能政务，让企业服务更高效</p>
       </div>
     </div>
 
@@ -57,7 +57,7 @@
       <div class="form-wrapper">
         <div class="welcome-text">
           <h2>创建新账户 🚀</h2>
-          <p>欢迎加入经济开发区管理平台</p>
+          <p style="font-size: 15px">欢迎加入经济开发区</p>
         </div>
 
         <el-form ref="registerFormRef" :model="regForm" :rules="regRules" label-width="0" size="large">
@@ -259,6 +259,7 @@ const goToLogin = () => {
   --divider-color: #e2e8f0;
   --tool-bg: #f1f5f9;
   --tool-icon: #64748b;
+  --bg-img: url('@/assets/light-img.jpg');
 }
 
 .dark-theme {
@@ -276,6 +277,7 @@ const goToLogin = () => {
   --divider-color: #2e3338;
   --tool-bg: #22262b;
   --tool-icon: #8a99a0;
+  --bg-img: url('@/assets/dark-img.jpg');
 }
 
 /* ================== 基础整体布局 ================== */
@@ -289,11 +291,30 @@ const goToLogin = () => {
 
 .login-left {
   flex: 1;
-  background: var(--bg-left);
+  background: var(--bg-img)no-repeat center center;
+  background-size: cover;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: background 0.3s ease;
+}
+
+.login-left::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  backdrop-filter: blur(5px);
+  z-index: 1;
+}
+
+/* 确保内容在伪元素之上 */
+.brand-logo, .illustration-content {
+  position: relative;
+  z-index: 2;
 }
 
 .login-right {
