@@ -18,8 +18,9 @@
             router
         >
           <el-menu-item index="/home">首页</el-menu-item>
-          <el-menu-item index="/news">园区动态</el-menu-item>
+          <el-menu-item index="/news">要闻导读</el-menu-item>
           <el-menu-item index="/policy">政策中心</el-menu-item>
+          <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
           <el-menu-item v-if="isAdmin || isStaff" index="/my-enterprise">我的企业</el-menu-item>
           <el-menu-item index="/contact">联系我们</el-menu-item>

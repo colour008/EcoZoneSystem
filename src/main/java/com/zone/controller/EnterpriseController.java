@@ -90,7 +90,7 @@ public class EnterpriseController {
 	 * 获取企业列表
 	 */
 	@GetMapping("/list")
-	@Operation(summary = "获取企业列表")
+	@Operation(summary = "B端-获取企业列表")
 	public Result<List<EnterpriseVO>> list() {
 		log.info("查询全量企业列表");
 		List<EnterpriseVO> enterpriseList = enterpriseService.listAll();
@@ -127,7 +127,7 @@ public class EnterpriseController {
 	 * 获取企业审核历史流水
 	 */
 	@GetMapping("/audit/history/{id}")
-	@Operation(summary = "管理端-查看审核历史记录")
+	@Operation(summary = "B端-查看审核历史记录")
 	public Result<List<EnterpriseAuditVO>> getAuditHistory(@PathVariable Long id) {
 		// 假设你在 service 中实现了获取流水的方法
 		List<EnterpriseAuditVO> history = enterpriseService.getAuditHistory(id);
@@ -163,7 +163,7 @@ public class EnterpriseController {
 	 * 修改企业信息
 	 */
 	@PutMapping("/update")
-	@Operation(summary = "修改企业信息")
+	@Operation(summary = "B端-修改企业信息")
 	public Result<String> updateById(@RequestBody EnterpriseDTO enterpriseDTO) {
 		log.info("管理员更新企业信息");
 		boolean success = enterpriseService.updateEnterprise(enterpriseDTO);
@@ -186,8 +186,12 @@ public class EnterpriseController {
 	 * 获取待审核数量
 	 */
 	@GetMapping("/pending/count")
-	@Operation(summary = "获取待审核数量")
+	@Operation(summary = "B端-获取待审核数量")
 	public Result<Integer> getPendingCount() {
 		return Result.success(enterpriseService.getPendingCount());
 	}
+
+	/*
+	  TODO 租约到期预警，待完成通知公告业务后实现
+	 */
 }

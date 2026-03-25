@@ -45,7 +45,7 @@ const fetchArticleDetail = async () => {
   try {
     loading.value = true
     // 模拟接口调用，实际开发中放开下面的注释
-    const res = await request.get(`/api/portal/notice/${articleId}`)
+    const res = await request.get(`/portal/notice/${articleId}`)
     article.value = res.data
 
     // 模拟数据注入
