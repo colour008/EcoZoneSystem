@@ -20,6 +20,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkOrderPageQueryDTO extends PageQuery {
+
+	/** 用户ID（C端查询时固定，B端查询时可选） */
+	private Long userId;
+
 	/** 工单编号（模糊搜索） */
 	private String orderNo;
 

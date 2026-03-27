@@ -64,4 +64,7 @@ public class WorkOrder extends BaseEntity {
 	private String enterpriseName; // 冗余字段：企业名称
 
 	private String handlerName; // 冗余字段：处理人姓名
+
+	/** 用户ID（C端查询时固定，B端查询时可选） */
+	private Long userId;
 }

@@ -50,6 +50,7 @@ public enum ResponseCodeEnum {
 	WORK_ORDER_EVALUATE_FAILED(4205, "工单未办结，无法评价"),
 	WORK_ORDER_REPEAT_SUBMIT(4206, "请勿重复提交相同诉求工单"),
 	WORK_ORDER_HANDLER_ERROR(4207, "非当前处理人，无法操作"),
+	WORK_ORDER_NO_PERMISSION(4208, "非当前处理人，无法操作" ),
 
 	// ===================== 园区公告相关（4301-4399） =====================
 	NOTICE_NOT_EXIST(4301, "园区公告不存在"),
@@ -74,7 +75,7 @@ public enum ResponseCodeEnum {
 	PARAM_PHONE_ERROR(4802, "手机号格式错误"),
 	PARAM_DATE_ERROR(4803, "日期格式错误"),
 	PARAM_ID_ERROR(4804, "ID参数格式错误"),
-	PARAM_LENGTH_ERROR(4805, "参数长度超出限制"), ;
+	PARAM_LENGTH_ERROR(4805, "参数长度超出限制");
 
 	private final int bizCode;
 	private final String msg;

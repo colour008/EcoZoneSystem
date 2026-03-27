@@ -60,114 +60,213 @@
     </header>
 
     <main class="main-content" v-loading="loading">
-      <template v-if="enterpriseInfo.id">
+      <el-tabs v-model="activeTab" class="custom-tabs" @tab-change="handleTabChange">
 
-        <section class="status-steps card-style"
-                 v-if="enterpriseInfo.status === 0 || enterpriseInfo.status === 2 || enterpriseInfo.status === 4">
-          <div class="card-header-simple">业务办理状态</div>
-          <el-steps :active="stepActive" finish-status="success" align-center>
-            <el-step title="提交申请" :description="enterpriseInfo.createTime"></el-step>
-            <el-step
-                title="审核中"
-                :status="enterpriseInfo.status === 2 ? 'error' : (enterpriseInfo.status === 4 ? 'process' : '')"
-                :description="enterpriseInfo.status === 2 ? '审核未通过' : '人工核验中'"
-            ></el-step>
-            <el-step title="办理完成" description="正式入驻/已迁出"></el-step>
-          </el-steps>
+        <el-tab-pane label="企业档案" name="info">
+          <template v-if="enterpriseInfo.id">
+            <section class="status-steps card-style"
+                     v-if="enterpriseInfo.status === 0 || enterpriseInfo.status === 2 || enterpriseInfo.status === 4">
+              <div class="card-header-simple">业务办理状态</div>
+              <el-steps :active="stepActive" finish-status="success" align-center>
+                <el-step title="提交申请" :description="enterpriseInfo.createTime"></el-step>
+                <el-step
+                    title="审核中"
+                    :status="enterpriseInfo.status === 2 ? 'error' : (enterpriseInfo.status === 4 ? 'process' : '')"
+                    :description="enterpriseInfo.status === 2 ? '审核未通过' : '人工核验中'"
+                ></el-step>
+                <el-step title="办理完成" description="正式入驻/已迁出"></el-step>
+              </el-steps>
 
-          <el-alert v-if="enterpriseInfo.status === 2" title="驳回反馈" type="error" :closable="false" show-icon
-                    class="reject-alert-box">
-            <template #default>
-              <p class="reject-reason">原因：{{ enterpriseInfo.auditOpinion || '资料不齐' }}</p>
-            </template>
-          </el-alert>
-        </section>
+              <el-alert v-if="enterpriseInfo.status === 2" title="驳回反馈" type="error" :closable="false" show-icon
+                        class="reject-alert-box">
+                <template #default>
+                  <p class="reject-reason">原因：{{ enterpriseInfo.auditOpinion || '资料不齐' }}</p>
+                </template>
+              </el-alert>
+            </section>
 
-        <section class="info-grid card-style">
-          <div class="section-title">
-            <el-icon>
-              <InfoFilled/>
-            </el-icon>
-            <span>企业基础信息</span>
-            <el-button v-if="enterpriseInfo.status === 1" link type="primary" icon="Edit" @click="handleOpenUpdateInfo"
-                       class="edit-link">
-              修改基本资料
-            </el-button>
-          </div>
-          <div class="info-dashboard">
-            <div class="info-item"><span class="label">信用代码</span><span class="value">{{
-                enterpriseInfo.creditCode
-              }}</span></div>
-            <div class="info-item"><span class="label">法人代表</span><span class="value">{{
-                enterpriseInfo.legalPerson
-              }}</span></div>
-            <div class="info-item"><span class="label">入驻楼宇</span><span class="value">{{
-                enterpriseInfo.buildingNo || '待分配'
-              }}</span></div>
-            <div class="info-item"><span class="label">租用面积</span><span class="value">{{
-                enterpriseInfo.rentArea || 0
-              }} ㎡</span></div>
-          </div>
-
-          <el-descriptions :column="2" border class="custom-descriptions">
-            <el-descriptions-item label="所属行业">{{ enterpriseInfo.industry || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="注册资本">{{ enterpriseInfo.registeredCapital }} 万</el-descriptions-item>
-            <el-descriptions-item label="业务联系人">{{ enterpriseInfo.contactPerson || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="联系电话">{{ enterpriseInfo.contactPhone || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="计划租约" :span="2">
-              {{ enterpriseInfo.leaseStartDate || '-' }} 至 {{ enterpriseInfo.leaseEndDate || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="营业执照预览" :span="2">
-              <div class="license-preview-box">
-                <el-image v-if="enterpriseInfo.licenseUrl" :src="enterpriseInfo.licenseUrl"
-                          :preview-src-list="[enterpriseInfo.licenseUrl]" fit="contain" preview-teleported/>
-                <el-empty v-else :image-size="40" description="未上传"/>
+            <section class="info-grid card-style">
+              <div class="section-title">
+                <el-icon>
+                  <InfoFilled/>
+                </el-icon>
+                <span>企业基础信息</span>
+                <el-button v-if="enterpriseInfo.status === 1" link type="primary" icon="Edit"
+                           @click="handleOpenUpdateInfo"
+                           class="edit-link">
+                  修改基本资料
+                </el-button>
               </div>
-            </el-descriptions-item>
-          </el-descriptions>
-        </section>
+              <div class="info-dashboard">
+                <div class="info-item"><span class="label">信用代码</span><span class="value">{{
+                    enterpriseInfo.creditCode
+                  }}</span></div>
+                <div class="info-item"><span class="label">法人代表</span><span class="value">{{
+                    enterpriseInfo.legalPerson
+                  }}</span></div>
+                <div class="info-item"><span class="label">入驻楼宇</span><span class="value">{{
+                    enterpriseInfo.buildingNo || '待分配'
+                  }}</span></div>
+                <div class="info-item"><span class="label">租用面积</span><span class="value">{{
+                    enterpriseInfo.rentArea || 0
+                  }} ㎡</span></div>
+              </div>
 
-        <section class="intro-display-section card-style">
-          <div class="section-title">
-            <el-icon>
-              <Monitor/>
-            </el-icon>
-            <span>企业简介</span>
-          </div>
-          <div class="decoration-container">
-            <div class="rich-content-view" v-if="enterpriseInfo.introduction"
-                 v-html="enterpriseInfo.introduction"></div>
-            <el-empty v-else description="暂无简介"/>
-          </div>
-        </section>
+              <el-descriptions :column="2" border class="custom-descriptions">
+                <el-descriptions-item label="所属行业">{{ enterpriseInfo.industry || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="注册资本">{{ enterpriseInfo.registeredCapital }} 万</el-descriptions-item>
+                <el-descriptions-item label="业务联系人">{{
+                    enterpriseInfo.contactPerson || '-'
+                  }}
+                </el-descriptions-item>
+                <el-descriptions-item label="联系电话">{{ enterpriseInfo.contactPhone || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="计划租约" :span="2">
+                  {{ enterpriseInfo.leaseStartDate || '-' }} 至 {{ enterpriseInfo.leaseEndDate || '-' }}
+                </el-descriptions-item>
+                <el-descriptions-item label="营业执照预览" :span="2">
+                  <div class="license-preview-box">
+                    <el-image v-if="enterpriseInfo.licenseUrl" :src="enterpriseInfo.licenseUrl"
+                              :preview-src-list="[enterpriseInfo.licenseUrl]" fit="contain" preview-teleported/>
+                    <el-empty v-else :image-size="40" description="未上传"/>
+                  </div>
+                </el-descriptions-item>
+              </el-descriptions>
+            </section>
 
-        <section v-if="auditHistory.length > 0" class="audit-timeline card-style">
-          <div class="section-title">
-            <el-icon>
-              <Timer/>
-            </el-icon>
-            <span>流转审批记录</span></div>
-          <el-timeline>
-            <el-timeline-item v-for="(log, index) in auditHistory" :key="index"
-                              :type="log.status === 1 ? 'success' : (log.status === 2 ? 'danger' : 'primary')"
-                              :timestamp="log.createTime">
-              <el-card shadow="never" class="log-card">
-                <h4>{{ log.auditAction }}</h4>
-                <p v-if="log.opinion" class="opinion-text">反馈：{{ log.opinion }}</p>
-                <span class="auditor-tag">
-                      <el-icon><User/></el-icon> {{ log.auditorName || '申请人' }}
-                </span>
+            <section class="intro-display-section card-style">
+              <div class="section-title">
+                <el-icon>
+                  <Monitor/>
+                </el-icon>
+                <span>企业简介</span>
+              </div>
+              <div class="decoration-container">
+                <div class="rich-content-view" v-if="enterpriseInfo.introduction"
+                     v-html="enterpriseInfo.introduction"></div>
+                <el-empty v-else description="暂无简介"/>
+              </div>
+            </section>
+
+            <section v-if="auditHistory.length > 0" class="audit-timeline card-style">
+              <div class="section-title">
+                <el-icon>
+                  <Timer/>
+                </el-icon>
+                <span>流转审批记录</span></div>
+              <el-timeline>
+                <el-timeline-item v-for="(log, index) in auditHistory" :key="index"
+                                  :type="log.status === 1 ? 'success' : (log.status === 2 ? 'danger' : 'primary')"
+                                  :timestamp="log.createTime">
+                  <el-card shadow="never" class="log-card">
+                    <h4>{{ log.auditAction }}</h4>
+                    <p v-if="log.opinion" class="opinion-text">反馈：{{ log.opinion }}</p>
+                    <span class="auditor-tag">
+                          <el-icon><User/></el-icon> {{ log.auditorName || '申请人' }}
+                    </span>
+                  </el-card>
+                </el-timeline-item>
+              </el-timeline>
+            </section>
+          </template>
+
+          <el-empty v-else :image-size="200" description="您尚未加入园区企业档案库">
+            <el-button type="primary" size="large" class="gradient-btn" icon="Plus" @click="handleOpenApply">
+              提交入驻申请
+            </el-button>
+          </el-empty>
+        </el-tab-pane>
+
+        <el-tab-pane label="诉求工单" name="workorder">
+          <div class="work-order-section">
+            <div class="work-order-actions card-style shadow-sm">
+              <el-button type="primary" size="large" icon="Plus" @click="handleOpenWorkOrder" class="gradient-btn">
+                发起服务诉求
+              </el-button>
+              <div class="filter-box">
+                <el-radio-group v-model="workOrderQuery.status" @change="loadWorkOrders" size="default">
+                  <el-radio-button :label="null">全部</el-radio-button>
+                  <el-radio-button :label="0">待受理</el-radio-button>
+                  <el-radio-button :label="1">处理中</el-radio-button>
+                  <el-radio-button :label="2">已办结</el-radio-button>
+                  <el-radio-button :label="3">已评价</el-radio-button>
+                </el-radio-group>
+              </div>
+            </div>
+
+            <div class="order-list">
+              <el-empty v-if="workOrders.length === 0" description="暂无相关诉求记录"/>
+              <el-card v-for="item in workOrders" :key="item.id" class="order-item-card card-style" shadow="hover">
+                <div class="order-card-header">
+                  <div class="order-no">单号：{{ item.id }}</div>
+                  <el-tag :type="orderStatusMap[item.status]?.type">{{ orderStatusMap[item.status]?.text }}</el-tag>
+                </div>
+                <div class="order-body">
+                  <div class="order-main-info">
+                    <h3 class="order-title">
+                      <el-tag size="small" effect="plain" class="type-tag">{{ orderTypeMap[item.type] }}</el-tag>
+                      {{ item.title }}
+                    </h3>
+                    <p class="order-desc">{{ item.content }}</p>
+
+                    <div class="order-images" v-if="item.images">
+                      <el-image
+                          v-for="(img, idx) in item.images.split(',')"
+                          :key="idx"
+                          :src="img"
+                          :preview-src-list="item.images.split(',')"
+                          :initial-index="idx"
+                          preview-teleported
+                          class="order-img"
+                      />
+                    </div>
+                  </div>
+                  <div class="order-meta">
+                    <div class="meta-item">
+                      <el-icon>
+                        <Timer/>
+                      </el-icon>
+                      提交时间：{{ item.createTime }}
+                    </div>
+                    <div class="meta-item" v-if="item.handlerName">
+                      <el-icon>
+                        <User/>
+                      </el-icon>
+                      受理人：{{ item.handlerName }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="order-feedback" v-if="item.status >= 2">
+                  <div class="feedback-title">处理反馈：</div>
+                  <div class="feedback-content">{{ item.remark || '已妥善处理您的诉求。' }}</div>
+                </div>
+
+                <div class="order-footer" v-if="item.status === 2">
+                  <el-button type="primary" plain icon="ChatDotRound" @click="handleOpenEvaluate(item)">评价服务
+                  </el-button>
+                </div>
+                <div class="order-footer" v-if="item.status === 3">
+                  <div class="evaluated-box">
+                    <span>我的评价：</span>
+                    <el-rate v-model="item.score" disabled show-score text-color="#ff9900"/>
+                  </div>
+                </div>
               </el-card>
-            </el-timeline-item>
-          </el-timeline>
-        </section>
-      </template>
 
-      <el-empty v-else :image-size="200" description="您尚未加入园区企业档案库">
-        <el-button type="primary" size="large" class="gradient-btn" icon="Plus" @click="handleOpenApply">
-          提交入驻申请
-        </el-button>
-      </el-empty>
+              <div class="pagination-container" v-if="total > 0">
+                <el-pagination
+                    background
+                    layout="prev, pager, next"
+                    :total="total"
+                    :page-size="workOrderQuery.pageSize"
+                    v-model:current-page="workOrderQuery.pageNum"
+                    @current-change="loadWorkOrders"
+                />
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </main>
 
     <el-dialog v-model="infoDialogVisible" :title="isEdit ? '修改企业资料' : '填报入驻申请'" width="900px"
@@ -292,11 +391,84 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="workOrderVisible" title="发起服务诉求" width="650px" destroy-on-close>
+      <el-form ref="orderFormRef" :model="orderForm" :rules="orderRules" label-position="top">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="诉求类型" prop="type">
+              <el-select v-model="orderForm.type" placeholder="请选择类型" style="width: 100%">
+                <el-option label="维修服务" :value="1"/>
+                <el-option label="政策咨询" :value="2"/>
+                <el-option label="投诉建议" :value="3"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="诉求标题" prop="title">
+              <el-input v-model="orderForm.title" placeholder="简述您的诉求"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="详细内容描述" prop="content">
+          <el-input v-model="orderForm.content" type="textarea" :rows="4"
+                    placeholder="请详细描述您遇到的问题或需求..."/>
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="联系人" prop="contactPerson">
+              <el-input v-model="orderForm.contactPerson"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="联系电话" prop="contactPhone">
+              <el-input v-model="orderForm.contactPhone"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="现场照片/补充附件 (可选)">
+          <el-upload
+              action="#"
+              list-type="picture-card"
+              :http-request="handleOrderImageUpload"
+              :on-remove="handleOrderImageRemove"
+              accept=".jpg,.jpeg,.png"
+          >
+            <el-icon>
+              <Plus/>
+            </el-icon>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="workOrderVisible = false">取消</el-button>
+        <el-button type="primary" :loading="woSubmitting" @click="submitWorkOrder" class="gradient-btn">提交诉求
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="evaluateVisible" title="服务评价" width="450px" destroy-on-close>
+      <div class="evaluate-body">
+        <p style="margin-bottom: 15px; color: #64748b;">请对本次工单处理结果进行打分：</p>
+        <el-rate v-model="evaluateForm.score" :texts="['极差', '失望', '一般', '满意', '非常惊喜']" show-text/>
+        <el-input
+            v-model="evaluateForm.commentText"
+            type="textarea"
+            :rows="3"
+            placeholder="写下您的评价内容（选填）..."
+            style="margin-top: 25px"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="evaluateVisible = false">取消</el-button>
+        <el-button type="primary" :loading="evalSubmitting" @click="submitEvaluate">提交评价</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue'
+import {ref, reactive, onMounted, computed} from 'vue'
 import {
   InfoFilled,
   Plus,
@@ -306,14 +478,20 @@ import {
   OfficeBuilding,
   Timer,
   Loading,
-  Promotion, User, Delete, ZoomIn
+  Promotion,
+  User,
+  Delete,
+  ZoomIn,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
+import workOrderApi from '@/api/workOrder'
 import WangEditor from '@/components/WangEditor/index.vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {uploadFile} from "@/utils/upload.js";
+import {uploadFile} from "@/utils/upload.js"
 
-// 状态控制
+// ================== 原有：企业资料状态控制 ==================
+const activeTab = ref('info') // 选项卡控制
 const loading = ref(true)
 const submitting = ref(false)
 const infoDialogVisible = ref(false)
@@ -321,11 +499,9 @@ const isEdit = ref(false)
 const infoFormRef = ref(null)
 const showViewer = ref(false)
 
-// 数据模型
+// 原有：企业数据模型
 const enterpriseInfo = ref({id: null, status: null, introduction: ''})
 const auditHistory = ref([])
-
-// 表单数据模型
 const infoForm = ref({
   id: null,
   companyName: '',
@@ -333,15 +509,15 @@ const infoForm = ref({
   legalPerson: '',
   registeredCapital: 0,
   industry: '',
-  buildingNo: '',          // 新增：建筑编号
-  rentArea: 0,             // 新增：租用面积
-  leaseRange: [],          // 新增：租期范围数组（前端展示用）
-  leaseStartDate: '',      // 新增：租期开始（提交后端）
-  leaseEndDate: '',        // 新增：租期结束（提交后端）
+  buildingNo: '',
+  rentArea: 0,
+  leaseRange: [],
+  leaseStartDate: '',
+  leaseEndDate: '',
   contactPerson: '',
   contactPhone: '',
   licenseUrl: '',
-  introduction: ''         // 新增：企业简介
+  introduction: ''
 })
 
 const statusMap = {
@@ -360,7 +536,6 @@ const stepActive = computed(() => {
   return 0;
 });
 
-// 表单规则（全必填增强）
 const rules = {
   companyName: [{required: true, message: '请输入企业全称', trigger: 'blur'}],
   creditCode: [{required: true, pattern: /^[A-Z0-9]{18}$/, message: '请输入18位大写信用代码', trigger: 'blur'}],
@@ -375,6 +550,56 @@ const rules = {
   introduction: [{required: true, message: '请编写企业简介（支持图文）', trigger: 'blur'}]
 }
 
+// ================== 新增：工单相关状态与模型 ==================
+const workOrderVisible = ref(false)
+const evaluateVisible = ref(false)
+const woSubmitting = ref(false)
+const evalSubmitting = ref(false)
+
+const workOrders = ref([])
+const total = ref(0)
+const workOrderQuery = reactive({
+  pageNum: 1,
+  pageSize: 5,
+  status: null,
+  enterpriseId: null
+})
+
+const orderFormRef = ref(null)
+const orderForm = ref({
+  type: 1,
+  title: '',
+  content: '',
+  contactPerson: '',
+  contactPhone: '',
+  images: ''
+})
+const orderImages = ref([]) // 用于暂存已上传的图片URL
+
+const evaluateForm = reactive({
+  id: null,
+  score: 5,
+  commentText: ''
+})
+
+const orderRules = {
+  type: [{required: true, message: '请选择诉求类型', trigger: 'change'}],
+  title: [{required: true, message: '请输入诉求标题', trigger: 'blur'}],
+  content: [{required: true, message: '请输入详细内容描述', trigger: 'blur'}],
+  contactPerson: [{required: true, message: '请输入联系人', trigger: 'blur'}],
+  contactPhone: [{required: true, pattern: /^1[0-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur'}]
+}
+
+const orderStatusMap = {
+  0: {text: '待受理', type: 'info'},
+  1: {text: '处理中', type: 'warning'},
+  2: {text: '已办结', type: 'success'},
+  3: {text: '已评价', type: 'primary'}
+}
+const orderTypeMap = {1: '维修服务', 2: '政策咨询', 3: '投诉建议'}
+
+
+// ================== 初始化逻辑 ==================
 const initData = async () => {
   loading.value = true
   try {
@@ -391,13 +616,12 @@ const initData = async () => {
   }
 }
 
-// 打开申请/修改
+// ================== 原有：企业业务方法 ==================
 const handleOpenApply = () => {
   isEdit.value = false
   resetForm()
   if (enterpriseInfo.value.id) {
     Object.assign(infoForm.value, enterpriseInfo.value)
-    // 处理日期回显
     if (enterpriseInfo.value.leaseStartDate && enterpriseInfo.value.leaseEndDate) {
       infoForm.value.leaseRange = [enterpriseInfo.value.leaseStartDate, enterpriseInfo.value.leaseEndDate]
     }
@@ -431,7 +655,6 @@ const resetForm = () => {
   }
 }
 
-// 图片处理逻辑
 const beforeLicenseUpload = (rawFile) => {
   const isImg = rawFile.type.startsWith('image/')
   if (!isImg) {
@@ -462,12 +685,10 @@ const handleRemove = () => {
   ElMessage.success('已移除')
 }
 
-// 提交表单
 const submitInfoForm = async () => {
   await infoFormRef.value.validate(async (valid) => {
     if (!valid) return
 
-    // 拆分日期数组给后端
     if (infoForm.value.leaseRange && infoForm.value.leaseRange.length === 2) {
       infoForm.value.leaseStartDate = infoForm.value.leaseRange[0]
       infoForm.value.leaseEndDate = infoForm.value.leaseRange[1]
@@ -490,7 +711,6 @@ const submitInfoForm = async () => {
   })
 }
 
-// 迁出申请逻辑
 const handleApplyMoveOut = () => {
   ElMessageBox.prompt('请输入申请迁出的原因', '迁出园区申请', {
     confirmButtonText: '提交申请',
@@ -510,12 +730,124 @@ const handleApplyMoveOut = () => {
   })
 }
 
+// ================== 新增：工单业务方法 ==================
+
+// 切换选项卡
+const handleTabChange = (name) => {
+  if (name === 'workorder') {
+    loadWorkOrders()
+  }
+}
+
+// 加载工单列表
+const loadWorkOrders = async () => {
+  // 防御逻辑：如果当前账号还没有关联企业，直接清空列表并返回，不发请求
+  if (!enterpriseInfo.value || !enterpriseInfo.value.id) {
+    workOrders.value = []
+    total.value = 0
+    return
+  }
+
+  loading.value = true
+  try {
+    // 请求前，将当前企业的ID动态赋值给查询参数
+    workOrderQuery.enterpriseId = enterpriseInfo.value.id
+
+    const res = await workOrderApi.getMyPage(workOrderQuery)
+    workOrders.value = res.data.records
+    total.value = res.data.total
+  } catch (err) {
+    console.error('加载工单失败', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 工单图片上传
+const handleOrderImageUpload = async (options) => {
+  try {
+    const url = await uploadFile(options.file)
+    orderImages.value.push(url)
+    orderForm.value.images = orderImages.value.join(',')
+  } catch (e) {
+    ElMessage.error('图片上传失败')
+  }
+}
+
+// 工单图片移除
+const handleOrderImageRemove = (file, uploadFiles) => {
+  // 简化处理：重置图片数组。实际场景应通过对比 response url 删除特定一项
+  orderImages.value = []
+  orderForm.value.images = ''
+  ElMessage.warning('图片已移除，如需多图请重新整理上传')
+}
+
+// 打开提报工单
+const handleOpenWorkOrder = () => {
+  if (!enterpriseInfo.value.id || enterpriseInfo.value.status !== 1) {
+    ElMessage.warning('企业正式入驻后方可提报工单')
+    return
+  }
+  // 初始化表单时，带上 enterpriseId
+  orderForm.value = {
+    type: 1,
+    title: '',
+    content: '',
+    contactPerson: enterpriseInfo.value.contactPerson || '',
+    contactPhone: enterpriseInfo.value.contactPhone || '',
+    images: '',
+    enterpriseId: enterpriseInfo.value.id // 新增：提报工单时绑定当前企业
+  }
+  orderImages.value = []
+  workOrderVisible.value = true
+}
+
+// 提交工单
+const submitWorkOrder = async () => {
+  await orderFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    woSubmitting.value = true
+    try {
+      await workOrderApi.submit(orderForm.value)
+      ElMessage.success('诉求提报成功，请耐心等待园区处理')
+      workOrderVisible.value = false
+      loadWorkOrders()
+    } finally {
+      woSubmitting.value = false
+    }
+  })
+}
+
+// 打开评价窗口
+const handleOpenEvaluate = (row) => {
+  evaluateForm.id = row.id
+  evaluateForm.score = 5
+  evaluateForm.commentText = ''
+  evaluateVisible.value = true
+}
+
+// 提交评价
+const submitEvaluate = async () => {
+  evalSubmitting.value = true
+  try {
+    await workOrderApi.evaluate(evaluateForm)
+    ElMessage.success('评价提交成功，感谢您的反馈！')
+    evaluateVisible.value = false
+    loadWorkOrders()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    evalSubmitting.value = false
+  }
+}
+
 onMounted(() => {
   initData()
 })
 </script>
 
 <style scoped>
+/* ================= 原有样式保持完全不变 ================= */
 .my-enterprise-container {
   background-color: #f8fafc;
   min-height: 100vh;
@@ -750,5 +1082,139 @@ onMounted(() => {
   background-color: #fff;
   font-weight: bold;
   color: #4f46e5;
+}
+
+/* ================= 新增：工单专属样式 ================= */
+
+.custom-tabs {
+  background: transparent;
+}
+
+.custom-tabs :deep(.el-tabs__header) {
+  margin: 0 0 24px;
+  background: #fff;
+  padding: 0 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border-bottom: none;
+}
+
+.custom-tabs :deep(.el-tabs__nav-wrap::after) {
+  display: none; /* 隐藏底部灰线，让其完全像浮动卡片 */
+}
+
+.work-order-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+}
+
+.order-item-card {
+  margin-top: 15px;
+  transition: all 0.3s;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.order-no {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.order-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e293b;
+}
+
+.order-desc {
+  color: #475569;
+  line-height: 1.6;
+  font-size: 14px;
+  background: #f8fafc;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.order-images {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.order-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.order-meta {
+  margin-top: 15px;
+  display: flex;
+  gap: 30px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.order-meta .el-icon {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.order-feedback {
+  margin-top: 20px;
+  background: #f0fdf4;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+}
+
+.feedback-title {
+  font-weight: 600;
+  color: #065f46;
+  margin-bottom: 5px;
+}
+
+.feedback-content {
+  color: #047857;
+  font-size: 14px;
+}
+
+.order-footer {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #e2e8f0;
+  text-align: right;
+}
+
+.evaluated-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.type-tag {
+  font-weight: normal;
+}
+
+.pagination-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
 }
 </style>

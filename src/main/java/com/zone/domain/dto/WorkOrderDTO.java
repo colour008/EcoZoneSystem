@@ -19,6 +19,9 @@ public class WorkOrderDTO implements Serializable {
 
 	private Long id; // 修改或处理时使用
 
+	/** 用户ID */
+	private Long userId;
+
 	/** 标题 */
 	private String title;
 

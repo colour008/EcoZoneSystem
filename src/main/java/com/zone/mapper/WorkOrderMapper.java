@@ -4,6 +4,8 @@ import com.github.pagehelper.Page;
 import com.zone.domain.dto.WorkOrderPageQueryDTO;
 import com.zone.domain.entity.WorkOrder;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @Author:     JamHoo
@@ -41,4 +43,8 @@ public interface WorkOrderMapper {
 	 * @return
 	 */
 	Page<WorkOrder> getWorkOrderPage(WorkOrderPageQueryDTO dto);
+
+	// 根据当前用户 ID 获取其关联的企业 ID
+	@Select("SELECT id FROM biz_enterprise WHERE user_id = #{userId} LIMIT 1")
+	Long getEnterpriseIdByUserId(@Param("userId") Long userId);
 }

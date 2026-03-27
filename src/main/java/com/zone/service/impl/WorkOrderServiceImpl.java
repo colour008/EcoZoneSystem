@@ -49,34 +49,24 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	 * @return
 	 */
 	@Override
-	@Transactional(rollbackFor = Exception.class) // 1. 涉及单号生成和入库，建议开启事务
+	@Transactional(rollbackFor = Exception.class)
 	public boolean submit(WorkOrderDTO dto) {
-		// 2. 强制校验企业身份
-		Long enterpriseId = SecurityUtils.getEnterpriseId();
+		Long userId = SecurityUtils.getUserId();
+		// 1. 规范化：从数据库实时查询用户绑定的企业ID，不相信前端传参
+		Long enterpriseId = workOrderMapper.getEnterpriseIdByUserId(userId);
 		if (enterpriseId == null) {
 			throw new BusinessException(ResponseCodeEnum.NOT_ENTERPRISE_USER);
-		}
-
-		// 3. 基础参数简单校验
-		if (StringUtils.isBlank(dto.getTitle()) || dto.getType() == null) {
-			throw new BusinessException(ResponseCodeEnum.PARAM_ERROR);
 		}
 
 		WorkOrder workOrder = new WorkOrder();
 		BeanUtils.copyProperties(dto, workOrder);
 
-		// 4. 核心字段强制重置 (覆盖 DTO 可能带来的恶意篡改)
+		// 2. 强制绑定后端查出来的企业ID
 		workOrder.setEnterpriseId(enterpriseId);
-		workOrder.setOrderNo(CodeGenerator.getBusCode("WO")); // 生成唯一单号
-		workOrder.setStatus(0); // 初始状态强制为：待受理
-
-		// 5. 初始化一些 DTO 里不该有的字段，确保数据干净
-		workOrder.setHandlerId(null);
-		workOrder.setAcceptTime(null);
-		workOrder.setFinishTime(null);
+		workOrder.setOrderNo(CodeGenerator.getBusCode("WO"));
+		workOrder.setStatus(0); // 待受理
+		workOrder.setCreateTime(LocalDateTime.now());
 		workOrder.setIsDeleted(0);
-
-		log.info("企业[{}]提交了新工单: {}", enterpriseId, workOrder.getOrderNo());
 
 		return workOrderMapper.insert(workOrder) > 0;
 	}
@@ -88,8 +78,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	 */
 	@Override
 	public PageResult<WorkOrderVO> getMyPage(WorkOrderPageQueryDTO dto) {
-		// C端查询强制锁定当前企业ID
-		dto.setEnterpriseId(SecurityUtils.getEnterpriseId());
+		Long userId = SecurityUtils.getUserId();
+		if (userId == null) {
+			return new PageResult<>(0L, new ArrayList<>());
+		}
+		dto.setUserId(userId);
 		return getPageResult(dto);
 	}
 
@@ -104,7 +97,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		WorkOrder workOrder = workOrderMapper.selectById(dto.getId());
 		if (workOrder == null) throw new BusinessException(ResponseCodeEnum.WORK_ORDER_NOT_EXIST);
 
-		// 只有已办结(2)的工单才能评价
+		Long myEntId = workOrderMapper.getEnterpriseIdByUserId(SecurityUtils.getUserId());
+		if (!workOrder.getEnterpriseId().equals(myEntId)) {
+			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_NO_PERMISSION);
+		}
+
 		if (workOrder.getStatus() != 2) {
 			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_EVALUATE_FAILED);
 		}
@@ -112,7 +109,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		workOrder.setScore(dto.getScore());
 		workOrder.setCommentText(dto.getCommentText());
 		workOrder.setStatus(3); // 已评价
-
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
@@ -141,11 +137,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		if (workOrder == null || workOrder.getStatus() != 0) {
 			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_STATUS_ERROR);
 		}
-
 		workOrder.setHandlerId(handlerId);
 		workOrder.setAcceptTime(LocalDateTime.now());
-		workOrder.setStatus(1); // 处理中
-
+		workOrder.setStatus(1);
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
@@ -161,11 +155,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		if (workOrder == null || workOrder.getStatus() != 1) {
 			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_STATUS_ERROR);
 		}
-
 		workOrder.setRemark(dto.getRemark());
 		workOrder.setFinishTime(LocalDateTime.now());
-		workOrder.setStatus(2); // 已办结
-
+		workOrder.setStatus(2);
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
@@ -173,34 +165,20 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	 * 通用分页查询提取
 	 */
 	private PageResult<WorkOrderVO> getPageResult(WorkOrderPageQueryDTO dto) {
-		// 1. 开启分页
 		PageHelper.startPage(dto.getPageNum(), dto.getPageSize());
-
-		// 2. 查询
 		Page<WorkOrder> page = workOrderMapper.getWorkOrderPage(dto);
-
-		// 3. 转换为 VO 并手动处理图片列表
-		List<WorkOrderVO> voList = page.getResult().stream().map(workOrder -> {
-			WorkOrderVO vo = new WorkOrderVO();
-			BeanUtils.copyProperties(workOrder, vo);
-
-			// --- 手动处理图片逻辑 ---
-			String imagesStr = workOrder.getImages();
-			if (imagesStr != null && !imagesStr.trim().isEmpty()) {
-				// 将字符串按逗号拆分并转为 List
-				List<String> list = Arrays.stream(imagesStr.split(","))
-						.map(String::trim) // 去空格
-						.filter(s -> !s.isEmpty()) // 过滤空串
-						.collect(Collectors.toList());
-				vo.setImageList(list);
-			} else {
-				vo.setImageList(new ArrayList<>()); // 返回空集合而非 null，防止前端报错
-			}
-			// -----------------------
-
-			return vo;
-		}).collect(Collectors.toList());
-
+		List<WorkOrderVO> voList = page.getResult().stream().map(this::convertToVO).collect(Collectors.toList());
 		return new PageResult<>(page.getTotal(), voList);
+	}
+
+	private WorkOrderVO convertToVO(WorkOrder workOrder) {
+		WorkOrderVO vo = new WorkOrderVO();
+		BeanUtils.copyProperties(workOrder, vo);
+		if (StringUtils.isNotBlank(workOrder.getImages())) {
+			vo.setImageList(Arrays.asList(workOrder.getImages().split(",")));
+		} else {
+			vo.setImageList(new ArrayList<>());
+		}
+		return vo;
 	}
 }

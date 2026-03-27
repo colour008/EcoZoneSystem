@@ -22,7 +22,7 @@
           <el-menu-item index="/policy">政策中心</el-menu-item>
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
-          <el-menu-item v-if="isEnterprise" index="/my-enterprise">我的企业</el-menu-item>
+          <el-menu-item v-if="isEnterprise" index="/my-enterprise">企业服务中心</el-menu-item>
 <!--          <el-menu-item index="/contact">联系我们</el-menu-item>-->
         </el-menu>
       </nav>

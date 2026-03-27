@@ -12,6 +12,7 @@
 
     <resultMap id="WorkOrderResultMap" type="com.zone.domain.entity.WorkOrder">
         <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
         <result column="order_no" property="orderNo"/>
         <result column="enterprise_id" property="enterpriseId"/>
         <result column="title" property="title"/>
@@ -69,6 +70,9 @@
         left join sys_user u on w.handler_id = u.id
         <where>
             AND w.is_deleted = 0
+            <if test="userId != null">
+                AND e.user_id = #{userId}
+            </if>
             <if test="enterpriseId != null">
                 AND w.enterprise_id = #{enterpriseId}
             </if>
