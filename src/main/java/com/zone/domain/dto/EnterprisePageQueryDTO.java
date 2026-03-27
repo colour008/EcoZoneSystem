@@ -3,6 +3,8 @@ package com.zone.domain.dto;
 import com.zone.domain.base.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
@@ -11,7 +13,7 @@ import java.time.LocalDate;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class EnterprisePageQueryDTO extends PageQuery {
+public class EnterprisePageQueryDTO extends PageQuery implements Serializable {
 	private String companyName;     // 公司名称模糊查询
 	private String creditCode;      // 信用代码
 	private String industry;        // 所属行业

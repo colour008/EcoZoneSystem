@@ -7,6 +7,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @Author: JamHoo
@@ -68,5 +69,26 @@ public class SecurityUtils {
 			throw new UnauthorizedException("非 Web 环境无法获取用户信息");
 		}
 		return attributes.getRequest();
+	}
+
+	/**
+	 * 获取当前登录用户的企业ID
+	 */
+	/**
+	 * 获取当前登录用户的企业ID (Optional 包装)
+	 * 适用于：不确定当前用户是否属于某个企业（如管理员）
+	 */
+	public static Optional<Long> getEnterpriseIdOptional() {
+		Object attr = getRequest().getAttribute("enterpriseId");
+		if (attr instanceof Long) {
+			return Optional.of((Long) attr);
+		}
+		return Optional.empty();
+	}
+	/**
+	 * 兼容性写法：直接返回 Long，但增加了安全检查
+	 */
+	public static Long getEnterpriseId() {
+		return getEnterpriseIdOptional().orElse(null);
 	}
 }

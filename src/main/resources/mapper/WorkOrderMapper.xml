@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zone.mapper.WorkOrderMapper">
+
+    <sql id="Base_Column_List">
+        w.id, w.order_no, w.enterprise_id, w.title, w.content, w.contact_person, w.contact_phone,
+        w.remark, w.type, w.status, w.accept_time, w.finish_time, w.handler_id,
+        w.comment_text, w.score, w.images, w.create_time, w.update_time, w.is_deleted
+    </sql>
+
+    <resultMap id="WorkOrderResultMap" type="com.zone.domain.entity.WorkOrder">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="enterprise_id" property="enterpriseId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="contact_person" property="contactPerson"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="remark" property="remark"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <result column="accept_time" property="acceptTime"/>
+        <result column="finish_time" property="finishTime"/>
+        <result column="handler_id" property="handlerId"/>
+        <result column="comment_text" property="commentText"/>
+        <result column="score" property="score"/>
+        <result column="images" property="images"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="company_name" property="enterpriseName"/>
+        <result column="handler_name" property="handlerName"/>
+    </resultMap>
+
+    <!-- 新增 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_work_order (
+        order_no, enterprise_id, title, content, contact_person, contact_phone,
+        type, status, images, create_time, update_time, is_deleted
+        )
+        values (
+        #{orderNo}, #{enterpriseId}, #{title}, #{content}, #{contactPerson}, #{contactPhone},
+        #{type}, #{status}, #{images}, NOW(), NOW(), 0
+        )
+    </insert>
+
+    <!-- 查询单个 -->
+    <select id="selectById" resultMap="WorkOrderResultMap">
+        select
+        <include refid="Base_Column_List"/>,
+        e.company_name,
+        u.real_name as handler_name
+        from biz_work_order w
+        left join biz_enterprise e on w.enterprise_id = e.id
+        left join sys_user u on w.handler_id = u.id
+        where w.id = #{id} AND w.is_deleted = 0
+    </select>
+
+    <!-- 查询分页 -->
+    <select id="getWorkOrderPage" resultMap="WorkOrderResultMap">
+        select
+        <include refid="Base_Column_List"/>,
+        e.company_name,
+        u.real_name as handler_name
+        from biz_work_order w
+        left join biz_enterprise e on w.enterprise_id = e.id
+        left join sys_user u on w.handler_id = u.id
+        <where>
+            AND w.is_deleted = 0
+            <if test="enterpriseId != null">
+                AND w.enterprise_id = #{enterpriseId}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                AND w.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="title != null and title != ''">
+                AND w.title like concat('%', #{title}, '%')
+            </if>
+            <if test="type != null">
+                AND w.type = #{type}
+            </if>
+            <if test="status != null">
+                AND w.status = #{status}
+            </if>
+            <if test="startTime != null">
+                AND w.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND w.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY w.create_time DESC
+    </select>
+
+    <!-- 更新 -->
+    <update id="updateById">
+        update biz_work_order
+        <set>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="acceptTime != null">accept_time = #{acceptTime},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="handlerId != null">handler_id = #{handlerId},</if>
+            <if test="comment_text != null">comment_text = #{commentText},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="is_deleted != null">is_deleted = #{isDeleted},</if>
+            update_time = NOW()
+        </set>
+        where id = #{id}
+    </update>
+
+</mapper>

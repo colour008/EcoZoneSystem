@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -14,7 +16,7 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class EnterpriseDTO {
+public class EnterpriseDTO implements Serializable {
 	private Long id;                // 主键ID
 	private String companyName;     // 公司名称
 	private String creditCode;      // 统一社会信用代码

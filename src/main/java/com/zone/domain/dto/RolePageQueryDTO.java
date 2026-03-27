@@ -4,6 +4,8 @@ import com.zone.domain.base.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @Author: JamHoo
  * @Description: 角色分页查询参数
@@ -12,7 +14,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class RolePageQueryDTO extends PageQuery {
+public class RolePageQueryDTO extends PageQuery implements Serializable {
 	/**
 	 * 角色名
 	 */

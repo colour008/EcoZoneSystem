@@ -22,8 +22,8 @@
           <el-menu-item index="/policy">政策中心</el-menu-item>
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
-          <el-menu-item v-if="isAdmin || isStaff" index="/my-enterprise">我的企业</el-menu-item>
-          <el-menu-item index="/contact">联系我们</el-menu-item>
+          <el-menu-item v-if="isEnterprise" index="/my-enterprise">我的企业</el-menu-item>
+<!--          <el-menu-item index="/contact">联系我们</el-menu-item>-->
         </el-menu>
       </nav>
 
@@ -39,7 +39,7 @@
         <div v-else class="user-info">
           <div class="status-guide-area" style="margin-right: 20px;">
             <el-button
-                v-if="enterpriseStatus === null || enterpriseStatus === 3"
+                v-if="enterpriseStatus === null || enterpriseStatus === 3 "
                 type="primary"
                 size="small"
                 plain
@@ -356,7 +356,7 @@ onUnmounted(() => {
 }
 
 .header-container {
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
   height: 100%;
   display: flex;
@@ -394,12 +394,12 @@ onUnmounted(() => {
 }
 
 :deep(.el-menu-item) {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   color: #4b5563 !important;
   height: 70px !important;
   line-height: 70px !important;
-  padding: 0 22px !important;
+  padding: 0 24px !important;
   transition: all 0.3s ease !important;
   position: relative;
   background: transparent !important;
@@ -497,8 +497,7 @@ onUnmounted(() => {
 }
 
 .nickname {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
   color: #374151;
 }
 

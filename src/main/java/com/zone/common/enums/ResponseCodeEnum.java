@@ -40,6 +40,7 @@ public enum ResponseCodeEnum {
 	ENTERPRISE_CREDIT_CODE_DUPLICATE(4103, "统一社会信用代码已存在，请核实"),
 	ENTERPRISE_STATUS_ERROR(4104, "企业状态异常，无法操作"),
 	ENTERPRISE_USER_BIND_ERROR(4105, "该账号已绑定企业，请勿重复绑定"),
+	NOT_ENTERPRISE_USER(4106, "企业未绑定用户"),
 
 	// ===================== 服务工单相关（4201-4299） =====================
 	WORK_ORDER_NOT_EXIST(4201, "服务工单不存在"),

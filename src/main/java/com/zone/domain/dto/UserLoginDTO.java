@@ -2,6 +2,8 @@ package com.zone.domain.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @Author: JamHoo
  * @Description: 用户登录参数
@@ -9,7 +11,7 @@ import lombok.Data;
  * @Version: 1.0
  */
 @Data
-public class UserLoginDTO {
+public class UserLoginDTO implements Serializable {
 	/**
 	 * 用户名
 	 */

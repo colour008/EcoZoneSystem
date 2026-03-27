@@ -3,6 +3,8 @@ package com.zone.domain.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @Author: JamHoo
  * @Description: 角色参数
@@ -10,7 +12,7 @@ import lombok.Data;
  * @Version: 1.0
  */
 @Data
-public class RoleDTO {
+public class RoleDTO implements Serializable {
 	/**
 	 * 主键ID
 	 */

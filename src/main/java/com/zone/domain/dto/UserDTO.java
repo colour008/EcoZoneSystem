@@ -2,6 +2,7 @@ package com.zone.domain.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
  * @Version: 1.0
  */
 @Data
-public class UserDTO {
+public class UserDTO implements Serializable {
 	private Long id;
 	private String username;
 	private String password;

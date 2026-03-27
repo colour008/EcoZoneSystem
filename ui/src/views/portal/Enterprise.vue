@@ -32,7 +32,7 @@
             <el-col
                 v-for="ent in enterpriseList"
                 :key="ent.id"
-                :xs="24" :sm="12" :md="12" :lg="8" :xl="6"
+                :xs="24" :sm="12" :md="12" :lg="8" :xl="8"
             >
               <el-card class="ent-card" shadow="hover" @click="openDetail(ent)">
                 <div class="card-media">
@@ -130,7 +130,7 @@
             <el-pagination
                 v-model:current-page="queryParams.pageNum"
                 v-model:page-size="queryParams.pageSize"
-                :page-sizes="[9, 18, 36]"
+                :page-sizes="[6, 12, 24]"
                 background
                 layout="total, sizes, prev, pager, next, jumper"
                 :total="total"
@@ -178,7 +178,7 @@ const currentEnt = ref(null)
 
 const queryParams = ref({
   pageNum: 1,
-  pageSize: 6, // 建议 3的倍数，适配网格
+  pageSize: 6,
   companyName: ''
 })
 

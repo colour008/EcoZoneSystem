@@ -4,6 +4,8 @@ import com.zone.domain.base.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
+
 /**
  * @Author: JamHoo
  * @Description: 用户查询参数
@@ -12,7 +14,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class UserPageQueryDTO extends PageQuery {
+public class UserPageQueryDTO extends PageQuery implements Serializable {
 	/**
 	 * 用户名
 	 */

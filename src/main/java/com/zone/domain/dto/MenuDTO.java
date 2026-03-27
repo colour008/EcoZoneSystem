@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MenuDTO extends BaseEntity {
+public class MenuDTO extends BaseEntity implements Serializable {
 	/**
 	 * 父菜单ID，一级菜单为0
 	 */
