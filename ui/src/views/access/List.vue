@@ -40,9 +40,9 @@
         </el-table-column>
         <el-table-column prop="type" label="类型" align="center" width="100">
           <template #default="scope">
-            <el-tag v-if="scope.row.type === 'M'" effect="light">目录</el-tag>
-            <el-tag v-else-if="scope.row.type === 'C'" type="success" effect="light">菜单</el-tag>
-            <el-tag v-else type="info" effect="light">按钮</el-tag>
+            <el-tag v-if="scope.row.type === 'M'" effect="dark">目录</el-tag>
+            <el-tag v-else-if="scope.row.type === 'C'" type="success" effect="dark">菜单</el-tag>
+            <el-tag v-else type="info" effect="dark">按钮</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="orderNum" label="排序" align="center" width="80"/>
@@ -50,15 +50,15 @@
         <el-table-column prop="component" label="组件路径" min-width="150" show-overflow-tooltip/>
         <el-table-column label="状态" align="center" width="80">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
+            <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'" effect="dark">
               {{ scope.row.status === 1 ? '显示' : '隐藏' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="isExternal" label="外链" align="center" width="80">
           <template #default="scope">
-            <el-tag v-if="scope.row.isExternal === 1" type="warning" effect="plain">是</el-tag>
-            <el-tag v-else type="info" effect="plain">否</el-tag>
+            <el-tag v-if="scope.row.isExternal === 1" type="warning" effect="dark">是</el-tag>
+            <el-tag v-else type="info" effect="dark">否</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" width="220" fixed="right">

@@ -136,11 +136,11 @@
           <template #default="scope">
             <el-tooltip v-if="scope.row.status === 2" :content="'驳回理由：' + (scope.row.auditOpinion || '无')"
                         placement="top">
-              <el-tag :type="statusMap[scope.row.status]?.type" effect="light" style="cursor: help">
+              <el-tag :type="statusMap[scope.row.status]?.type" effect="dark" style="cursor: help">
                 {{ statusMap[scope.row.status]?.label }}
               </el-tag>
             </el-tooltip>
-            <el-tag v-else :type="statusMap[scope.row.status]?.type" effect="light">
+            <el-tag v-else :type="statusMap[scope.row.status]?.type" effect="dark">
               {{ statusMap[scope.row.status]?.label }}
             </el-tag>
           </template>

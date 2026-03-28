@@ -56,14 +56,14 @@
         <el-table-column label="角色名称" prop="roleName" min-width="150" align="center"/>
         <el-table-column label="角色编码" prop="roleCode" min-width="150" align="center">
           <template #default="scope">
-            <el-tag type="danger" size="small" effect="light">{{ scope.row.roleCode }}</el-tag>
+            <el-tag type="primary" size="small" effect="dark">{{ scope.row.roleCode }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" prop="createTime" min-width="180" align="center"/>
         <el-table-column label="更新时间" prop="updateTime" min-width="180" align="center"/>
         <el-table-column label="角色权重" prop="roleSort" width="120" align="center" sortable>
           <template #default="scope">
-            <el-tag :type="scope.row.roleSort <= 0 ? 'danger' : 'info'" effect="plain">
+            <el-tag :type="scope.row.roleSort <= 0 ? 'danger' : 'info'" effect="dark">
               等级: {{ scope.row.roleSort }}
             </el-tag>
           </template>

@@ -36,7 +36,7 @@
         <el-table-column prop="enterpriseName" label="提报企业" min-width="180" show-overflow-tooltip align="center"/>
         <el-table-column prop="type" label="类型" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="typeMap[row.type]?.tag || 'info'">{{ typeMap[row.type]?.label || '未知' }}</el-tag>
+            <el-tag :type="typeMap[row.type]?.tag || 'info'" effect="dark">{{ typeMap[row.type]?.label || '未知' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="title" label="诉求标题" min-width="200" show-overflow-tooltip align="center"/>
@@ -48,7 +48,7 @@
         </el-table-column>
         <el-table-column prop="workerName" label="处理人" width="120" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.workerName" type="success" size="small">{{ row.workerName }}</el-tag>
+            <el-tag v-if="row.workerName" type="success" size="small" effect="dark">{{ row.workerName }}</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>

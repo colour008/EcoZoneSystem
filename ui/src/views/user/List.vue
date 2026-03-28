@@ -59,7 +59,7 @@
         <el-table-column label="手机号" prop="phone" min-width="130" align="center"/>
         <el-table-column label="所属角色" align="center" min-width="150">
           <template #default="scope">
-            <el-tag v-if="scope.row.roleName" size="small" effect="plain">
+            <el-tag v-if="scope.row.roleName" size="small" effect="dark">
               {{ scope.row.roleName }}
             </el-tag>
             <span v-else style="color: #999; font-size: 12px">暂无角色</span>
