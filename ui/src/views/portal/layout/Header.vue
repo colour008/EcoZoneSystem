@@ -23,7 +23,7 @@
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
           <el-menu-item v-if="isEnterprise" index="/my-enterprise">企业服务中心</el-menu-item>
-<!--          <el-menu-item index="/contact">联系我们</el-menu-item>-->
+          <!--          <el-menu-item index="/contact">联系我们</el-menu-item>-->
         </el-menu>
       </nav>
 
@@ -199,7 +199,9 @@ watch(() => userStore.token, (val) => {
 
 // 角色判断的计算属性
 const isAdmin = computed(() => userStore.roles.includes('ROLE_ADMIN'))
-const isStaff = computed(() => userStore.roles.includes('ROLE_STAFF'))
+const isStaff = computed(() =>
+    userStore.roles.includes('ROLE_STAFF') || userStore.roles.includes('ROLE_WORKER')
+)
 const isEnterprise = computed(() => userStore.roles.includes('ROLE_ENTERPRISE'))
 
 const profileVisible = ref(false)

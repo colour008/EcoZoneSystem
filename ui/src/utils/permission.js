@@ -3,9 +3,10 @@ import menuApi from '@/api/menu'
 import {useUserStore} from '@/store/user'
 import {resolvePath} from '@/utils/path'
 import NProgress from 'nprogress'
+import {ElMessage} from "element-plus";
 
 // 1. 白名单配置
-const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact', '/notice', '/']
+const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact', '/notice']
 const modules = import.meta.glob('../views/**/*.vue')
 
 router.beforeEach(async (to, from, next) => {
@@ -30,7 +31,14 @@ router.beforeEach(async (to, from, next) => {
 
                     // 设置 Dashboard 标题
                     const isEnterprise = userStore.roles.includes('ROLE_ENTERPRISE')
-                    const dashboardTitle = isEnterprise ? '企业服务中心' : '系统主控台'
+                    const dashboardTitle = isEnterprise ? '企业服务中心' : '管理工作台'
+                    // 1. 先物理挂载 Dashboard 路由到 Layout 名下
+                    router.addRoute('Layout', {
+                        path: '/index/dashboard',
+                        name: 'Dashboard',
+                        component: () => import('@/views/dashboard/Index.vue'),
+                        meta: { title: dashboardTitle, icon: 'House' }
+                    })
                     const dashboardMenu = {
                         path: '/index/dashboard',
                         menuName: dashboardTitle,
@@ -75,7 +83,10 @@ router.beforeEach(async (to, from, next) => {
                 }
             } else {
                 // 5. 角色权限拦截 (针对移动端 /m 路径的简单拦截)
-                if (to.path.startsWith('/m/worker') && !userStore.roles.includes('ROLE_WORKER') && !userStore.roles.includes('ROLE_ADMIN')) {
+                if (to.path.startsWith('/m/worker') &&
+                    !userStore.roles.includes('ROLE_WORKER') &&
+                    !userStore.roles.includes('ROLE_STAFF') &&
+                    !userStore.roles.includes('ROLE_ADMIN')) {
                     ElMessage.error('您没有权限访问工人端')
                     return next({path: '/home'})
                 }

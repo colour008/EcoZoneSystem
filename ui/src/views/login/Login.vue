@@ -255,7 +255,6 @@ const isMobileDevice = () => {
 }
 
 const handleLogin = async () => {
-  // 1. 增加非空校验
   if (!username.value || !password.value) {
     ElMessage.warning('请输入账号和密码')
     return
@@ -265,7 +264,6 @@ const handleLogin = async () => {
 
   loginLoading.value = true
   try {
-    // 2. 修正：将 ref 的值传给接口
     const res = await loginApi({
       username: username.value,
       password: password.value,
@@ -282,43 +280,31 @@ const handleLogin = async () => {
 
     ElMessage.success('欢迎回来')
 
-    // 3. 多角色、多端跳转判断逻辑
     setTimeout(() => {
       const isMobile = isMobileDevice()
       const redirectPath = router.currentRoute.value.query.redirect
 
-      // 情况 A: 如果是处理人员 (ROLE_WORKER)，无论在哪，统一去 H5 工单列表
-      if (roles.includes('ROLE_WORKER')) {
-        router.push('/m/worker/list')
-        return
-      }
+      // 检查 roles 数组中是否包含 STAFF 或 WORKER 中的任意一个
+      const isStaffOrWorker = roles.some(role => ['ROLE_STAFF', 'ROLE_WORKER'].includes(role))
 
-      // 情况 B: 如果是园区员工 (ROLE_STAFF)
-      if (roles.includes('ROLE_STAFF')) {
+      if (isStaffOrWorker) {
         if (isMobile) {
-          // 员工在移动端登录，跳转到移动端管理页（请确认路由是否存在）
-          router.push('/m/staff/home')
+          // 移动端登录，跳转到工单列表页
+          router.push('/m/worker/list')
         } else {
-          // 员工在 PC 端登录，走普通逻辑
-          if (redirectPath && redirectPath !== '/') {
-            router.push(redirectPath)
-          } else {
-            router.push('/home')
-          }
+          // PC 端登录，如果有重定向地址则去重定向，否则去首页
+          router.push(redirectPath || '/index/dashboard')
         }
         return
       }
 
-      // 情况 C: 普通用户或其他角色，维持原逻辑
-      if (redirectPath && redirectPath !== '/') {
-        router.push(redirectPath)
-      } else {
-        router.push('/home')
-      }
+      // 普通用户或其他角色
+      router.push(redirectPath || '/home')
+      // ======================================================
+
     }, 200)
 
   } catch (error) {
-    // 登录失败重置滑块状态
     isPassed.value = false
     sliderWidth.value = 0
     console.error('登录异常:', error)
@@ -326,7 +312,6 @@ const handleLogin = async () => {
     loginLoading.value = false
   }
 }
-// ================== 核心修改逻辑结束 ==================
 
 const goToRegister = () => {
   router.push('/register')
