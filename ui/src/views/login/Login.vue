@@ -284,23 +284,23 @@ const handleLogin = async () => {
       const isMobile = isMobileDevice()
       const redirectPath = router.currentRoute.value.query.redirect
 
-      // 检查 roles 数组中是否包含 STAFF 或 WORKER 中的任意一个
+      // 检查 roles 数组中是否包含 STAFF 或 WORKER
       const isStaffOrWorker = roles.some(role => ['ROLE_STAFF', 'ROLE_WORKER'].includes(role))
 
       if (isStaffOrWorker) {
+        // 员工/工人角色，强制忽略 redirect，直接跳对应页面
         if (isMobile) {
-          // 移动端登录，跳转到工单列表页
+          // 移动端：强制跳工单列表
           router.push('/m/worker/list')
         } else {
-          // PC 端登录，如果有重定向地址则去重定向，否则去首页
-          router.push(redirectPath || '/index/dashboard')
+          // PC端：强制跳管理工作台，不使用redirect
+          router.push('/index/dashboard')
         }
         return
       }
 
-      // 普通用户或其他角色
+      // 普通用户/企业角色，才走重定向逻辑
       router.push(redirectPath || '/home')
-      // ======================================================
 
     }, 200)
 
@@ -308,6 +308,7 @@ const handleLogin = async () => {
     isPassed.value = false
     sliderWidth.value = 0
     console.error('登录异常:', error)
+    ElMessage.error('登录失败，请检查账号密码')
   } finally {
     loginLoading.value = false
   }
