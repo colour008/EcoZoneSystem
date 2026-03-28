@@ -1006,7 +1006,7 @@ onMounted(() => getList())
 .search-card, .table-card {
   background: #fff;
   border-radius: 4px;
-  padding: 20px;
+  padding: 20px 20px 0 20px;
   margin-bottom: 15px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }

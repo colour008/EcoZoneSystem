@@ -249,9 +249,9 @@ import workOrderApi from '@/api/workOrder'
 import userApi from '@/api/user'
 
 const typeMap = {
-  1: {label: '维修报备', tag: 'danger'},
+  1: {label: '维修报备', tag: 'warning'},
   2: {label: '业务咨询', tag: 'primary'},
-  3: {label: '投诉建议', tag: 'warning'}
+  3: {label: '投诉建议', tag: 'danger'}
 }
 
 const statusMap = {
