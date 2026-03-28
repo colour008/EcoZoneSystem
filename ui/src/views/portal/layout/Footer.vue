@@ -64,4 +64,50 @@
   border-top: 1px solid #3d424d;
   font-size: 12px;
 }
+
+/* ===================== 统一移动端响应式适配 ===================== */
+/* 手机适配 (<768px) */
+@media (max-width: 768px) {
+  .footer {
+    padding: 30px 0 15px;
+  }
+
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 25px;
+    padding: 0 15px;
+  }
+
+  .footer-info h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+
+  .footer-info p {
+    font-size: 13px;
+  }
+
+  .footer-links {
+    align-items: center;
+  }
+
+  .footer-bottom {
+    margin-top: 30px;
+    padding-top: 15px;
+    font-size: 11px;
+  }
+}
+
+/* 小屏手机适配 (<375px) */
+@media (max-width: 375px) {
+  .footer {
+    padding: 25px 0 10px;
+  }
+
+  .footer-container {
+    gap: 20px;
+  }
+}
 </style>

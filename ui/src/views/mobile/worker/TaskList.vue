@@ -8,12 +8,14 @@
     </van-tabs>
 
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+      <!-- 新增 immediate-check="false"：禁止van-list自动初始化加载，解决重复触发 -->
       <van-list
           v-model:loading="loading"
           :finished="finished"
           finished-text="没有更多任务了"
           @load="onLoad"
           class="m-task-list"
+          immediate-check="false"
       >
         <div
             v-for="item in list"
@@ -58,7 +60,7 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
+import {ref, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
 import workOrderApi from '@/api/workOrder';
 
@@ -69,40 +71,52 @@ const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
 const pageNum = ref(1);
+const pageSize = 10;
 
 const typeMap = {1: '报修', 2: '咨询', 3: '投诉'};
 
+// 核心：分页加载数据（仅列表滚动到底部触发）
 const onLoad = async () => {
+  if (loading.value) return;
+  loading.value = true;
+
   try {
     const res = await workOrderApi.getWorkerTaskPage({
       pageNum: pageNum.value,
-      pageSize: 10,
+      pageSize: pageSize,
       status: Number(activeStatus.value)
     });
 
-    if (refreshing.value) {
-      list.value = [];
-      refreshing.value = false;
-    }
-
+    // 追加数据
     list.value.push(...res.data.records);
     pageNum.value++;
 
-    if (list.value.length >= res.data.total) {
-      finished.value = true;
-    }
+    // 判断是否加载完毕
+    finished.value = list.value.length >= res.data.total;
   } catch (e) {
     finished.value = true;
+    console.error(e);
   } finally {
     loading.value = false;
+    refreshing.value = false;
   }
 };
 
+// 核心：刷新/切换标签（清空数据，重新加载第一页）
 const onRefresh = () => {
-  finished.value = false;
+  // 重置所有状态
+  list.value = [];
   pageNum.value = 1;
+  finished.value = false;
+  refreshing.value = true;
+  // 主动加载第一页
   onLoad();
 };
+
+// 页面初始化：主动加载一次数据
+onMounted(() => {
+  onRefresh();
+});
 </script>
 
 <style scoped>
@@ -197,6 +211,12 @@ const onRefresh = () => {
   flex: 1;
   font-size: 13px;
   color: #64748b;
+}
+
+.action-btn {
+  padding: 0 12px;
+  height: 24px;
+  font-size: 12px;
 }
 
 @keyframes pulse {

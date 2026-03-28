@@ -10,7 +10,8 @@
         <span class="logo-text">经济开发区管理委员会</span>
       </div>
 
-      <nav class="nav-menu">
+      <!-- 桌面端导航 -->
+      <nav class="nav-menu desktop-nav">
         <el-menu
             :default-active="activeMenu"
             mode="horizontal"
@@ -23,9 +24,15 @@
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
           <el-menu-item v-if="isEnterprise" index="/my-enterprise">企业服务中心</el-menu-item>
-          <!--          <el-menu-item index="/contact">联系我们</el-menu-item>-->
         </el-menu>
       </nav>
+
+      <!-- 移动端汉堡按钮 -->
+      <div class="mobile-menu-btn" @click="drawerVisible = true">
+        <el-icon :size="24">
+          <Menu/>
+        </el-icon>
+      </div>
 
       <div class="header-right">
         <div v-if="!userStore.token" class="auth-btns">
@@ -63,6 +70,18 @@
               {{ statusConfig[enterpriseStatus].text }}
             </el-tag>
           </div>
+
+          <el-button
+              v-if="isStaff && isMobile"
+              type="primary"
+              size="small"
+              round
+              icon="Document"
+              @click="router.push('/m/worker/list')"
+              style="margin-right: 12px;"
+          >
+            工单处理
+          </el-button>
 
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-avatar-wrapper">
@@ -102,65 +121,87 @@
         </div>
       </div>
     </div>
-  </header>
 
-  <el-dialog
-      v-model="profileVisible"
-      title="个人资料修改"
-      width="500px"
-      destroy-on-close
-      append-to-body
-  >
-    <el-form
-        ref="profileFormRef"
-        :model="profileForm"
-        :rules="profileRules"
-        label-width="100px"
-        style="padding: 10px 20px"
+    <!-- 移动端侧边导航抽屉 -->
+    <el-drawer
+        v-model="drawerVisible"
+        placement="left"
+        :width="240"
+        append-to-body
     >
-      <el-form-item label="用户名">
-        <el-input v-model="profileForm.username" disabled/>
-        <div style="font-size: 12px; color: #999">账号名不可修改</div>
-      </el-form-item>
-      <el-form-item label="姓名" prop="realName">
-        <el-input v-model="profileForm.realName" placeholder="请输入姓名"/>
-      </el-form-item>
-      <el-divider content-position="center" class="my-divider">修改密码（不改请留空）</el-divider>
-      <el-form-item label="新密码" prop="password">
-        <el-input v-model="profileForm.password" type="password" show-password placeholder="请输入新密码"/>
-      </el-form-item>
-      <el-form-item label="确认密码" prop="confirmPassword">
-        <el-input v-model="profileForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码"/>
-      </el-form-item>
-      <el-form-item label="手机号" prop="phone">
-        <el-input v-model="profileForm.phone" placeholder="请输入手机号"/>
-      </el-form-item>
-      <el-form-item label="头像">
-        <el-upload
-            class="avatar-uploader"
-            action="#"
-            :show-file-list="false"
-            :http-request="handleProfileAvatarUpload"
-        >
-          <img v-if="profileForm.avatar" :src="profileForm.avatar" class="profile-avatar" alt="头像"/>
-          <el-icon v-else class="avatar-uploader-icon">
-            <Plus/>
-          </el-icon>
-        </el-upload>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="profileVisible = false">取消</el-button>
-      <el-button type="primary" :loading="profileLoading" @click="submitProfile">保存修改</el-button>
-    </template>
-  </el-dialog>
+      <el-menu
+          :default-active="activeMenu"
+          mode="vertical"
+          router
+          @click="drawerVisible = false"
+      >
+        <el-menu-item index="/home">首页</el-menu-item>
+        <el-menu-item index="/news">要闻导读</el-menu-item>
+        <el-menu-item index="/policy">政策中心</el-menu-item>
+        <el-menu-item index="/notice">通知公告</el-menu-item>
+        <el-menu-item index="/enterprise">企业风采</el-menu-item>
+        <el-menu-item v-if="isEnterprise" index="/my-enterprise">企业服务中心</el-menu-item>
+      </el-menu>
+    </el-drawer>
+
+    <el-dialog
+        v-model="profileVisible"
+        title="个人资料修改"
+        width="500px"
+        destroy-on-close
+        append-to-body
+    >
+      <el-form
+          ref="profileFormRef"
+          :model="profileForm"
+          :rules="profileRules"
+          label-width="100px"
+          style="padding: 10px 20px"
+      >
+        <el-form-item label="用户名">
+          <el-input v-model="profileForm.username" disabled/>
+          <div style="font-size: 12px; color: #999">账号名不可修改</div>
+        </el-form-item>
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="profileForm.realName" placeholder="请输入姓名"/>
+        </el-form-item>
+        <el-divider content-position="center" class="my-divider">修改密码（不改请留空）</el-divider>
+        <el-form-item label="新密码" prop="password">
+          <el-input v-model="profileForm.password" type="password" show-password placeholder="请输入新密码"/>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="profileForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码"/>
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="profileForm.phone" placeholder="请输入手机号"/>
+        </el-form-item>
+        <el-form-item label="头像">
+          <el-upload
+              class="avatar-uploader"
+              action="#"
+              :show-file-list="false"
+              :http-request="handleProfileAvatarUpload"
+          >
+            <img v-if="profileForm.avatar" :src="profileForm.avatar" class="profile-avatar" alt="头像"/>
+            <el-icon v-else class="avatar-uploader-icon">
+              <Plus/>
+            </el-icon>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="profileVisible = false">取消</el-button>
+        <el-button type="primary" :loading="profileLoading" @click="submitProfile">保存修改</el-button>
+      </template>
+    </el-dialog>
+  </header>
 </template>
 
 <script setup>
 import {ref, onMounted, onUnmounted, computed, watch} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 import {useUserStore} from '@/store/user'
-import {OfficeBuilding, ArrowDown, Plus} from '@element-plus/icons-vue'
+import {OfficeBuilding, ArrowDown, Plus, Menu} from '@element-plus/icons-vue'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import userApi from '@/api/user'
 import enterpriseApi from '@/api/enterprise'
@@ -170,8 +211,15 @@ const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 
+// 移动端抽屉状态
+const drawerVisible = ref(false)
+const isMobile = ref(window.innerWidth <= 768) // 与CSS媒体查询一致
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
 // --- 企业状态逻辑开始 ---
-const enterpriseStatus = ref(null) // 0待审核 1已入驻 2已驳回 3已迁出 4迁出待审核
+const enterpriseStatus = ref(null)
 
 const statusConfig = {
   0: {text: '入驻审核中', type: 'warning'},
@@ -190,14 +238,12 @@ const fetchStatus = async () => {
   }
 }
 
-// 监听登录状态变化，登录后查询企业信息
 watch(() => userStore.token, (val) => {
   if (val) fetchStatus()
   else enterpriseStatus.value = null
 }, {immediate: true})
 // --- 企业状态逻辑结束 ---
 
-// 角色判断的计算属性
 const isAdmin = computed(() => userStore.roles.includes('ROLE_ADMIN'))
 const isStaff = computed(() =>
     userStore.roles.includes('ROLE_STAFF') || userStore.roles.includes('ROLE_WORKER')
@@ -329,10 +375,12 @@ const confirmLogout = () => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  window.addEventListener('resize', handleResize)
 })
 </script>
 
@@ -456,7 +504,6 @@ onUnmounted(() => {
   align-items: center;
 }
 
-/* 立即入驻引导按钮样式 */
 .guide-btn {
   border-style: dashed !important;
   background: rgba(64, 158, 255, 0.05) !important;
@@ -470,7 +517,6 @@ onUnmounted(() => {
   color: #0f4780;
 }
 
-/* 状态标签样式 */
 .status-tag {
   cursor: pointer;
   transition: all 0.3s ease;
@@ -542,5 +588,70 @@ onUnmounted(() => {
 :deep(.my-divider .el-divider__text) {
   font-size: 13px;
   color: #f56c6c;
+}
+
+/* 移动端汉堡按钮 */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4b5563;
+  margin-right: 15px;
+}
+
+/* ===================== 统一移动端响应式适配 ===================== */
+@media (max-width: 1024px) {
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .logo {
+    margin-right: 20px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 15px;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .status-guide-area {
+    display: none !important;
+  }
+
+  .nickname {
+    display: none;
+  }
+
+  .user-avatar-wrapper {
+    padding: 4px;
+  }
+
+  .auth-btns {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 375px) {
+  .logo-text {
+    display: none;
+  }
 }
 </style>

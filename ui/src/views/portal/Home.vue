@@ -46,7 +46,8 @@
 
     <div class="main-content">
       <el-row :gutter="40">
-        <el-col :span="16">
+        <!-- 响应式栅格：移动端全屏，平板/PC端保持原有布局 -->
+        <el-col :xs="24" :sm="24" :md="16" :lg="16">
           <el-tabs v-model="activeTab" class="news-tabs">
             <el-tab-pane label="园区动态" name="dynamics">
               <ul class="news-list">
@@ -73,7 +74,8 @@
           </div>
         </el-col>
 
-        <el-col :span="8">
+        <!-- 响应式栅格：移动端全屏，平板/PC端保持原有布局 -->
+        <el-col :xs="24" :sm="24" :md="8" :lg="8">
           <div class="park-profile">
             <div class="section-title">
               <h3>园区名片</h3>
@@ -217,6 +219,7 @@ const goToArticle = (id) => {
   margin: -40px auto 40px;
   position: relative;
   z-index: 10;
+  padding: 0 20px;
 }
 
 .hall-inner {
@@ -274,6 +277,7 @@ const goToArticle = (id) => {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
 /* 新闻列表样式 */
@@ -417,5 +421,135 @@ const goToArticle = (id) => {
   font-size: 12px;
   color: #999;
   margin: 0;
+}
+
+/* ===================== 统一移动端响应式适配 ===================== */
+/* 平板适配 (768px-1200px) */
+@media (max-width: 1200px) {
+  .service-hall,
+  .main-content {
+    max-width: 100%;
+  }
+}
+
+/* 手机适配 (<768px) */
+@media (max-width: 768px) {
+  .portal-home {
+    padding-bottom: 30px;
+  }
+
+  /* 轮播图适配 */
+  .hero-carousel {
+    height: 300px !important;
+  }
+
+  .banner-content {
+    left: 20px;
+    right: 20px;
+  }
+
+  .banner-content h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .banner-content p {
+    font-size: 16px;
+  }
+
+  /* 服务大厅适配 */
+  .service-hall {
+    margin: -20px auto 20px;
+    padding: 0 15px;
+  }
+
+  .hall-inner {
+    flex-wrap: wrap;
+  }
+
+  .service-card {
+    flex: 0 0 50%;
+    padding: 20px 10px;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .service-card:nth-child(2n) {
+    border-right: none;
+  }
+
+  .service-card:nth-child(3),
+  .service-card:nth-child(4) {
+    border-bottom: none;
+  }
+
+  .service-card .icon {
+    font-size: 36px;
+  }
+
+  .service-card h3 {
+    font-size: 16px;
+  }
+
+  /* 主内容区适配 */
+  .main-content {
+    padding: 0 15px;
+  }
+
+  .el-row {
+    row-gap: 20px;
+  }
+
+  /* 新闻模块适配 */
+  .news-tabs {
+    padding: 15px;
+    min-height: auto;
+  }
+
+  :deep(.el-tabs__item) {
+    font-size: 16px;
+  }
+
+  .news-item {
+    padding: 12px 0;
+  }
+
+  .news-item .title {
+    font-size: 14px;
+  }
+
+  /* 园区名片适配 */
+  .park-profile {
+    padding: 20px 15px;
+  }
+
+  .profile-video img {
+    height: 140px;
+  }
+
+  .data-stats {
+    padding-top: 15px;
+  }
+
+  .stat-item h4 {
+    font-size: 20px;
+  }
+}
+
+/* 小屏手机适配 (<375px) */
+@media (max-width: 375px) {
+  .hero-carousel {
+    height: 250px !important;
+  }
+
+  .service-card {
+    flex: 0 0 100%;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .service-card:last-child {
+    border-bottom: none;
+  }
 }
 </style>

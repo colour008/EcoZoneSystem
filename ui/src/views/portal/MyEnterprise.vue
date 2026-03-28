@@ -242,8 +242,11 @@
                 </div>
 
                 <div class="order-footer">
-                  <el-button link type="primary" icon="View" size="small" @click="handleDetail(item)">查看详情</el-button>
-                  <el-button type="primary" plain icon="ChatDotRound" @click="handleOpenEvaluate(item)" v-if="item.status === 2">评价服务</el-button>
+                  <el-button link type="primary" icon="View" size="small" @click="handleDetail(item)">查看详情
+                  </el-button>
+                  <el-button type="primary" plain icon="ChatDotRound" @click="handleOpenEvaluate(item)"
+                             v-if="item.status === 2">评价服务
+                  </el-button>
                   <div class="evaluated-box" v-if="item.status === 3">
                     <span>我的评价：</span>
                     <el-rate v-model="item.score" disabled show-score text-color="#ff9900"/>
@@ -297,7 +300,8 @@
             <div class="rich-content-view">{{ currentOrder.content || '无详情说明' }}</div>
           </el-descriptions-item>
 
-          <el-descriptions-item label="附件图片" :span="2" v-if="currentOrder?.imageList && currentOrder.imageList.length > 0">
+          <el-descriptions-item label="附件图片" :span="2"
+                                v-if="currentOrder?.imageList && currentOrder.imageList.length > 0">
             <div class="image-list">
               <el-image
                   v-for="(img, index) in currentOrder.imageList"
@@ -864,7 +868,7 @@ const loadWorkOrders = async () => {
   if (!enterpriseInfo.value || !enterpriseInfo.value.id) {
     workOrders.value = []
     total.value = 0
-    totalStatusCount.value = { all: 0, 0: 0, 1: 0, 2: 0, 3: 0 }
+    totalStatusCount.value = {all: 0, 0: 0, 1: 0, 2: 0, 3: 0}
     return
   }
 
@@ -1077,6 +1081,7 @@ onMounted(() => {
   transition: all 0.3s ease;
   border: 1px solid #f1f5f9;
 }
+
 .card-style:hover {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.09), 0 3px 6px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
@@ -1093,6 +1098,7 @@ onMounted(() => {
   margin-bottom: 25px;
   border: 1px solid #e2e8f0;
 }
+
 .info-item {
   display: flex;
   flex-direction: column;
@@ -1101,12 +1107,14 @@ onMounted(() => {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+
 .info-item .label {
   font-size: 13px;
   color: #64748b;
   margin-bottom: 6px;
   font-weight: 500;
 }
+
 .info-item .value {
   font-size: 17px;
   font-weight: 700;
@@ -1118,11 +1126,13 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
 }
+
 .custom-descriptions :deep(.el-descriptions__label) {
   background-color: #f8fafc;
   font-weight: 600;
   color: #475569;
 }
+
 .custom-descriptions :deep(.el-descriptions__content) {
   color: #1e293b;
 }
@@ -1141,6 +1151,7 @@ onMounted(() => {
   padding-left: 12px;
   border-radius: 8px;
 }
+
 .section-title .el-icon {
   color: #4f46e5;
   font-size: 22px;
@@ -1291,9 +1302,11 @@ onMounted(() => {
 .custom-tabs :deep(.el-tabs__nav-wrap) {
   padding: 0 !important;
 }
+
 .custom-tabs :deep(.el-tabs__nav-wrap::after) {
   display: none;
 }
+
 .custom-tabs :deep(.el-tabs__active-bar) {
   display: none !important;
 }
@@ -1315,7 +1328,7 @@ onMounted(() => {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  border: rgba(83,83,83,0.85) 1px solid !important;
+  border: rgba(83, 83, 83, 0.85) 1px solid !important;
 }
 
 /* 激活状态：文字深蓝色，背景纯白 */
@@ -1357,6 +1370,7 @@ onMounted(() => {
   border-radius: 16px;
   overflow: hidden;
 }
+
 .order-item-card:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   transform: translateY(-3px);
@@ -1372,11 +1386,13 @@ onMounted(() => {
   padding-bottom: 14px;
   margin-bottom: 16px;
 }
+
 .order-no {
   font-size: 14px;
   color: #64748b;
   font-weight: 500;
 }
+
 .order-card-header .el-tag {
   font-weight: 500;
   padding: 4px 10px;
@@ -1429,6 +1445,7 @@ onMounted(() => {
   font-size: 13px;
   color: #64748b;
 }
+
 .order-meta .el-icon {
   vertical-align: middle;
   margin-right: 6px;
@@ -1465,6 +1482,7 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
 }
+
 .order-footer .el-button {
   font-weight: 500;
 }
@@ -1499,6 +1517,7 @@ onMounted(() => {
   overflow: hidden;
   margin-bottom: 24px;
 }
+
 .detail-container .el-descriptions__label {
   background-color: #f8fafc;
   font-weight: 600;
@@ -1509,10 +1528,12 @@ onMounted(() => {
 .detail-container .el-timeline {
   padding-left: 8px;
 }
+
 .detail-container .el-timeline-item__timestamp {
   color: #64748b;
   font-size: 13px;
 }
+
 .detail-container .el-timeline-item__content {
   padding-bottom: 16px;
 }
@@ -1523,6 +1544,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 12px;
 }
+
 .preview-img {
   width: 90px;
   height: 90px;
@@ -1531,6 +1553,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .preview-img:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -1551,9 +1574,142 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
 }
+
 .filter-box :deep(.el-radio-button__inner span:last-child) {
   color: #94a3b8;
   font-size: 12px;
   font-weight: 400;
+}
+
+/* ===================== 统一移动端响应式适配 ===================== */
+/* 平板适配 (768px-1200px) */
+@media (max-width: 1200px) {
+  .main-content {
+    max-width: 100%;
+    padding: 0 15px;
+  }
+}
+
+/* 手机适配 (<768px) */
+@media (max-width: 768px) {
+  /* 头部适配 */
+  .page-header {
+    padding: 20px 15px 40px;
+    margin-bottom: -20px;
+  }
+
+  .title-row {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .company-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .name-box h1 {
+    font-size: 20px;
+  }
+
+  .title-right {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* 卡片内边距 */
+  .card-style {
+    padding: 20px 15px;
+  }
+
+  /* 信息仪表盘单列 */
+  .info-dashboard {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  /* 描述列表单列 */
+  :deep(.custom-descriptions .el-descriptions__body) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(.custom-descriptions .el-descriptions-item) {
+    width: 100% !important;
+  }
+
+  /* Tabs 适配 */
+  .custom-tabs :deep(.el-tabs__header) {
+    left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .custom-tabs :deep(.el-tabs__item) {
+    padding: 0 15px !important;
+    font-size: 13px;
+  }
+
+  /* 工单操作栏 */
+  .work-order-actions {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+    padding: 15px;
+  }
+
+  .filter-box :deep(.el-radio-group) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  /* 工单卡片 */
+  .order-body {
+    flex-direction: column;
+  }
+
+  .order-meta {
+    gap: 10px;
+  }
+
+  .order-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* 弹窗/抽屉宽度 */
+  :deep(.el-dialog) {
+    --el-dialog-width: 95% !important;
+  }
+
+  :deep(.el-drawer) {
+    --el-drawer-width: 100% !important;
+  }
+
+  /* 分页缩放 */
+  .pagination-container {
+    transform: scale(0.9);
+  }
+}
+
+/* 小屏手机适配 (<375px) */
+@media (max-width: 375px) {
+  .page-header {
+    padding: 15px 10px 30px;
+  }
+
+  .card-style {
+    padding: 15px 10px;
+  }
+
+  .pagination-container {
+    transform: scale(0.85);
+  }
 }
 </style>

@@ -192,14 +192,14 @@ const extractMediaFromHtml = (htmlStr) => {
   const videoRegex = /<source[^>]+src=["']([^"']+)["']/gi
   const videoMatches = [...htmlStr.matchAll(videoRegex)]
   videoMatches.forEach(match => {
-    media.push({ type: 'video', url: match[1] })
+    media.push({type: 'video', url: match[1]})
   })
 
   // 2. 提取图片：匹配 <img> 标签中的 src
   const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi
   const imgMatches = [...htmlStr.matchAll(imgRegex)]
   imgMatches.forEach(match => {
-    media.push({ type: 'image', url: match[1] })
+    media.push({type: 'image', url: match[1]})
   })
 
   return media
@@ -567,5 +567,97 @@ onMounted(() => {
 
 .mr-4 {
   margin-right: 20px;
+}
+
+/* ===================== 统一移动端响应式适配 ===================== */
+/* 平板适配 (768px-1200px) */
+@media (max-width: 1200px) {
+  .main-container {
+    max-width: 100%;
+    padding: 0 15px 30px;
+  }
+}
+
+/* 手机适配 (<768px) */
+@media (max-width: 768px) {
+  /* Hero区适配 */
+  .hero-section {
+    height: 220px;
+    margin-bottom: -20px;
+  }
+
+  .hero-content .title {
+    font-size: 24px;
+  }
+
+  .hero-content .subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .search-box {
+    margin: 0 10px;
+  }
+
+  /* 卡片媒体区适配 */
+  .card-media {
+    height: 180px;
+  }
+
+  .placeholder-icon {
+    font-size: 36px;
+  }
+
+  /* 卡片内容区适配 */
+  .card-body {
+    padding: 15px;
+  }
+
+  .ent-name {
+    font-size: 16px;
+  }
+
+  .ent-desc {
+    font-size: 12px;
+  }
+
+  .meta-item {
+    font-size: 12px;
+  }
+
+  /* 分页适配 */
+  .pagination-wrapper {
+    margin-top: 20px;
+    transform: scale(0.9);
+  }
+
+  /* 弹窗适配 */
+  :deep(.detail-dialog) {
+    --el-dialog-width: 90% !important;
+  }
+
+  .detail-header-info {
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .rich-text-container {
+    font-size: 14px;
+  }
+}
+
+/* 小屏手机适配 (<375px) */
+@media (max-width: 375px) {
+  .hero-section {
+    height: 200px;
+  }
+
+  .card-media {
+    height: 160px;
+  }
+
+  .pagination-wrapper {
+    transform: scale(0.85);
+  }
 }
 </style>

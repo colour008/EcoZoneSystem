@@ -118,6 +118,15 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	 */
 	@Override
 	public PageResult<WorkOrderVO> getPage(WorkOrderPageQueryDTO dto) {
+		// ===================== 权限过滤 =====================
+		Long currentUserId = SecurityUtils.getUserId();
+		// 判断当前用户是否为 维修/工作人员角色
+		boolean isWorker = SecurityUtils.getRoleCodes().contains("ROLE_WORKER");
+		// 工作人员：仅查看分配给自己的工单
+		if (isWorker) {
+			dto.setWorkerId(currentUserId);
+		}
+		// 超级管理员/园区管理员：不设置workerId，查看全部工单
 		return getPageResult(dto);
 	}
 

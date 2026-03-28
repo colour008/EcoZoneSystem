@@ -49,4 +49,31 @@ import Footer from './Footer.vue'
   opacity: 0;
   transform: translateX(20px);
 }
+
+/* ===================== 统一移动端响应式适配 ===================== */
+/* 平板适配 */
+@media (max-width: 1024px) {
+  .portal-main {
+    padding-top: 60px;
+  }
+}
+
+/* 手机适配 */
+@media (max-width: 768px) {
+  .portal-main {
+    padding-top: 60px;
+  }
+
+  .el-backtop {
+    right: 20px !important;
+    bottom: 20px !important;
+  }
+}
+
+/* 小屏手机适配 */
+@media (max-width: 375px) {
+  .portal-main {
+    padding-top: 60px;
+  }
+}
 </style>
