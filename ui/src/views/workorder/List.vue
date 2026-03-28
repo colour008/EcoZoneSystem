@@ -48,7 +48,7 @@
         </el-table-column>
         <el-table-column prop="workerName" label="处理人" width="120" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.workerName" type="success" size="small" effect="dark">{{ row.workerName }}</el-tag>
+            <el-tag v-if="row.workerName" type="success" size="default" effect="dark" >{{ row.workerName }}</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -139,6 +139,38 @@
               />
             </div>
           </el-descriptions-item>
+          <el-descriptions-item
+              label="处理附件"
+              :span="2"
+              v-if="currentOrder.finishAttachmentList && currentOrder.finishAttachmentList.length > 0">
+            <div class="image-list">
+              <el-image
+                  v-for="(img, index) in currentOrder.finishAttachmentList"
+                  :key="index"
+                  :src="img"
+                  :preview-src-list="currentOrder.finishAttachmentList"
+                  :initial-index="index"
+                  fit="cover"
+                  class="preview-img finish-img"
+              />
+            </div>
+          </el-descriptions-item>
+
+          <el-timeline-item v-if="currentOrder.finishTime" :timestamp="currentOrder.finishTime" type="success">
+            工单处理完成 (处理人: <b>{{ currentOrder.workerName || currentOrder.handlerName }}</b>)
+            <div v-if="currentOrder.remark" class="common-opinions" style="margin-top: 8px;">
+              处理反馈: {{ currentOrder.remark }}
+            </div>
+            <div v-if="currentOrder.finishAttachmentList?.length" class="timeline-images">
+              <el-image
+                  v-for="img in currentOrder.finishAttachmentList"
+                  :key="img"
+                  :src="img"
+                  :preview-src-list="currentOrder.finishAttachmentList"
+                  class="mini-img"
+              />
+            </div>
+          </el-timeline-item>
         </el-descriptions>
 
         <el-divider content-position="left">处理进度</el-divider>
@@ -220,8 +252,8 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="processVisible" title="工单处理反馈" width="500px">
-      <el-form :model="processForm" :rules="processRules" ref="processFormRef" label-width="80px">
+    <el-dialog v-model="processVisible" title="工单处理反馈" width="800px">
+      <el-form :model="processForm" :rules="processRules" ref="processFormRef" label-width="120px">
         <el-form-item label="处理结果" prop="remark">
           <el-input
               v-model="processForm.remark"
@@ -229,6 +261,17 @@
               :rows="4"
               placeholder="请详细描述处理结果，该反馈将对企业可见..."
           />
+        </el-form-item>
+        <el-form-item label="处理附件 (可选)">
+          <el-upload
+              action="#"
+              list-type="picture-card"
+              :http-request="handleOrderImageUpload"
+              :on-remove="handleOrderImageRemove"
+              accept=".jpg,.jpeg,.png"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -244,9 +287,10 @@
 <script setup>
 import {ref, reactive, onMounted} from 'vue'
 import {ElMessage} from 'element-plus'
-import {WarningFilled, InfoFilled, UserFilled} from '@element-plus/icons-vue'
+import {WarningFilled, InfoFilled, UserFilled, Plus} from '@element-plus/icons-vue'
 import workOrderApi from '@/api/workOrder'
 import userApi from '@/api/user'
+import {uploadFile} from "@/utils/upload.js";
 
 const typeMap = {
   1: {label: '维修报备', tag: 'warning'},
@@ -309,9 +353,15 @@ const handleDetail = (row) => {
   } else if (!row.imageList) {
     row.imageList = []
   }
+  if (row.finishAttachmentList && typeof row.finishAttachmentList === 'string') {
+    row.finishAttachmentList = row.finishAttachmentList.split(',')
+  } else if (!row.finishAttachmentList) {
+    row.finishAttachmentList = []
+  }
   currentOrder.value = row
   detailVisible.value = true
 }
+
 
 // 指派逻辑
 const dispatchVisible = ref(false)
@@ -354,13 +404,34 @@ const submitDispatch = async () => {
 // 处理反馈逻辑
 const processVisible = ref(false)
 const processFormRef = ref(null)
-const processForm = reactive({id: null, remark: ''})
+const processForm = ref({id: null, remark: '', finishAttachments: ''})
 const processRules = {remark: [{required: true, message: '处理反馈不能为空', trigger: 'blur'}]}
 
+const finishImages= ref([]) // 用于暂存已上传的图片URL
 const handleProcess = (row) => {
   processForm.id = row.id
   processForm.remark = ''
   processVisible.value = true
+
+}
+
+// 附件图片上传
+const handleOrderImageUpload = async (options) => {
+  try {
+    const url = await uploadFile(options.file)
+    finishImages.value.push(url)
+    processForm.value.finishAttachments = finishImages.value.join(',')
+  } catch (e) {
+    ElMessage.error('图片上传失败')
+  }
+}
+
+// 工单图片移除
+const handleOrderImageRemove = (file, uploadFiles) => {
+  // 简化处理：重置图片数组。实际场景应通过对比 response url 删除特定一项
+  finishImages.value = []
+  processForm.value.finishAttachments = ''
+  ElMessage.warning('图片已移除，如需多图请重新整理上传')
 }
 
 const submitProcess = async () => {
@@ -435,7 +506,7 @@ onMounted(() => {
   width: 80px;
   height: 80px;
   border-radius: 4px;
-  border: 1px solid #EBEEF5;
+  border: 1px solid #63affa;
   cursor: pointer;
 }
 
@@ -451,5 +522,21 @@ onMounted(() => {
   background-color: rgba(76, 127, 181, 0.89) !important;
   color: #ffffff;
   font-weight: 500;
+}
+
+.finish-img {
+  border: 1px solid #9affc9;
+}
+
+.timeline-images {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.mini-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
 }
 </style>

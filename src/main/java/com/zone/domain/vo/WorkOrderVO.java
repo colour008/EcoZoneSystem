@@ -55,4 +55,7 @@ public class WorkOrderVO {
 	 * 图片列表，用于前端直接渲染
 	 */
 	private List<String> imageList;
+
+	// WorkOrderVO.java 中增加
+	private List<String> finishAttachmentList;
 }

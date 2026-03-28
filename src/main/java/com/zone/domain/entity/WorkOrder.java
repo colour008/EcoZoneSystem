@@ -58,8 +58,11 @@ public class WorkOrder extends BaseEntity {
 	/** 评分(1-5星) */
 	private Integer score;
 
-	/** 附件图片URL,多张用逗号隔开 */
+	/** 提报附件图片URL,多张用逗号隔开 */
 	private String images;
+
+	/** 完成附件图片URL,多张用逗号隔开 */
+	private String finishAttachments;
 
 	/** 逻辑删除: 0正常 1删除 */
 	private Integer isDeleted;

@@ -27,6 +27,7 @@ public class WorkOrderDTO implements Serializable {
 	private String contactPhone;
 	private Integer type;
 	private String images; // 企业上传的报修图
+	private String finishAttachments; // 工单处理完成后的附件
 
 	/* ------------------- B端派单/处理字段 ------------------- */
 

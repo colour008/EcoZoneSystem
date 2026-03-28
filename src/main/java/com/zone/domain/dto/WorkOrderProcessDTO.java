@@ -23,7 +23,6 @@ public class WorkOrderProcessDTO implements Serializable {
     private Long workerId;
 
     /** * 处理后的附件图片URL (留证)
-     * 对应表中的 images 字段（或你之后可能新增的 finish_images）
      */
-    private String images;
+    private String finishAttachments;
 }

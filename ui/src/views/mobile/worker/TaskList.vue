@@ -1,21 +1,20 @@
 <template>
   <div class="m-worker-container">
-    <van-nav-bar title="待办任务大厅" fixed placeholder/>
+    <van-nav-bar title="任务大厅" fixed placeholder/>
 
-    <van-tabs v-model:active="activeStatus" @change="onRefresh" sticky offset-top="46px">
+    <van-tabs v-model:active="activeStatus" @change="onTabChange" sticky offset-top="46px">
       <van-tab title="待处理" name="1"/>
       <van-tab title="已完成" name="2"/>
     </van-tabs>
 
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-      <!-- 新增 immediate-check="false"：禁止van-list自动初始化加载，解决重复触发 -->
       <van-list
           v-model:loading="loading"
           :finished="finished"
           finished-text="没有更多任务了"
           @load="onLoad"
           class="m-task-list"
-          immediate-check="false"
+          :immediate-check="false"
       >
         <div
             v-for="item in list"
@@ -24,7 +23,7 @@
             @click="router.push(`/m/worker/detail/${item.id}`)"
         >
           <div class="card-header">
-            <span class="type-tag" :class="'type-' + item.type">{{ typeMap[item.type] }}</span>
+            <span class="type-tag" :class="'type-' + item.type">{{ typeMap[item.type] || '其他' }}</span>
             <span class="time">{{ item.createTime }}</span>
           </div>
 
@@ -75,10 +74,10 @@ const pageSize = 10;
 
 const typeMap = {1: '报修', 2: '咨询', 3: '投诉'};
 
-// 核心：分页加载数据（仅列表滚动到底部触发）
+// 核心加载方法
 const onLoad = async () => {
-  if (loading.value) return;
-  loading.value = true;
+  // 正在刷新时，不执行加载更多
+  if (refreshing.value) return;
 
   try {
     const res = await workOrderApi.getWorkerTaskPage({
@@ -87,39 +86,57 @@ const onLoad = async () => {
       status: Number(activeStatus.value)
     });
 
-    // 追加数据
-    list.value.push(...res.data.records);
+    const records = res.data.records || [];
+
+    // 如果是第一页，则直接赋值，否则追加
+    if (pageNum.value === 1) {
+      list.value = records;
+    } else {
+      list.value.push(...records);
+    }
+
+    // 更新页码
     pageNum.value++;
 
     // 判断是否加载完毕
-    finished.value = list.value.length >= res.data.total;
+    if (list.value.length >= res.data.total) {
+      finished.value = true;
+    }
   } catch (e) {
     finished.value = true;
-    console.error(e);
+    console.error('加载任务列表失败:', e);
   } finally {
     loading.value = false;
     refreshing.value = false;
   }
 };
 
-// 核心：刷新/切换标签（清空数据，重新加载第一页）
+// 标签切换触发
+const onTabChange = () => {
+  onRefresh();
+};
+
+// 刷新/重置逻辑
 const onRefresh = () => {
-  // 重置所有状态
-  list.value = [];
-  pageNum.value = 1;
+  // 1. 立即锁定状态，防止重复请求
   finished.value = false;
-  refreshing.value = true;
-  // 主动加载第一页
+  loading.value = true;
+
+  // 2. 重置分页和数据
+  pageNum.value = 1;
+  // 注意：不要在这里直接清空 list.value = []，否则页面会瞬间空白，体验不好
+  // onLoad 内部会根据 pageNum === 1 自动处理覆盖
+
   onLoad();
 };
 
-// 页面初始化：主动加载一次数据
 onMounted(() => {
   onRefresh();
 });
 </script>
 
 <style scoped>
+/* 保持原有样式不变 */
 .m-worker-container {
   min-height: 100vh;
   background: #f4f6f8;

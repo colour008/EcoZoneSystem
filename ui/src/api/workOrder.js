@@ -84,6 +84,18 @@ const workOrderApi = {
             method: 'put',
             data
         })
+    },
+
+    /**
+     * B端/H5端根据ID获取详情
+     * @param id
+     * @returns {*}
+     */
+    getById(id) {
+        return request({
+            url: `/work-order/${id}`, // 这里的路径根据你后端的实际详情接口修改
+            method: 'get'
+        })
     }
 }
 

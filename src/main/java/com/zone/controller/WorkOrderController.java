@@ -85,11 +85,26 @@ public class WorkOrderController {
         return Result.success(workOrderService.getWorkerPage(dto));
     }
 
+    /**
+     * 新增：供工人在 H5 端处理反馈
+     */
     @PutMapping("/process")
     @Operation(summary = "B端/H5端-处理反馈", description = "工人提交处理结果和凭证，状态变为已办结")
     public Result<String> process(@RequestBody WorkOrderProcessDTO dto) {
         log.info("工人处理工单反馈: {}", dto.getId());
         boolean success = workOrderService.process(dto);
         return success ? Result.success("处理完成") : Result.sysError("操作失败");
+    }
+
+
+    /**
+     * 新增：供工人在 H5 端查看工单详情
+     */
+    @GetMapping("/{id}")
+    @Operation(summary = "获取工单详情", description = "根据ID获取工单的详细信息，包括图片列表")
+    public Result<WorkOrderVO> getById(@PathVariable Long id) {
+        log.info("查询工单详情, id: {}", id);
+        WorkOrderVO workOrderVO = workOrderService.getById(id);
+        return Result.success(workOrderVO);
     }
 }

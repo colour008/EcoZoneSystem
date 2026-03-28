@@ -189,13 +189,30 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
 		workOrder.setRemark(dto.getRemark());
 		// 如果工人上传了处理凭证图
-		if (StringUtils.isNotBlank(dto.getImages())) {
-			workOrder.setImages(dto.getImages());
+		if (StringUtils.isNotBlank(dto.getFinishAttachments())) {
+			workOrder.setFinishAttachments(dto.getFinishAttachments());
 		}
 
 		workOrder.setFinishTime(LocalDateTime.now());
 		workOrder.setStatus(2); // 变为已办结
 		return workOrderMapper.updateById(workOrder) > 0;
+	}
+
+	/**
+	 * 工单详情
+	 */
+	@Override
+	public WorkOrderVO getById(Long id) {
+		// 1. 从数据库查询实体
+		WorkOrder workOrder = workOrderMapper.selectById(id);
+
+		// 2. 校验是否存在
+		if (workOrder == null) {
+			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_NOT_EXIST);
+		}
+
+		// 3. 利用现有的 convertToVO 方法转为前端需要的格式
+		return convertToVO(workOrder);
 	}
 
 	/**
@@ -214,11 +231,21 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	private WorkOrderVO convertToVO(WorkOrder workOrder) {
 		WorkOrderVO vo = new WorkOrderVO();
 		BeanUtils.copyProperties(workOrder, vo);
-		if (StringUtils.isNotBlank(workOrder.getImages())) {
-			vo.setImageList(Arrays.asList(workOrder.getImages().split(",")));
-		} else {
-			vo.setImageList(new ArrayList<>());
-		}
+		// 处理报修图片
+		vo.setImageList(processImageList(workOrder.getImages()));
+		// 处理完成附件图片
+		vo.setFinishAttachmentList(processImageList(workOrder.getFinishAttachments()));
 		return vo;
 	}
+
+	/**
+	 * 处理图片列表
+	 */
+	private List<String> processImageList(String images) {
+		if (StringUtils.isNotBlank(images)) {
+			return Arrays.asList(images.split(","));
+		}
+		return new ArrayList<>();
+	}
+
 }

@@ -68,4 +68,11 @@ public interface WorkOrderService {
 	 * @return
 	 */
 	PageResult<WorkOrderVO> getWorkerPage(WorkOrderPageQueryDTO dto);
+
+	/**
+	 * 根据ID查询工单
+	 * @param id
+	 * @return
+	 */
+	WorkOrderVO getById(Long id);
 }
