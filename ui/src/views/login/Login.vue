@@ -23,7 +23,6 @@
     </div>
 
     <div class="login-right">
-      <!-- 移动端顶部品牌栏 -->
       <div class="mobile-top-bar">
         <el-button type="primary" size="small" icon="Back" @click="router.push('/home')"
                    class="mobile-back-btn">
@@ -38,7 +37,6 @@
         </div>
       </div>
 
-      <!-- 桌面端顶部操作栏 -->
       <div class="desktop-top-actions">
         <div class="action-pill">
           <div class="action-icon" @click="isDark = !isDark">
@@ -248,6 +246,14 @@ const onSliderEnd = () => {
   window.removeEventListener('touchend', onSliderEnd)
 }
 
+// ================== 核心修改逻辑开始 ==================
+/**
+ * 判断是否为移动端环境
+ */
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 const handleLogin = async () => {
   // 1. 增加非空校验
   if (!username.value || !password.value) {
@@ -261,8 +267,8 @@ const handleLogin = async () => {
   try {
     // 2. 修正：将 ref 的值传给接口
     const res = await loginApi({
-      username: username.value, // 必须传这个
-      password: password.value, // 必须传这个
+      username: username.value,
+      password: password.value,
       mode: loginMode.value
     })
 
@@ -276,11 +282,34 @@ const handleLogin = async () => {
 
     ElMessage.success('欢迎回来')
 
-    // 3. 统一跳转逻辑
+    // 3. 多角色、多端跳转判断逻辑
     setTimeout(() => {
+      const isMobile = isMobileDevice()
       const redirectPath = router.currentRoute.value.query.redirect
 
-      // 如果有被拦截前想去的地址（且不是根目录），则返回原页面；否则所有人统一去门户首页
+      // 情况 A: 如果是处理人员 (ROLE_WORKER)，无论在哪，统一去 H5 工单列表
+      if (roles.includes('ROLE_WORKER')) {
+        router.push('/m/worker/list')
+        return
+      }
+
+      // 情况 B: 如果是园区员工 (ROLE_STAFF)
+      if (roles.includes('ROLE_STAFF')) {
+        if (isMobile) {
+          // 员工在移动端登录，跳转到移动端管理页（请确认路由是否存在）
+          router.push('/m/staff/home')
+        } else {
+          // 员工在 PC 端登录，走普通逻辑
+          if (redirectPath && redirectPath !== '/') {
+            router.push(redirectPath)
+          } else {
+            router.push('/home')
+          }
+        }
+        return
+      }
+
+      // 情况 C: 普通用户或其他角色，维持原逻辑
       if (redirectPath && redirectPath !== '/') {
         router.push(redirectPath)
       } else {
@@ -297,6 +326,7 @@ const handleLogin = async () => {
     loginLoading.value = false
   }
 }
+// ================== 核心修改逻辑结束 ==================
 
 const goToRegister = () => {
   router.push('/register')
@@ -354,7 +384,7 @@ onUnmounted(() => onSliderEnd())
 
 .login-left {
   flex: 1;
-  background: var(--bg-img)no-repeat center center;
+  background: var(--bg-img) no-repeat center center;
   background-size: cover;
   display: flex;
   flex-direction: column;

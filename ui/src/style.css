@@ -44,6 +44,18 @@ select,
   font-family: 'PingFangSC', 'Fira Code', 'Inter', -apple-system, sans-serif !important;
 }
 
+/* style.css */
+:root {
+  /* 统一为你的大厂蓝/紫色调 */
+  --van-primary-color: #4f46e5;
+  --van-success-color: #10b981;
+  --van-warning-color: #f97316;
+  --van-danger-color: #ef4444;
+
+  /* 也可以统一按钮的圆角风格 */
+  --van-button-border-radius: 8px;
+}
+
 /* ==========================================
    全局链接与无障碍样式
 ========================================== */

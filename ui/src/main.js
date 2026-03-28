@@ -7,6 +7,7 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import router from '@/router'
 import {createPinia} from 'pinia'
 import './style.css' // <--- 全局样式
+import 'vant/lib/index.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 // 创建Vue实例
