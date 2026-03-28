@@ -46,8 +46,11 @@ public class WorkOrder extends BaseEntity {
 	/** 完成时间 */
 	private LocalDateTime finishTime;
 
-	/** 处理人ID */
+	/** 受理人ID */
 	private Long handlerId;
+
+	/** 处理人ID */
+	private Long workerId;
 
 	/** 用户评价内容 */
 	private String commentText;
@@ -63,7 +66,9 @@ public class WorkOrder extends BaseEntity {
 
 	private String enterpriseName; // 冗余字段：企业名称
 
-	private String handlerName; // 冗余字段：处理人姓名
+	private String handlerName; // 冗余字段：受理人姓名
+
+	private String workerName; // 冗余字段：处理人姓名
 
 	/** 用户ID（C端查询时固定，B端查询时可选） */
 	private Long userId;

@@ -5,7 +5,6 @@ const workOrderApi = {
 
     /**
      * C端-提报工单
-     * @param {Object} data - 工单信息 (title, content, type, images, contactPerson, contactPhone)
      */
     submit(data) {
         return request({
@@ -17,7 +16,6 @@ const workOrderApi = {
 
     /**
      * C端-获取“我的”工单分页列表
-     * @param {Object} params - 分页与过滤参数 (pageNum, pageSize, status, type, title)
      */
     getMyPage(params) {
         return request({
@@ -28,8 +26,7 @@ const workOrderApi = {
     },
 
     /**
-     * C端-评价工单 (状态为已办结 2 时可评价)
-     * @param {Object} data - (id, score, commentText)
+     * C端-评价工单
      */
     evaluate(data) {
         return request({
@@ -39,7 +36,7 @@ const workOrderApi = {
         })
     },
 
-    // ================== B端：园区管控接口 ==================
+    // ================== B端：园区管控接口 (PC管理端) ==================
 
     /**
      * B端-分页查询全园工单列表
@@ -53,21 +50,33 @@ const workOrderApi = {
     },
 
     /**
-     * B端-受理/分派工单
-     * @param {Long} id - 工单ID
-     * @param {Long} handlerId - 指派的处理人ID
+     * 核心修改：B端-委派/指派工单
+     * @param {Object} data - { orderId: 1, workerId: 2 }
      */
-    accept(id, handlerId) {
+    dispatch(data) {
         return request({
-            url: `/work-order/accept/${id}`,
+            url: '/work-order/dispatch',
             method: 'put',
-            params: { handlerId }
+            data
+        })
+    },
+
+    // ================== H5端：工人执行接口 (移动端) ==================
+
+    /**
+     * 新增：H5端-获取分配给当前工人的工单
+     */
+    getWorkerTaskPage(params) {
+        return request({
+            url: '/work-order/worker/page',
+            method: 'get',
+            params
         })
     },
 
     /**
-     * B端-处理反馈 (结案)
-     * @param {Object} data - (id, remark)
+     * B端/H5端-处理反馈 (工人提交凭证结案)
+     * @param {Object} data - (id, remark, images)
      */
     process(data) {
         return request({

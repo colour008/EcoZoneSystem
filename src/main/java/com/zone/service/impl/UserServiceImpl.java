@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -249,6 +250,16 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public User getById(Long id) {
 		return userMapper.selectById(id);
+	}
+
+	/**
+	 * 获取员工列表
+	 *
+	 * @return List<Map<String, Object>>
+	 */
+	@Override
+	public List<Map<String, Object>> getWorkerList() {
+		return userMapper.selectWorkerList();
 	}
 
 }

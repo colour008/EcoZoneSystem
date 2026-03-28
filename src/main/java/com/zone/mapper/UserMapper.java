@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: JamHoo
@@ -72,4 +73,10 @@ public interface UserMapper {
 	 * @return
 	 */
 	int checkUsernameExists(@Param("username") String username);
+
+	/**
+	 * 查询所有员工
+	 * @return
+	 */
+	List<Map<String, Object>> selectWorkerList();
 }

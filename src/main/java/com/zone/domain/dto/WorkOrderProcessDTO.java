@@ -12,18 +12,18 @@ public class WorkOrderProcessDTO implements Serializable {
     /** 工单ID */
     private Long id;
 
-    /** * 处理反馈/备注 
-     * 对应表中的 remark 字段
+    /** * 处理反馈/备注
+     * 对应表中的 remark 字段，由工人填写
      */
     private String remark;
 
-    /** * 处理人ID 
-     * 虽然可以从 SecurityContext 获取，但某些场景下（如代办）需要手动传入
+    /** * 执行工人ID
+     * 对应表中的 worker_id，标记是谁完成了这个活
      */
-    private Long handlerId;
+    private Long workerId;
 
-    /** * 处理后的附件图片URL (可选)
-     * 如果处理完后需要拍照留证，可以更新此字段
+    /** * 处理后的附件图片URL (留证)
+     * 对应表中的 images 字段（或你之后可能新增的 finish_images）
      */
     private String images;
 }

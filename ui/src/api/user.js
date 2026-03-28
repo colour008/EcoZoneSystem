@@ -109,7 +109,18 @@ const userApi = {
             url: `/user/${id}`,
             method: 'get'
         })
-    }
+    },
+
+    /**
+     * 获取所有工单处理员列表 (ROLE_WORKER)
+     * 用于工单指派时的下拉框选择
+     */
+    getWorkers() {
+        return request({
+            url: '/user/workers',
+            method: 'get'
+        })
+    },
 }
 
 export default userApi

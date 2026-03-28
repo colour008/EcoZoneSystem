@@ -39,6 +39,13 @@ public class WorkOrderPageQueryDTO extends PageQuery {
 	/** 企业ID（C端查询时固定，B端查询时可选） */
 	private Long enterpriseId;
 
+	/** 受理专员ID（可选，用于查询某位专员派发的单子） */
+	private Long handlerId;
+
+	/** 处理人员ID（用于 H5 端查询分配给自己的工单） */
+	private Long workerId;
+
+
 	/** 开始时间（搜索创建时间范围） */
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime startTime;

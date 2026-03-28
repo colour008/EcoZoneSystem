@@ -25,6 +25,11 @@ public class RoleDTO implements Serializable {
 	private String roleName;
 
 	/**
+	 * 角色排序
+	 */
+	private Integer roleSort;
+
+	/**
 	 * 角色编码
 	 */
 	@NotBlank(message = "角色编码不能为空")

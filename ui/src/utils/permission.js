@@ -32,7 +32,7 @@ router.beforeEach(async (to, from, next) => {
 
                     // 根据角色动态判断工作台的名称
                     const isEnterprise = userStore.roles.includes('ROLE_ENTERPRISE')
-                    const dashboardTitle = isEnterprise ? '企业工作台' : '系统主控台'
+                    const dashboardTitle = isEnterprise ? '企业服务中心' : '系统主控台'
 
                     const dashboardMenu = {
                         path: '/index/dashboard',

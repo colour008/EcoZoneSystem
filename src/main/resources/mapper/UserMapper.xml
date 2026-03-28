@@ -108,4 +108,26 @@
     <select id="checkUsernameExists" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM sys_user WHERE username = #{username}
     </select>
+
+    <!--    查询员工列表-->
+    <resultMap id="WorkerUserMap" type="com.zone.domain.entity.User">
+        <id column="id" property="id"/>
+        <result column="real_name" property="realName"/>
+        <result column="username" property="username"/>
+    </resultMap>
+
+    <select id="selectWorkerList" resultMap="WorkerUserMap">
+        SELECT DISTINCT
+        u.id,
+        u.real_name,
+        u.username
+        FROM sys_user u
+        INNER JOIN sys_user_role ur ON u.id = ur.user_id
+        INNER JOIN sys_role r ON ur.role_id = r.id
+        <where>
+            AND r.role_code IN ('ROLE_WORKER', 'ROLE_STAFF')
+            AND u.status = 1
+        </where>
+        ORDER BY u.id ASC
+    </select>
 </mapper>

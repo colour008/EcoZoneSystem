@@ -92,7 +92,7 @@
                     icon="Memo"
                     style="color: #67C23A;"
                 >
-                  企业工作台
+                  企业服务中心
                 </el-dropdown-item>
                 <el-dropdown-item command="profile" icon="User">个人中心</el-dropdown-item>
                 <el-dropdown-item divided command="logout" icon="SwitchButton">退出登录</el-dropdown-item>

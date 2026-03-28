@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: JamHoo
@@ -183,5 +184,14 @@ public class UserController {
 		vo.setRoleIds(roleIds);
 
 		return Result.success(vo);
+	}
+
+	/**
+	 * 获取所有工单处理员列表
+	 */
+	@GetMapping("/workers")
+	@Operation(summary = "获取所有工单处理员列表", description = "用于派单时的下拉框选择")
+	public Result<List<Map<String, Object>>> getWorkerList() {
+		return Result.success(userService.getWorkerList());
 	}
 }

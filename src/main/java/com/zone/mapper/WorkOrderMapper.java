@@ -45,6 +45,5 @@ public interface WorkOrderMapper {
 	Page<WorkOrder> getWorkOrderPage(WorkOrderPageQueryDTO dto);
 
 	// 根据当前用户 ID 获取其关联的企业 ID
-	@Select("SELECT id FROM biz_enterprise WHERE user_id = #{userId} LIMIT 1")
 	Long getEnterpriseIdByUserId(@Param("userId") Long userId);
 }

@@ -81,7 +81,6 @@ public class LoginServiceImpl implements LoginService {
 		}
 
 		// 4. 查询角色、权限以及最高等级
-		// 查询角色编码列表 (如: ["ROLE_ADMIN"])
 		List<String> roles = roleMapper.getRoleCodesByUserId(user.getId());
 
 		// 查询权限标识列表 (如: ["user:add"])

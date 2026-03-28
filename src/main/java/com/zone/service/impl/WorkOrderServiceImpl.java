@@ -52,7 +52,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	@Transactional(rollbackFor = Exception.class)
 	public boolean submit(WorkOrderDTO dto) {
 		Long userId = SecurityUtils.getUserId();
-		// 1. 规范化：从数据库实时查询用户绑定的企业ID，不相信前端传参
 		Long enterpriseId = workOrderMapper.getEnterpriseIdByUserId(userId);
 		if (enterpriseId == null) {
 			throw new BusinessException(ResponseCodeEnum.NOT_ENTERPRISE_USER);
@@ -61,10 +60,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		WorkOrder workOrder = new WorkOrder();
 		BeanUtils.copyProperties(dto, workOrder);
 
-		// 2. 强制绑定后端查出来的企业ID
 		workOrder.setEnterpriseId(enterpriseId);
 		workOrder.setOrderNo(CodeGenerator.getBusCode("WO"));
-		workOrder.setStatus(0); // 待受理
+		workOrder.setStatus(0);
 		workOrder.setCreateTime(LocalDateTime.now());
 		workOrder.setIsDeleted(0);
 
@@ -76,7 +74,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	 * @param dto
 	 * @return
 	 */
-	@Override
 	public PageResult<WorkOrderVO> getMyPage(WorkOrderPageQueryDTO dto) {
 		Long userId = SecurityUtils.getUserId();
 		if (userId == null) {
@@ -108,7 +105,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
 		workOrder.setScore(dto.getScore());
 		workOrder.setCommentText(dto.getCommentText());
-		workOrder.setStatus(3); // 已评价
+		workOrder.setStatus(3);
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
@@ -125,28 +122,47 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 	}
 
 	/**
-	 * 受理/分派工单
-	 * @param id
-	 * @param handlerId
-	 * @return
+	 * 核心修改：分派工单
+	 * @param orderId 工单ID
+	 * @param workerId 执行工人ID (ROLE_WORKER)
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public boolean accept(Long id, Long handlerId) {
-		WorkOrder workOrder = workOrderMapper.selectById(id);
+	public boolean dispatch(Long orderId, Long workerId) {
+		WorkOrder workOrder = workOrderMapper.selectById(orderId);
 		if (workOrder == null || workOrder.getStatus() != 0) {
 			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_STATUS_ERROR);
 		}
-		workOrder.setHandlerId(handlerId);
+
+		// 记录谁派的单 (当前登录专员)
+		workOrder.setHandlerId(SecurityUtils.getUserId());
+		// 记录谁去干活 (选中的工人)
+		workOrder.setWorkerId(workerId);
+
 		workOrder.setAcceptTime(LocalDateTime.now());
-		workOrder.setStatus(1);
+		workOrder.setStatus(1); // 变为处理中
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
+	// ================== H5端：工人执行接口 ==================
+
 	/**
-	 * 处理反馈
-	 * @param dto
-	 * @return
+	 * 获取分配给当前工人的工单列表
+	 */
+	@Override
+	public PageResult<WorkOrderVO> getWorkerPage(WorkOrderPageQueryDTO dto) {
+		Long currentWorkerId = SecurityUtils.getUserId();
+		// 强制过滤只能看到自己的任务
+		dto.setWorkerId(currentWorkerId);
+		// 通常工人只关心待处理(status=1)的任务，如果前端没传状态，可以在此设置默认
+		if (dto.getStatus() == null) {
+			dto.setStatus(1);
+		}
+		return getPageResult(dto);
+	}
+
+	/**
+	 * 工人处理反馈
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -155,9 +171,21 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		if (workOrder == null || workOrder.getStatus() != 1) {
 			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_STATUS_ERROR);
 		}
+
+		// 安全校验：非管理员只能处理分配给自己的单子
+		Long currentUserId = SecurityUtils.getUserId();
+		if (!workOrder.getWorkerId().equals(currentUserId) && !SecurityUtils.isAdmin()) {
+			throw new BusinessException(ResponseCodeEnum.WORK_ORDER_NO_PERMISSION);
+		}
+
 		workOrder.setRemark(dto.getRemark());
+		// 如果工人上传了处理凭证图
+		if (StringUtils.isNotBlank(dto.getImages())) {
+			workOrder.setImages(dto.getImages());
+		}
+
 		workOrder.setFinishTime(LocalDateTime.now());
-		workOrder.setStatus(2);
+		workOrder.setStatus(2); // 变为已办结
 		return workOrderMapper.updateById(workOrder) > 0;
 	}
 
@@ -171,6 +199,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		return new PageResult<>(page.getTotal(), voList);
 	}
 
+	/**
+	 * 工单实体转VO
+	 */
 	private WorkOrderVO convertToVO(WorkOrder workOrder) {
 		WorkOrderVO vo = new WorkOrderVO();
 		BeanUtils.copyProperties(workOrder, vo);

@@ -35,7 +35,8 @@ public class WorkOrderVO {
 
 	private String remark;
 	private Long handlerId;
-	private String handlerName; // 冗余显示：处理人姓名
+	private String handlerName; // 冗余显示：受理人姓名
+	private String workerName; // 冗余显示：处理人姓名
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime acceptTime;

@@ -46,13 +46,14 @@ public interface WorkOrderService {
 	 */
 	PageResult<WorkOrderVO> getPage(WorkOrderPageQueryDTO dto);
 
+
 	/**
-	 * 受理/分派工单
-	 * @param id
-	 * @param handlerId
+	 * 分派工单
+	 * @param orderId 工单ID
+	 * @param workerId 处理人ID
 	 * @return
 	 */
-	boolean accept(Long id, Long handlerId);
+	boolean dispatch(Long orderId, Long workerId);
 
 	/**
 	 * 处理反馈
@@ -60,4 +61,11 @@ public interface WorkOrderService {
 	 * @return
 	 */
 	boolean process(WorkOrderProcessDTO dto);
+
+	/**
+	 * 获取处理中的工单分页
+	 * @param dto
+	 * @return
+	 */
+	PageResult<WorkOrderVO> getWorkerPage(WorkOrderPageQueryDTO dto);
 }

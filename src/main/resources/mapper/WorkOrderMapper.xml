@@ -6,13 +6,12 @@
 
     <sql id="Base_Column_List">
         w.id, w.order_no, w.enterprise_id, w.title, w.content, w.contact_person, w.contact_phone,
-        w.remark, w.type, w.status, w.accept_time, w.finish_time, w.handler_id,
+        w.remark, w.type, w.status, w.accept_time, w.finish_time, w.handler_id, w.worker_id,
         w.comment_text, w.score, w.images, w.create_time, w.update_time, w.is_deleted
     </sql>
 
     <resultMap id="WorkOrderResultMap" type="com.zone.domain.entity.WorkOrder">
         <id column="id" property="id"/>
-        <result column="user_id" property="userId"/>
         <result column="order_no" property="orderNo"/>
         <result column="enterprise_id" property="enterpriseId"/>
         <result column="title" property="title"/>
@@ -25,56 +24,65 @@
         <result column="accept_time" property="acceptTime"/>
         <result column="finish_time" property="finishTime"/>
         <result column="handler_id" property="handlerId"/>
+        <result column="worker_id" property="workerId"/>
         <result column="comment_text" property="commentText"/>
         <result column="score" property="score"/>
         <result column="images" property="images"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
         <result column="is_deleted" property="isDeleted"/>
-        <result column="company_name" property="enterpriseName"/>
+        <result column="enterprise_name" property="enterpriseName"/>
         <result column="handler_name" property="handlerName"/>
+        <result column="worker_name" property="workerName"/>
     </resultMap>
 
     <!-- 新增 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into biz_work_order (
-        order_no, enterprise_id, title, content, contact_person, contact_phone,
-        type, status, images, create_time, update_time, is_deleted
+            order_no, enterprise_id, title, content, contact_person, contact_phone,
+            type, status, images, create_time, update_time, is_deleted
         )
         values (
-        #{orderNo}, #{enterpriseId}, #{title}, #{content}, #{contactPerson}, #{contactPhone},
-        #{type}, #{status}, #{images}, NOW(), NOW(), 0
-        )
+                   #{orderNo}, #{enterpriseId}, #{title}, #{content}, #{contactPerson}, #{contactPhone},
+                   #{type}, #{status}, #{images}, NOW(), NOW(), 0
+               )
     </insert>
 
     <!-- 查询单个 -->
     <select id="selectById" resultMap="WorkOrderResultMap">
         select
         <include refid="Base_Column_List"/>,
-        e.company_name,
-        u.real_name as handler_name
+        e.company_name as enterprise_name,
+        u1.real_name as handler_name,
+        u2.real_name as worker_name
         from biz_work_order w
         left join biz_enterprise e on w.enterprise_id = e.id
-        left join sys_user u on w.handler_id = u.id
+        left join sys_user u1 on w.handler_id = u1.id
+        left join sys_user u2 on w.worker_id = u2.id
         where w.id = #{id} AND w.is_deleted = 0
     </select>
 
-    <!-- 查询分页 -->
+    <!-- 分页查询 -->
     <select id="getWorkOrderPage" resultMap="WorkOrderResultMap">
         select
         <include refid="Base_Column_List"/>,
-        e.company_name,
-        u.real_name as handler_name
+        e.company_name as enterprise_name,
+        u1.real_name as handler_name,
+        u2.real_name as worker_name
         from biz_work_order w
         left join biz_enterprise e on w.enterprise_id = e.id
-        left join sys_user u on w.handler_id = u.id
+        left join sys_user u1 on w.handler_id = u1.id
+        left join sys_user u2 on w.worker_id = u2.id
         <where>
-            AND w.is_deleted = 0
+            w.is_deleted = 0
             <if test="userId != null">
                 AND e.user_id = #{userId}
             </if>
             <if test="enterpriseId != null">
                 AND w.enterprise_id = #{enterpriseId}
+            </if>
+            <if test="workerId != null">
+                AND w.worker_id = #{workerId}
             </if>
             <if test="orderNo != null and orderNo != ''">
                 AND w.order_no like concat('%', #{orderNo}, '%')
@@ -111,13 +119,18 @@
             <if test="acceptTime != null">accept_time = #{acceptTime},</if>
             <if test="finishTime != null">finish_time = #{finishTime},</if>
             <if test="handlerId != null">handler_id = #{handlerId},</if>
-            <if test="comment_text != null">comment_text = #{commentText},</if>
+            <if test="workerId != null">worker_id = #{workerId},</if>
+            <if test="commentText != null">comment_text = #{commentText},</if>
             <if test="score != null">score = #{score},</if>
             <if test="images != null">images = #{images},</if>
-            <if test="is_deleted != null">is_deleted = #{isDeleted},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             update_time = NOW()
         </set>
         where id = #{id}
     </update>
+
+    <select id="getEnterpriseIdByUserId" resultType="java.lang.Long">
+        select id from biz_enterprise where user_id = #{userId} and status = 1 limit 1
+    </select>
 
 </mapper>

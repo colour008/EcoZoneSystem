@@ -7,6 +7,7 @@ import com.zone.domain.entity.User;
 import com.zone.domain.vo.UserVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: JamHoo
@@ -73,4 +74,10 @@ public interface UserService {
 	 * @return User
 	 */
 	User getById(Long id);
+
+	/**
+	 * 获取处理人列表
+	 * @return List<Map<String, Object>>
+	 */
+	List<Map<String, Object>> getWorkerList();
 }

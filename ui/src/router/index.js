@@ -68,12 +68,6 @@ const routes = [
                 meta: { title: '我的企业'}
             },
             {
-                path: 'work-order-detail/:id',
-                name: 'PortalWorkOrderDetail',
-                component: () => import('@/views/workorder/Detail.vue'),
-                meta: { title: '工单详情', requireAuth: true }
-            },
-            {
                 path: 'contact',
                 name: 'PortalContact',
                 component: () => import('@/views/portal/Contact.vue'),
