@@ -71,6 +71,19 @@
               {{ statusConfig[enterpriseStatus].text }}
             </el-tag>
           </div>
+
+          <el-button
+              v-if="isStaff && isMobile"
+              type="primary"
+              size="small"
+              round
+              icon="Document"
+              @click="router.push('/m/worker/list')"
+              style="margin-right: 12px;"
+          >
+            工单处理
+          </el-button>
+
           <el-popover
               v-if="userStore.token"
               placement="bottom-end"
@@ -197,20 +210,6 @@
               </div>
             </div>
           </el-popover>
-
-
-
-          <el-button
-              v-if="isStaff && isMobile"
-              type="primary"
-              size="small"
-              round
-              icon="Document"
-              @click="router.push('/m/worker/list')"
-              style="margin-right: 12px;"
-          >
-            工单处理
-          </el-button>
 
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-avatar-wrapper">
@@ -972,49 +971,7 @@ onUnmounted(() => {
   margin-right: 15px;
 }
 
-/* 基础菜单项样式优化 */
-.el-menu {
-  border-right: none;
-  padding: 0 !important;
-}
 
-.el-menu-item {
-  font-size: 14px;
-  padding: 0 20px !important;
-  height: 60px !important;
-  line-height: 60px !important;
-  color: #4b5563 !important; /* 非激活状态文字颜色 */
-  background: transparent !important;
-  position: relative;
-  display: flex;
-  justify-content: center; /* 居中对齐，匹配图片效果 */
-}
-
-/* 激活状态样式重写 */
-.el-menu-item.is-active {
-  color: #1677ff !important; /* 激活状态文字蓝色 */
-  font-weight: 600;
-  background: transparent !important;
-}
-
-/* 实现图片中的蓝色下划线指示器 */
-.el-menu-item.is-active::after {
-  content: "";
-  position: absolute;
-  bottom: 12px; /* 距离底部的距离 */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px; /* 下划线的宽度 */
-  height: 3px; /* 下划线的高度 */
-  background: #1677ff; /* 蓝色 */
-  border-radius: 4px; /* 圆角效果 */
-}
-
-/* 移除鼠标悬停时的背景色，保持干净 */
-.el-menu-item:hover {
-  background: rgba(22, 119, 255, 0.05) !important;
-  color: #1677ff !important;
-}
 /* ===================== 统一移动端响应式适配 ===================== */
 @media (max-width: 1024px) {
   .desktop-nav {
@@ -1040,7 +997,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: 25px;
   }
 
   .logo {
@@ -1066,6 +1023,50 @@ onUnmounted(() => {
   .auth-btns {
     transform: scale(0.9);
   }
+
+  /* 基础菜单项样式优化 */
+  .el-menu {
+    border-right: none;
+    padding: 0 !important;
+  }
+
+  .el-menu-item {
+    font-size: 14px;
+    padding: 0 20px !important;
+    height: 60px !important;
+    line-height: 60px !important;
+    color: #4b5563 !important; /* 非激活状态文字颜色 */
+    background: transparent !important;
+    position: relative;
+    display: flex;
+    justify-content: center; /* 居中对齐，匹配图片效果 */
+  }
+
+  /* 激活状态样式重写 */
+  .el-menu-item.is-active {
+    color: #1677ff !important; /* 激活状态文字蓝色 */
+    font-weight: 600;
+    background: transparent !important;
+  }
+
+  /* 实现图片中的蓝色下划线指示器 */
+  .el-menu-item.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 12px; /* 距离底部的距离 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px; /* 下划线的宽度 */
+    height: 3px; /* 下划线的高度 */
+    background: #1677ff; /* 蓝色 */
+    border-radius: 4px; /* 圆角效果 */
+  }
+
+  /* 移除鼠标悬停时的背景色，保持干净 */
+  .el-menu-item:hover {
+    background: rgba(22, 119, 255, 0.05) !important;
+    color: #1677ff !important;
+  }
 }
 
 @media (max-width: 375px) {
@@ -1079,6 +1080,50 @@ onUnmounted(() => {
 
   .logo-text {
     display: none;
+  }
+
+  /* 基础菜单项样式优化 */
+  .el-menu {
+    border-right: none;
+    padding: 0 !important;
+  }
+
+  .el-menu-item {
+    font-size: 14px;
+    padding: 0 20px !important;
+    height: 60px !important;
+    line-height: 60px !important;
+    color: #4b5563 !important; /* 非激活状态文字颜色 */
+    background: transparent !important;
+    position: relative;
+    display: flex;
+    justify-content: center; /* 居中对齐，匹配图片效果 */
+  }
+
+  /* 激活状态样式重写 */
+  .el-menu-item.is-active {
+    color: #1677ff !important; /* 激活状态文字蓝色 */
+    font-weight: 600;
+    background: transparent !important;
+  }
+
+  /* 实现图片中的蓝色下划线指示器 */
+  .el-menu-item.is-active::after {
+    content: "";
+    position: absolute;
+    bottom: 12px; /* 距离底部的距离 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px; /* 下划线的宽度 */
+    height: 3px; /* 下划线的高度 */
+    background: #1677ff; /* 蓝色 */
+    border-radius: 4px; /* 圆角效果 */
+  }
+
+  /* 移除鼠标悬停时的背景色，保持干净 */
+  .el-menu-item:hover {
+    background: rgba(22, 119, 255, 0.05) !important;
+    color: #1677ff !important;
   }
 }
 </style>
