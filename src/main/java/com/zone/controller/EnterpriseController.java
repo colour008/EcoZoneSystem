@@ -191,6 +191,16 @@ public class EnterpriseController {
 		return Result.success(enterpriseService.getPendingCount());
 	}
 
+	/**
+	 * 获取我的申请提醒数量
+	 */
+	@GetMapping("/mine/notice/count")
+	@Operation(summary = "C端-获取我的申请提醒数量", description = "统计当前用户的待审核(0)、已驳回(2)、迁出待审核(4)的数量")
+	public Result<Integer> getMyNoticeCount() {
+		log.info("查询当前登录用户的入驻通知数量");
+		return Result.success(enterpriseService.getMyNoticeCount());
+	}
+
 	/*
 	  TODO 租约到期预警，待完成通知公告业务后实现
 	 */

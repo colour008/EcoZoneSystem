@@ -44,6 +44,131 @@
         </div>
 
         <div v-else class="user-info">
+
+          <el-popover
+              v-if="userStore.token"
+              placement="bottom-end"
+              :width="320"
+              trigger="click"
+              popper-class="notice-center-popper"
+              :offset="15"
+          >
+            <template #reference>
+              <el-badge
+                  :value="totalNoticeCount"
+                  :max="99"
+                  :hidden="totalNoticeCount <= 0"
+                  class="notice-badge"
+                  style="margin-right: 20px;"
+              >
+                <el-icon class="notice-bell-icon">
+                  <Bell/>
+                </el-icon>
+              </el-badge>
+            </template>
+
+            <div class="notice-panel">
+              <div class="notice-panel-header">
+                <span class="title">待办通知</span>
+                <span class="count-tag" v-if="totalNoticeCount > 0">{{ totalNoticeCount }} 条提醒</span>
+              </div>
+
+              <div class="notice-panel-body">
+                <template v-if="isAdmin || isStaff">
+                  <div class="group-label">园区行政</div>
+                  <div class="notice-card" @click="handleNav('/business/enterprise/list')">
+                    <div class="card-icon ent-bg">
+                      <el-icon>
+                        <Monitor/>
+                      </el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">入驻（迁出）审核</div>
+                      <div class="value">{{ enterprisePendingCount }} <small>家待办</small></div>
+                    </div>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
+                  <el-divider style="margin: 8px 0"/>
+                </template>
+
+                <template v-if="isEnterprise && myEnterpriseNoticeCount > 0">
+                  <div class="group-label">入驻（迁出）进度</div>
+
+                  <div v-if="enterpriseStatus === 0 || enterpriseStatus === 4"
+                       class="notice-card" @click="handleNav('/my-enterprise')">
+                    <div class="card-icon ent-bg">
+                      <el-icon><Timer /></el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">{{ enterpriseStatus === 0 ? '入驻申请' : '迁出申请' }}</div>
+                      <div class="value">审核中<small>请耐心等待</small></div>
+                    </div>
+                    <el-icon class="arrow-right"><ArrowRight /></el-icon>
+                  </div>
+
+                  <div v-if="enterpriseStatus === 2"
+                       class="notice-card" @click="handleNav('/my-enterprise')">
+                    <div class="card-icon order-pending-bg">
+                      <el-icon><Warning /></el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">审核反馈</div>
+                      <div class="value" style="color: #f56c6c;">申请被驳回<small>请查看原因</small></div>
+                    </div>
+                    <el-icon class="arrow-right"><ArrowRight /></el-icon>
+                  </div>
+                </template>
+
+                <div v-if="isAdmin || isStaff" class="group-label">工单运维</div>
+
+                <div v-if="isAdmin || isStaff" class="notice-card" @click="handleNav('/business/workorder/list')">
+                  <div class="card-icon order-pending-bg">
+                    <el-icon>
+                      <Tools/>
+                    </el-icon>
+                  </div>
+                  <div class="card-info">
+                    <div class="label">待受理工单</div>
+                    <div class="value">{{ orderStats.pendingCount }} <small>个待分派</small></div>
+                  </div>
+                  <el-icon class="arrow-right">
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+
+                <div v-if="isAdmin || isStaff" class="notice-card" @click="handleNav('/business/workorder/list')">
+                  <div class="card-icon order-processing-bg">
+                    <el-icon>
+                      <Loading/>
+                    </el-icon>
+                  </div>
+                  <div class="card-info">
+                    <div class="label">待处理工单</div>
+                    <div class="value">{{ orderStats.processingCount }} <small>个待处理</small></div>
+                  </div>
+                  <el-icon class="arrow-right">
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+              </div>
+
+              <div class="notice-panel-footer" @click="fetchAllNotifications">
+                <el-icon>
+                  <Refresh/>
+                </el-icon>
+                <span>刷新数据</span>
+              </div>
+            </div>
+          </el-popover>
+
+          <div class="status-guide-area" style="margin-right: 20px;">
+          </div>
+
+          <el-dropdown trigger="click" @command="handleCommand">
+          </el-dropdown>
+
           <div class="status-guide-area" style="margin-right: 20px;">
             <el-button
                 v-if="enterpriseStatus === null || enterpriseStatus === 3 "
@@ -201,7 +326,18 @@
 import {ref, onMounted, onUnmounted, computed, watch} from 'vue'
 import {useRouter, useRoute} from 'vue-router'
 import {useUserStore} from '@/store/user'
-import {OfficeBuilding, ArrowDown, Plus, Menu} from '@element-plus/icons-vue'
+import workOrderApi from '@/api/workOrder'
+import {
+  OfficeBuilding,
+  ArrowDown,
+  Plus,
+  Menu,
+  Refresh,
+  ArrowRight,
+  Loading,
+  Tools,
+  Monitor, Bell, Warning, Timer
+} from '@element-plus/icons-vue'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import userApi from '@/api/user'
 import enterpriseApi from '@/api/enterprise'
@@ -210,6 +346,83 @@ import {uploadFile} from '@/utils/upload'
 const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
+
+// 定义统计数据响应式变量
+const enterprisePendingCount = ref(0)
+const myEnterpriseNoticeCount = ref(0)
+const orderStats = ref({
+  pendingCount: 0,
+  processingCount: 0
+})
+let noticeTimer = null
+
+// 计算总通知数
+const totalNoticeCount = computed(() => {
+  if (!userStore.token) return 0
+  let count = 0
+
+  // 管理员/职员逻辑
+  if (isAdmin.value || isStaff.value) {
+    count += (enterprisePendingCount.value || 0)
+    count += (orderStats.value.pendingCount || 0)
+    count += (orderStats.value.processingCount || 0)
+  }
+
+  // 企业用户逻辑 (加上新接口的返回数)
+  if (isEnterprise.value) {
+    count += (myEnterpriseNoticeCount.value || 0)
+  }
+
+  return count
+})
+
+// 获取数据的核心方法
+const fetchAllNotifications = async () => {
+  if (!userStore.token) return
+  const roles = userStore.roles || []
+  const isAdminOrStaff = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
+  const isEnterpriseUser = roles.includes('ROLE_ENTERPRISE')
+
+  try {
+    // 准备请求列表
+    const requests = [workOrderApi.getStatistics()]
+
+    // 如果是管理层，查全量待审核
+    if (isAdminOrStaff) {
+      requests.push(enterpriseApi.getPendingCount())
+    } else {
+      requests.push(Promise.resolve(null))
+    }
+
+    // 如果是企业用户，查个人通知数
+    if (isEnterpriseUser) {
+      requests.push(enterpriseApi.getMyNoticeCount())
+    } else {
+      requests.push(Promise.resolve(null))
+    }
+
+    const [orderRes, entPendingRes, myNoticeRes] = await Promise.all(requests)
+
+    if (orderRes.code === 200) orderStats.value = orderRes.data
+
+    // 管理端：更新全量待办
+    if (entPendingRes && entPendingRes.code === 200) {
+      enterprisePendingCount.value = entPendingRes.data
+    }
+
+    // 企业端：更新个人通知
+    if (myNoticeRes && myNoticeRes.code === 200) {
+      myEnterpriseNoticeCount.value = myNoticeRes.data
+    }
+  } catch (error) {
+    console.error('同步通知数据失败', error)
+  }
+}
+
+// 处理通知点击跳转 (根据路由结构调整)
+const handleNav = (path) => {
+  router.push(path)
+}
 
 // 移动端抽屉状态
 const drawerVisible = ref(false)
@@ -376,11 +589,16 @@ const confirmLogout = () => {
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleResize)
+  if (userStore.token) {
+    fetchAllNotifications()
+    noticeTimer = setInterval(fetchAllNotifications, 60000)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleResize)
+  if (noticeTimer) clearInterval(noticeTimer)
 })
 </script>
 
@@ -588,6 +806,156 @@ onUnmounted(() => {
 :deep(.my-divider .el-divider__text) {
   font-size: 13px;
   color: #f56c6c;
+}
+
+
+/* 通知铃铛基础样式 */
+.notice-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.3s;
+}
+
+.notice-bell-icon {
+  font-size: 22px;
+  color: #606266;
+  transition: all 0.3s;
+}
+
+.notice-badge:hover .notice-bell-icon {
+  color: #409EFF;
+  transform: scale(1.1) rotate(15deg);
+}
+
+/* 小红点右上角精准定位 */
+:deep(.el-badge__content.is-fixed) {
+  top: 4px !important;
+  right: 4px !important;
+  transform: translateY(-50%) translateX(50%) scale(0.8);
+  border: none;
+  background-color: #f56c6c;
+  box-shadow: 0 0 4px rgba(245, 108, 108, 0.4);
+  z-index: 10;
+}
+
+/* 下拉面板全局样式（需使用 :global 因为 Popper 挂载在 body） */
+:global(.notice-center-popper) {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.notice-panel-header {
+  padding: 14px 16px;
+  background: #f8faff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.notice-panel-header .title {
+  font-weight: 600;
+  color: #1d2129;
+  font-size: 14px;
+}
+
+.count-tag {
+  font-size: 10px;
+  background: #ff4d4f;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.notice-panel-body {
+  padding: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.group-label {
+  font-size: 11px;
+  color: #86909c;
+  padding: 6px 8px;
+}
+
+.notice-card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notice-card:hover {
+  background: #f2f3f5;
+}
+
+.card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  margin-right: 12px;
+}
+
+.ent-bg {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.order-pending-bg {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.order-processing-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-info .label {
+  font-size: 12px;
+  color: #4e5969;
+}
+
+.card-info .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.card-info .value small {
+  font-weight: 400;
+  font-size: 11px;
+  color: #86909c;
+  margin-left: 2px;
+}
+
+.arrow-right {
+  margin-left: auto;
+  color: #c9cdd4;
+  font-size: 14px;
+}
+
+.notice-panel-footer {
+  padding: 10px;
+  text-align: center;
+  color: #409eff;
+  font-size: 12px;
+  cursor: pointer;
+  border-top: 1px solid #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* 移动端汉堡按钮 */

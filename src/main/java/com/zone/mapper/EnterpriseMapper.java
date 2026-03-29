@@ -36,4 +36,12 @@ public interface EnterpriseMapper {
 	int deleteByIds(@Param("ids") List<Long> ids); // 删除企业
 
 	int countPendingApplications(); // 获取待审核企业数量
+
+	/**
+	 * 根据用户ID和状态列表统计数量
+	 * @param userId 用户ID
+	 * @param statusList 状态列表
+	 * @return 统计结果
+	 */
+	int countByUserIdAndStatus(@Param("userId") Long userId, @Param("statusList") List<Integer> statusList);
 }

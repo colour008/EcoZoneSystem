@@ -163,6 +163,16 @@ const enterpriseApi = {
             url: '/enterprise/pending/count',
             method: 'get'
         })
+    },
+
+    /**
+     * C端-获取我的申请提醒数量 (统计状态 0, 2, 4)
+     */
+    getMyNoticeCount() {
+        return request({
+            url: '/enterprise/mine/notice/count',
+            method: 'get'
+        })
     }
 }
 

@@ -132,4 +132,11 @@ public interface EnterpriseService {
 	 * @return
 	 */
 	PageResult<EnterpriseShowVO> getEnterpriseShowPage(EnterprisePageQueryDTO dto);
+
+	/**
+	 * 获取当前用户通知数量
+	 *
+	 * @return
+	 */
+	int getMyNoticeCount();
 }

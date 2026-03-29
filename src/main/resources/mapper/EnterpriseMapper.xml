@@ -172,4 +172,14 @@
         WHERE status = 0 OR status = 4
     </select>
 
+    <select id="countByUserIdAndStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM biz_enterprise
+        WHERE user_id = #{userId}
+        AND status IN
+        <foreach collection="statusList" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+    </select>
+
 </mapper>

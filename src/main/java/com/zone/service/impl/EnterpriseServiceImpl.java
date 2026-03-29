@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -440,5 +441,18 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 			log.info("管理员审核迁出申请完成 - ID: {}, 结果: {}", id, status);
 		}
 		return rows > 0;
+	}
+
+	/**
+	 * 获取当前用户待处理的通知数量
+	 *
+	 * @return
+	 */
+	@Override
+	public int getMyNoticeCount() {
+		Long currentUserId = SecurityUtils.getUserId();
+		// 统计 0:待审核, 2:已驳回, 4:迁出待审核
+		List<Integer> statusList = Arrays.asList(0, 2, 4);
+		return enterpriseMapper.countByUserIdAndStatus(currentUserId, statusList);
 	}
 }
