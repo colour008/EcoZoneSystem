@@ -131,8 +131,26 @@
         where id = #{id}
     </update>
 
+    <!-- 根据当前用户 ID 获取其关联的企业 ID -->
     <select id="getEnterpriseIdByUserId" resultType="java.lang.Long">
         select id from biz_enterprise where user_id = #{userId} and status = 1 limit 1
     </select>
 
+    <!-- 工单统计 -->
+    <select id="countStatusByCondition" resultType="java.util.Map">
+        SELECT
+        status,
+        COUNT(1) as count
+        FROM biz_work_order w
+        <where>
+            w.is_deleted = 0
+            <if test="workerId != null">
+                AND w.worker_id = #{workerId}
+            </if>
+            <if test="enterpriseId != null">
+                AND w.enterprise_id = #{enterpriseId}
+            </if>
+        </where>
+        GROUP BY status
+    </select>
 </mapper>

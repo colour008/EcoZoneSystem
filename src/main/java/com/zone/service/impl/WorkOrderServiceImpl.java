@@ -10,6 +10,7 @@ import com.zone.domain.dto.WorkOrderEvaluateDTO;
 import com.zone.domain.dto.WorkOrderPageQueryDTO;
 import com.zone.domain.dto.WorkOrderProcessDTO;
 import com.zone.domain.entity.WorkOrder;
+import com.zone.domain.vo.WorkOrderStatsVO;
 import com.zone.domain.vo.WorkOrderVO;
 import com.zone.mapper.WorkOrderMapper;
 import com.zone.service.WorkOrderService;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -248,4 +250,43 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 		return new ArrayList<>();
 	}
 
+
+	/**
+	 * 工单状态统计
+	 */
+	@Override
+	public WorkOrderStatsVO getStatistics() {
+		Long currentUserId = SecurityUtils.getUserId();
+		List<String> roles = SecurityUtils.getRoleCodes();
+
+		// 初始化查询参数 DTO
+		WorkOrderPageQueryDTO queryDTO = new WorkOrderPageQueryDTO();
+
+		// 逻辑：如果是工人角色且不是管理员，则只统计分配给自己的
+		boolean isAdmin = roles.contains("ROLE_ADMIN") || roles.contains("ROLE_STAFF");
+		boolean isWorker = roles.contains("ROLE_WORKER");
+
+		if (isWorker && !isAdmin) {
+			queryDTO.setWorkerId(currentUserId);
+		}
+		// 注意：如果是管理员，则 queryDTO 的 workerId 为空，MyBatis 会统计全表
+
+		// 调用 Mapper 查询各状态的数量
+		List<Map<String, Object>> statsMapList = workOrderMapper.countStatusByCondition(queryDTO);
+
+		// 将数据库返回的 List<Map> 转换为 VO
+		WorkOrderStatsVO vo = new WorkOrderStatsVO();
+		for (Map<String, Object> map : statsMapList) {
+			Integer status = (Integer) map.get("status");
+			Long count = (Long) map.get("count");
+
+			switch (status) {
+				case 0: vo.setPendingCount(count); break;
+				case 1: vo.setProcessingCount(count); break;
+				case 2: vo.setCompletedCount(count); break;
+				case 3: vo.setEvaluatedCount(count); break;
+			}
+		}
+		return vo;
+	}
 }

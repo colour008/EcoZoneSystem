@@ -41,7 +41,7 @@
 
           <el-tooltip content="返回门户首页" placement="bottom">
             <el-icon @click="router.push('/home')" style="color: #409EFF;">
-              <Monitor />
+              <Monitor/>
             </el-icon>
           </el-tooltip>
 
@@ -50,11 +50,95 @@
             <Aim v-else/>
           </el-icon>
 
-          <el-badge :value="pendingCount" :max="99" :hidden="pendingCount <= 0" class="notice-badge">
-            <el-icon title="通知" @click="handleNoticeClick" style="cursor: pointer;">
-              <Bell/>
-            </el-icon>
-          </el-badge>
+          <el-popover
+              placement="bottom-end"
+              :width="320"
+              trigger="click"
+              popper-class="notice-center-popper"
+              :offset="12"
+          >
+            <template #reference>
+              <el-badge
+                  :value="totalNoticeCount"
+                  :max="99"
+                  :hidden="totalNoticeCount <= 0"
+                  class="notice-badge"
+              >
+                <el-icon class="notice-bell-icon">
+                  <Bell/>
+                </el-icon>
+              </el-badge>
+            </template>
+
+            <div class="notice-panel">
+              <div class="notice-panel-header">
+                <span class="title">待办通知</span>
+                <span class="count-tag" v-if="totalNoticeCount > 0">{{ totalNoticeCount }} 条新提醒</span>
+              </div>
+
+              <div class="notice-panel-body">
+                <template v-if="userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')">
+                  <div class="group-label">园区行政</div>
+                  <div class="notice-card" @click="handleNav('/business/enterprise/list')">
+                    <div class="card-icon ent-bg">
+                      <el-icon>
+                        <Monitor/>
+                      </el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">入驻（迁出）企业审核</div>
+                      <div class="value">{{ enterprisePendingCount }} <small>家待处理</small></div>
+                    </div>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
+                  <el-divider/>
+                </template>
+
+                <div class="group-label">工单运维</div>
+
+                <div v-if="userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')"
+                     class="notice-card" @click="handleNav('/business/workorder/list')">
+                  <div class="card-icon order-pending-bg">
+                    <el-icon>
+                      <Tools/>
+                    </el-icon>
+                  </div>
+                  <div class="card-info">
+                    <div class="label">待受理工单</div>
+                    <div class="value">{{ orderStats.pendingCount }} <small>个待分派</small></div>
+                  </div>
+                  <el-icon class="arrow-right">
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+
+                <div class="notice-card"
+                     @click="handleNav('/business/workorder/list')">
+                  <div class="card-icon order-processing-bg">
+                    <el-icon>
+                      <Loading/>
+                    </el-icon>
+                  </div>
+                  <div class="card-info">
+                    <div class="label">待处理工单</div>
+                    <div class="value">{{ orderStats.processingCount }} <small>个待处理</small></div>
+                  </div>
+                  <el-icon class="arrow-right">
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+              </div>
+
+              <div class="notice-panel-footer" @click="fetchAllNotifications">
+                <el-icon>
+                  <Refresh/>
+                </el-icon>
+                <span>刷新数据</span>
+              </div>
+            </div>
+          </el-popover>
         </div>
 
         <el-dropdown trigger="click">
@@ -193,16 +277,67 @@ import {useRoute, useRouter} from 'vue-router'
 import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
-  Fold, Expand, ArrowDown, Odometer, House, Setting, Key,
-  Search, FullScreen, Bell, User, SwitchButton, Aim, Plus, UserFilled, Monitor
+  Fold, Expand, ArrowDown, FullScreen, Bell, User, SwitchButton, Aim, Plus, Monitor, ArrowRight, Tools, Loading, Refresh
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
 import {resolvePath} from '@/utils/path'
 import enterpriseApi from '@/api/enterprise'
+import workOrderApi from '@/api/workOrder'
 
-const pendingCount = ref(0)
+
+// 1. 响应式数据
+const enterprisePendingCount = ref(0) // 原有的企业审核数
+const orderStats = ref({
+  pendingCount: 0,   // 待受理
+  processingCount: 0 // 处理中
+})
+
 let timer = null
+
+// 2. 计算总通知数（小红点显示的数字）
+const totalNoticeCount = computed(() => {
+  const roles = userStore.roles || []
+  const isAdmin = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
+
+  let total = 0
+  // 管理员累加：企业审核 + 待受理工单 + 处理中工单
+  if (isAdmin) {
+    total = enterprisePendingCount.value + orderStats.value.pendingCount + orderStats.value.processingCount
+  } else if (roles.includes('ROLE_WORKER')) {
+    // 工人仅累加：分配给自己的处理中工单
+    total = orderStats.value.processingCount
+  }
+  return total
+})
+
+// 3. 整合获取所有统计数据
+const fetchAllNotifications = async () => {
+  const roles = userStore.roles || []
+  const isAdmin = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
+
+  try {
+    // 并行请求：企业审核数 + 工单统计数
+    const [orderRes, entRes] = await Promise.all([
+      workOrderApi.getStatistics(),
+      isAdmin ? enterpriseApi.getPendingCount() : Promise.resolve({data: 0})
+    ])
+
+    if (orderRes.code === 200) {
+      orderStats.value = orderRes.data
+    }
+    if (entRes && entRes.code === 200) {
+      enterprisePendingCount.value = entRes.data
+    }
+  } catch (error) {
+    console.error('同步通知数据失败', error)
+  }
+}
+
+// 4. 处理跳转
+const handleNav = (path) => {
+  router.push(path)
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -414,12 +549,10 @@ onMounted(() => {
   }
 
   // 初始获取一次
-  fetchPendingCount()
+  fetchAllNotifications()
 
   // 每隔 1 分钟轮询一次
-  timer = setInterval(() => {
-    fetchPendingCount()
-  }, 60000)
+  timer = setInterval(fetchAllNotifications, 60000)
 })
 
 // 新增：组件卸载时清理定时器
@@ -637,14 +770,6 @@ onUnmounted(() => {
   overflow: visible !important;
 }
 
-.notice-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-}
-
 :deep(.el-badge__content.is-fixed) {
   top: 2px !important;
   right: 1px !important;
@@ -668,5 +793,162 @@ onUnmounted(() => {
 .header-action-icons .el-icon:hover {
   transform: scale(1.1);
   color: #409EFF; /* 悬浮时变蓝 */
+}
+
+/* 隐藏全局 Popper 的默认 padding 以便自定义 */
+:global(.notice-center-popper) {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.notice-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-panel-header {
+  padding: 16px;
+  background: #f8faff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
+  border-radius: 12px 12px 0 0;
+}
+
+.notice-panel-header .title {
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.count-tag {
+  font-size: 11px;
+  background: #ff4d4f;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.notice-panel-body {
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.group-label {
+  font-size: 12px;
+  color: #86909c;
+  padding: 4px 8px 8px;
+  font-weight: 500;
+}
+
+.notice-card {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 4px;
+}
+
+.notice-card:hover {
+  background: #f2f3f5;
+}
+
+.notice-card:hover .arrow-right {
+  transform: translateX(3px);
+  color: #409eff;
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+/* 渐变背景 */
+.ent-bg {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.order-pending-bg {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.order-processing-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-info .label {
+  font-size: 13px;
+  color: #4e5969;
+}
+
+.card-info .value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.card-info .value small {
+  font-weight: 400;
+  font-size: 12px;
+  color: #86909c;
+}
+
+.arrow-right {
+  margin-left: auto;
+  color: #c9cdd4;
+  transition: all 0.3s;
+}
+
+.notice-panel-footer {
+  padding: 12px;
+  text-align: center;
+  color: #409eff;
+  font-size: 13px;
+  cursor: pointer;
+  border-top: 1px solid #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.notice-panel-footer:hover {
+  background: #f0f7ff;
+}
+
+/* 小红点位置微调 */
+.notice-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1; /* 防止行高影响定位 */
+}
+
+:deep(.el-badge__content.is-fixed) {
+  top: 4px !important;      /* 距离顶部的距离，数值越小越靠上 */
+  right: 6px !important;    /* 距离右侧的距离，数值越小越靠右 */
+  transform: translateY(-50%) translateX(50%) scale(0.85);
+  border: none;             /* 去掉白色边框，更高级 */
+  box-shadow: 0 0 4px rgba(255, 77, 79, 0.3); /* 淡淡的红光阴影 */
+  z-index: 10;
+}
+
+
+.notice-badge:hover .notice-bell-icon {
+  background: transparent;
+  color: #409EFF;
+  transform: rotate(15deg); /* 悬浮时轻轻倾斜，增加动感 */
 }
 </style>

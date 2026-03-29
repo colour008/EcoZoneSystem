@@ -5,6 +5,7 @@ import com.zone.domain.dto.WorkOrderDTO;
 import com.zone.domain.dto.WorkOrderEvaluateDTO;
 import com.zone.domain.dto.WorkOrderPageQueryDTO;
 import com.zone.domain.dto.WorkOrderProcessDTO;
+import com.zone.domain.vo.WorkOrderStatsVO;
 import com.zone.domain.vo.WorkOrderVO;
 
 /**
@@ -75,4 +76,10 @@ public interface WorkOrderService {
 	 * @return
 	 */
 	WorkOrderVO getById(Long id);
+
+	/**
+	 * 获取工单统计数据
+	 * @return
+	 */
+	WorkOrderStatsVO getStatistics();
 }

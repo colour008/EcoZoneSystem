@@ -96,6 +96,17 @@ const workOrderApi = {
             url: `/work-order/${id}`, // 这里的路径根据你后端的实际详情接口修改
             method: 'get'
         })
+    },
+
+    /**
+     * 新增：获取工单状态统计数量
+     * 用于通知中心展示待受理和处理中的数量
+     */
+    getStatistics() {
+        return request({
+            url: '/work-order/statistics',
+            method: 'get'
+        })
     }
 }
 

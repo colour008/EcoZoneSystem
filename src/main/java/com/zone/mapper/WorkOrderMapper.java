@@ -7,6 +7,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @Author:     JamHoo
  * @Description: 工单映射接口
@@ -46,4 +49,11 @@ public interface WorkOrderMapper {
 
 	// 根据当前用户 ID 获取其关联的企业 ID
 	Long getEnterpriseIdByUserId(@Param("userId") Long userId);
+
+	/**
+	 * 统计工单状态数量
+	 * @param queryDTO
+	 * @return
+	 */
+	List<Map<String, Object>> countStatusByCondition(WorkOrderPageQueryDTO queryDTO);
 }

@@ -6,6 +6,7 @@ import com.zone.domain.dto.WorkOrderDTO;
 import com.zone.domain.dto.WorkOrderEvaluateDTO;
 import com.zone.domain.dto.WorkOrderPageQueryDTO;
 import com.zone.domain.dto.WorkOrderProcessDTO;
+import com.zone.domain.vo.WorkOrderStatsVO;
 import com.zone.domain.vo.WorkOrderVO;
 import com.zone.service.WorkOrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,7 +59,7 @@ public class WorkOrderController {
     }
 
     /**
-     * 接收参数：orderId (工单ID), workerId (选中的工人ID)
+     * 接收参数：orderId (工单ID), workerId (选中的园区工人ID)
      */
     @PutMapping("/dispatch")
     @Operation(summary = "B端-委派工单", description = "专员将工单指派给具体的执行工人")
@@ -73,20 +74,20 @@ public class WorkOrderController {
     }
 
 
-    // ================== H5端：工人执行接口 (移动端) ==================
+    // ================== H5端：园区工人执行接口 (移动端) ==================
 
     /**
-     * 新增：供工人在 H5 端查看分配给自己的任务
+     * 供园区工人在 H5 端查看分配给自己的任务
      */
     @GetMapping("/worker/page")
     @Operation(summary = "H5端-获取工人自己的待办工单")
     public Result<PageResult<WorkOrderVO>> getWorkerPage(WorkOrderPageQueryDTO dto) {
-        // 在 Service 层会通过 SecurityContext 获取当前登录工人的 workerId
+        // 在 Service 层会通过 SecurityContext 获取当前登录园区工人的 workerId
         return Result.success(workOrderService.getWorkerPage(dto));
     }
 
     /**
-     * 新增：供工人在 H5 端处理反馈
+     * 供园区工人在 H5 端处理反馈
      */
     @PutMapping("/process")
     @Operation(summary = "B端/H5端-处理反馈", description = "工人提交处理结果和凭证，状态变为已办结")
@@ -98,7 +99,7 @@ public class WorkOrderController {
 
 
     /**
-     * 新增：供工人在 H5 端查看工单详情
+     * 供园区工人在 H5 端查看工单详情
      */
     @GetMapping("/{id}")
     @Operation(summary = "获取工单详情", description = "根据ID获取工单的详细信息，包括图片列表")
@@ -106,5 +107,15 @@ public class WorkOrderController {
         log.info("查询工单详情, id: {}", id);
         WorkOrderVO workOrderVO = workOrderService.getById(id);
         return Result.success(workOrderVO);
+    }
+
+    /**
+     * 工单状态统计
+     */
+    @GetMapping("/statistics")
+    @Operation(summary = "获取工单状态统计", description = "根据角色自动返回统计数量：管理员和园区管理员看全员，园区工人看自己")
+    public Result<WorkOrderStatsVO> getStatistics() {
+        log.info("查询工单状态统计数据");
+        return Result.success(workOrderService.getStatistics());
     }
 }
