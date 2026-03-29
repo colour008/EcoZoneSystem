@@ -486,8 +486,7 @@ onMounted(() => {
 }
 
 .rich-content-view {
-  padding: 8px 12px;
-  background-color: #f8f9fa;
+  padding: 8px 0;
   border-radius: 4px;
   font-size: 13px;
   line-height: 1.6;
