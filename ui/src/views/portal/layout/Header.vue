@@ -74,7 +74,7 @@
               </div>
 
               <div class="notice-panel-body">
-                <template v-if="isAdmin || isStaff">
+                <template v-if="isAdmin || userStore.roles.includes('ROLE_STAFF')">
                   <div class="group-label">园区行政</div>
                   <div class="notice-card" @click="handleNav('/business/enterprise/list')">
                     <div class="card-icon ent-bg">
@@ -123,7 +123,7 @@
 
                 <div v-if="isAdmin || isStaff" class="group-label">工单运维</div>
 
-                <div v-if="isAdmin || isStaff" class="notice-card" @click="handleNav('/business/workorder/list')">
+                <div v-if="isAdmin || userStore.roles.includes('ROLE_STAFF')" class="notice-card" @click="handleNav('/business/workorder/list')">
                   <div class="card-icon order-pending-bg">
                     <el-icon>
                       <Tools/>
