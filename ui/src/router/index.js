@@ -95,9 +95,16 @@ const routes = [
         path: '/m',
         name: 'MobileLayout',
         component: () => import('@/views/mobile/Layout.vue'),
-        redirect: '/m/worker/list',
+        redirect: '/m/profile',
         meta: {requireAuth: true, isMobile: true},
         children: [
+            // --- 公共部分 ---
+            {
+                path: 'profile',
+                name: 'MobileProfile',
+                component: () => import('@/views/mobile/Profile.vue'),
+                meta: {title: '个人中心'}
+            },
             // 工人端页面
             {
                 path: 'worker/list',

@@ -13,10 +13,10 @@
       </template>
 
       <template v-if="userStore.roles.includes('ROLE_WORKER')">
-        <van-tabbar-item icon="orders-o" to="/m/worker/list">任务大厅</van-tabbar-item>
+        <van-tabbar-item icon="orders-o" to="/m/worker/list">工单列表</van-tabbar-item>
       </template>
 
-      <van-tabbar-item icon="user-o" to="/index">管理后台</van-tabbar-item>
+      <van-tabbar-item icon="user-o" to="/m/profile">个人中心</van-tabbar-item>
     </van-tabbar>
   </div>
 </template>

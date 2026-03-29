@@ -1,6 +1,6 @@
 <template>
   <div class="m-worker-container">
-    <van-nav-bar title="任务大厅" fixed placeholder/>
+    <van-nav-bar title="工单列表" fixed placeholder/>
 
     <van-tabs v-model:active="activeStatus" @change="onTabChange" sticky offset-top="46px">
       <van-tab title="待处理" name="1"/>
@@ -41,7 +41,7 @@
 
           <div class="card-footer">
             <span class="status-dot" :class="item.status === 1 ? 'active' : ''"></span>
-            <span class="status-text">{{ item.status === 1 ? '处理中' : '已结案' }}</span>
+            <span class="status-text">{{ item.status === 1 ? '处理中' : '已办结' }}</span>
             <van-button
                 size="small"
                 round

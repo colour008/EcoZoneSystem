@@ -95,7 +95,7 @@
 
         <div class="submit-box">
           <van-button round block type="primary" @click="handleComplete" :loading="submitting">
-            提交反馈并结案
+            提交反馈并办结
           </van-button>
         </div>
       </div>

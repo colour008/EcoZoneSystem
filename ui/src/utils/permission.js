@@ -9,7 +9,8 @@ import {ElMessage} from "element-plus";
 const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact', '/notice']
 const modules = import.meta.glob('../views/**/*.vue')
 
-router.beforeEach(async (to, from, next) => {
+// 移除 next 参数，改用 return 返回值
+router.beforeEach(async (to, from) => {
     NProgress.start()
 
     const baseTitle = '经济开发区管理平台'
@@ -20,7 +21,7 @@ router.beforeEach(async (to, from, next) => {
 
     if (hasToken) {
         if (to.path === '/login') {
-            next({path: '/home'})
+            return {path: '/home'}
         } else {
             // 2. 检查动态路由是否已加载
             if (userStore.routes.length === 0) {
@@ -37,7 +38,7 @@ router.beforeEach(async (to, from, next) => {
                         path: '/index/dashboard',
                         name: 'Dashboard',
                         component: () => import('@/views/dashboard/Index.vue'),
-                        meta: { title: dashboardTitle, icon: 'House' }
+                        meta: {title: dashboardTitle, icon: 'House'}
                     })
                     const dashboardMenu = {
                         path: '/index/dashboard',
@@ -75,11 +76,11 @@ router.beforeEach(async (to, from, next) => {
                         redirect: '/404'
                     })
 
-                    next({...to, replace: true})
+                    return {...to, replace: true}
                 } catch (error) {
                     console.error('路由加载失败', error)
                     userStore.logout()
-                    next(`/login?redirect=${to.path}`)
+                    return `/login?redirect=${to.path}`
                 }
             } else {
                 // 5. 角色权限拦截 (针对移动端 /m 路径的简单拦截)
@@ -88,17 +89,17 @@ router.beforeEach(async (to, from, next) => {
                     !userStore.roles.includes('ROLE_STAFF') &&
                     !userStore.roles.includes('ROLE_ADMIN')) {
                     ElMessage.error('您没有权限访问工人端')
-                    return next({path: '/home'})
+                    return {path: '/home'}
                 }
-                next()
+                return true
             }
         }
     } else {
         // 6. 未登录处理
         if (whiteList.includes(to.path)) {
-            next()
+            return true
         } else {
-            next(`/login?redirect=${to.path}`)
+            return `/login?redirect=${to.path}`
         }
     }
 })
