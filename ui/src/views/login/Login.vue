@@ -294,7 +294,7 @@ const handleLogin = async () => {
           router.push('/m/worker/list')
         } else {
           // PC端：强制跳管理工作台，不使用redirect
-          router.push('/index/dashboard')
+          router.push('/home')
         }
         return
       }

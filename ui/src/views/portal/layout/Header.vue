@@ -45,6 +45,32 @@
 
         <div v-else class="user-info">
 
+          <div class="status-guide-area" style="margin-right: 20px;">
+            <el-button
+                v-if="(enterpriseStatus === null || enterpriseStatus === 3)&& isEnterprise "
+                type="primary"
+                size="small"
+                plain
+                round
+                icon="Plus"
+                class="guide-btn"
+                @click="router.push('/my-enterprise')"
+            >
+              立即入驻
+            </el-button>
+
+            <el-tag
+                v-else-if="statusConfig[enterpriseStatus]"
+                :type="statusConfig[enterpriseStatus].type"
+                size="small"
+                effect="light"
+                round
+                class="status-tag"
+                @click="router.push('/my-enterprise')"
+            >
+              {{ statusConfig[enterpriseStatus].text }}
+            </el-tag>
+          </div>
           <el-popover
               v-if="userStore.token"
               placement="bottom-end"
@@ -99,31 +125,40 @@
                   <div v-if="enterpriseStatus === 0 || enterpriseStatus === 4"
                        class="notice-card" @click="handleNav('/my-enterprise')">
                     <div class="card-icon ent-bg">
-                      <el-icon><Timer /></el-icon>
+                      <el-icon>
+                        <Timer/>
+                      </el-icon>
                     </div>
                     <div class="card-info">
                       <div class="label">{{ enterpriseStatus === 0 ? '入驻申请' : '迁出申请' }}</div>
                       <div class="value">审核中<small>请耐心等待</small></div>
                     </div>
-                    <el-icon class="arrow-right"><ArrowRight /></el-icon>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
                   </div>
 
                   <div v-if="enterpriseStatus === 2"
                        class="notice-card" @click="handleNav('/my-enterprise')">
                     <div class="card-icon order-pending-bg">
-                      <el-icon><Warning /></el-icon>
+                      <el-icon>
+                        <Warning/>
+                      </el-icon>
                     </div>
                     <div class="card-info">
                       <div class="label">审核反馈</div>
                       <div class="value" style="color: #f56c6c;">申请被驳回<small>请查看原因</small></div>
                     </div>
-                    <el-icon class="arrow-right"><ArrowRight /></el-icon>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
                   </div>
                 </template>
 
                 <div v-if="isAdmin || isStaff" class="group-label">工单运维</div>
 
-                <div v-if="isAdmin || userStore.roles.includes('ROLE_STAFF')" class="notice-card" @click="handleNav('/business/workorder/list')">
+                <div v-if="isAdmin || userStore.roles.includes('ROLE_STAFF')" class="notice-card"
+                     @click="handleNav('/business/workorder/list')">
                   <div class="card-icon order-pending-bg">
                     <el-icon>
                       <Tools/>
@@ -163,38 +198,7 @@
             </div>
           </el-popover>
 
-          <div class="status-guide-area" style="margin-right: 20px;">
-          </div>
 
-          <el-dropdown trigger="click" @command="handleCommand">
-          </el-dropdown>
-
-          <div class="status-guide-area" style="margin-right: 20px;">
-            <el-button
-                v-if="enterpriseStatus === null || enterpriseStatus === 3 "
-                type="primary"
-                size="small"
-                plain
-                round
-                icon="Plus"
-                class="guide-btn"
-                @click="router.push('/my-enterprise')"
-            >
-              立即入驻
-            </el-button>
-
-            <el-tag
-                v-else-if="statusConfig[enterpriseStatus]"
-                :type="statusConfig[enterpriseStatus].type"
-                size="small"
-                effect="light"
-                round
-                class="status-tag"
-                @click="router.push('/my-enterprise')"
-            >
-              {{ statusConfig[enterpriseStatus].text }}
-            </el-tag>
-          </div>
 
           <el-button
               v-if="isStaff && isMobile"
@@ -968,6 +972,49 @@ onUnmounted(() => {
   margin-right: 15px;
 }
 
+/* 基础菜单项样式优化 */
+.el-menu {
+  border-right: none;
+  padding: 0 !important;
+}
+
+.el-menu-item {
+  font-size: 14px;
+  padding: 0 20px !important;
+  height: 60px !important;
+  line-height: 60px !important;
+  color: #4b5563 !important; /* 非激活状态文字颜色 */
+  background: transparent !important;
+  position: relative;
+  display: flex;
+  justify-content: center; /* 居中对齐，匹配图片效果 */
+}
+
+/* 激活状态样式重写 */
+.el-menu-item.is-active {
+  color: #1677ff !important; /* 激活状态文字蓝色 */
+  font-weight: 600;
+  background: transparent !important;
+}
+
+/* 实现图片中的蓝色下划线指示器 */
+.el-menu-item.is-active::after {
+  content: "";
+  position: absolute;
+  bottom: 12px; /* 距离底部的距离 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px; /* 下划线的宽度 */
+  height: 3px; /* 下划线的高度 */
+  background: #1677ff; /* 蓝色 */
+  border-radius: 4px; /* 圆角效果 */
+}
+
+/* 移除鼠标悬停时的背景色，保持干净 */
+.el-menu-item:hover {
+  background: rgba(22, 119, 255, 0.05) !important;
+  color: #1677ff !important;
+}
 /* ===================== 统一移动端响应式适配 ===================== */
 @media (max-width: 1024px) {
   .desktop-nav {
@@ -989,15 +1036,19 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .header-container {
-    padding: 0 15px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
   }
 
   .logo {
-    gap: 8px;
+    gap: 1px;
   }
 
   .logo-text {
-    font-size: 16px;
+    display: none;
   }
 
   .status-guide-area {
@@ -1018,6 +1069,14 @@ onUnmounted(() => {
 }
 
 @media (max-width: 375px) {
+  .header-container {
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
   .logo-text {
     display: none;
   }
