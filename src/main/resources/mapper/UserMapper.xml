@@ -68,9 +68,9 @@
 
     <!--    删除用户-->
     <delete id="deleteByIds">
-        delete from sys_user
-        where id in
-        <foreach collection="list" item="id" open="(" separator="," close=")">
+        DELETE FROM sys_user
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
     </delete>
@@ -129,5 +129,17 @@
             AND u.status = 1
         </where>
         ORDER BY u.id ASC
+    </select>
+
+    <!--    查询所有激活的用户ID-->
+    <select id="selectAllActiveUserIds" resultType="java.lang.Long">
+        SELECT id
+        FROM sys_user
+        WHERE status = 1
+    </select>
+
+    <!-- 获取指定公告的定向目标用户 -->
+    <select id="selectActiveUserVOs" resultType="com.zone.domain.vo.UserSelectVO">
+        SELECT id, real_name as realName FROM sys_user WHERE status = 1
     </select>
 </mapper>

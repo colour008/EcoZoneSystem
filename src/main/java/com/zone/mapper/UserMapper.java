@@ -3,6 +3,7 @@ package com.zone.mapper;
 import com.github.pagehelper.Page;
 import com.zone.domain.dto.UserPageQueryDTO;
 import com.zone.domain.entity.User;
+import com.zone.domain.vo.UserSelectVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -51,7 +52,7 @@ public interface UserMapper {
 	 * @param ids
 	 * @return
 	 */
-	int deleteByIds(List<Long> ids);
+	int deleteByIds(@Param("ids") List<Long> ids);
 
 	/**
 	 * 动态更新用户信息
@@ -79,4 +80,14 @@ public interface UserMapper {
 	 * @return
 	 */
 	List<Map<String, Object>> selectWorkerList();
+
+	/**
+	 * 获取所有正常状态(在职/未封禁)的用户ID
+	 */
+	List<UserSelectVO> selectActiveUserVOs();
+
+	/**
+	 * 获取所有正常状态(在职/未封禁)的用户ID
+	 */
+	List<Long> selectAllActiveUserIds();
 }

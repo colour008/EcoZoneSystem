@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zone.mapper.NoticeUserMapper">
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteByNoticeId">
+        DELETE FROM biz_notice_user WHERE notice_id = #{noticeId}
+    </delete>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert">
+        INSERT INTO biz_notice_user (notice_id, user_id, is_read, create_time)
+        VALUES
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{noticeId}, #{userId}, 0, NOW())
+        </foreach>
+    </insert>
+
+    <!-- 标记为已读 -->
+    <update id="markAsRead">
+        UPDATE biz_notice_user
+        SET is_read = 1, read_time = #{readTime}
+        WHERE notice_id = #{noticeId}
+          AND user_id = #{userId}
+          AND is_read = 0 </update>
+
+    <!-- 获取未读数量 -->
+    <select id="countUnreadByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM biz_notice_user nu
+                 INNER JOIN biz_notice n ON nu.notice_id = n.id
+        WHERE nu.user_id = #{userId}
+          AND nu.is_read = 0
+          AND n.status = 1 AND n.is_deleted = 0
+    </select>
+
+</mapper>

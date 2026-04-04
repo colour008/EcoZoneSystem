@@ -147,7 +147,7 @@
 
           <el-col :span="12" v-if="form.type !== 'F'">
             <el-form-item label="路由地址" prop="path">
-              <el-input v-model="form.path" placeholder="请输入路由地址"/>
+              <el-input v-model="form.path" placeholder="如：user/list"/>
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="form.type === 'C'">
@@ -164,7 +164,7 @@
               <el-input
                   v-model="form.component"
                   :disabled="form.isExternal === 1"
-                  :placeholder="form.isExternal === 1 ? '外链无需组件路径' : '请输入组件路径'"
+                  :placeholder="form.isExternal === 1 ? '外链无需组件路径' : '如：user/List'"
               />
             </el-form-item>
           </el-col>
@@ -179,7 +179,7 @@
 
           <el-col :span="12" v-if="form.type !== 'M'">
             <el-form-item label="权限标识" prop="perms">
-              <el-input v-model="form.perms" placeholder="请输入权限标识"/>
+              <el-input v-model="form.perms" placeholder="如：sys:user:list"/>
             </el-form-item>
           </el-col>
         </el-row>

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,12 +17,13 @@ import java.time.LocalDateTime;
 /**
  * @Author: JamHoo
  * @Description: 企业实体类 - 对应数据库 biz_enterprise
+ * @Date: 2026-3-21
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Enterprise extends BaseEntity {
+public class Enterprise extends BaseEntity implements Serializable {
 	@Serial
 	private static final long serialVersionUID = 1L;
 
