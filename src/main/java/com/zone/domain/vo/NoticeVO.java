@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Description: 通知公告VO
@@ -24,6 +25,7 @@ public class NoticeVO {
 
 	// 如果没有封面，返回空字符串而不是null
 	private String coverUrl;
+
 	// 手写 Getter 确保不返回 null（或者在 Setter 里判断）
 	public String getCoverUrl() {
 		return coverUrl == null ? "" : coverUrl;
@@ -59,7 +61,14 @@ public class NoticeVO {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updateTime;
 	private String publisherName = ""; // 冗余字段--发布人名称
+
 	public String getPublisherName() {
 		return publisherName == null ? "" : publisherName;
 	}
+
+	// 推送目标人
+	private List<Long> targetUserIds;
+
+	// 推送目标人数统计（用于列表展示）
+	private Integer targetUserCount;
 }

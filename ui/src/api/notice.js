@@ -56,6 +56,18 @@ const noticeApi = {
     },
 
     /**
+     * 批量逻辑删除公告
+     * @param {Array} ids ID数组，如 [1, 2]
+     */
+    deleteNotice(ids) {
+        // 后端接收 @PathVariable List<Long> ids，Spring 会自动解析 1,2,3 这种格式
+        return request({
+            url: `/notice/${ids.join(',')}`,
+            method: 'delete'
+        })
+    },
+
+    /**
      * 获取激活用户列表
      * @returns {*}
      */

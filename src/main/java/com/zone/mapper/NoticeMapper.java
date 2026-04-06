@@ -53,9 +53,15 @@ public interface NoticeMapper {
 	 */
 	Page<NoticeVO> getPublicNoticePage(@Param("dto") NoticePageQueryDTO dto, @Param("currentUserId") Long currentUserId);
 
+
 	/**
-	 * 获取指定公告的定向目标用户ID集合 (需关联 biz_notice_target 表)
+	 * 根据ID集合查询公告列表
 	 */
-	List<Long> getSelectedUserIds(Long noticeId);
+	List<Notice> selectByIds(@Param("ids") List<Long> ids);
+
+	/**
+	 * 批量逻辑删除公告
+	 */
+	int logicalDeleteByIds(@Param("ids") List<Long> ids);
 
 }

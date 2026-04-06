@@ -36,4 +36,13 @@
           AND n.status = 1 AND n.is_deleted = 0
     </select>
 
+    <!-- 批量删除 -->
+    <delete id="deleteByNoticeIds">
+        DELETE FROM biz_notice_user
+        WHERE notice_id IN
+        <foreach collection="noticeIds" item="noticeId" open="(" separator="," close=")">
+            #{noticeId}
+        </foreach>
+    </delete>
+
 </mapper>

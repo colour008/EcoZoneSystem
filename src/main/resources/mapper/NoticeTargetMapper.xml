@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zone.mapper.NoticeTargetMapper">
+
+    <!-- 根据公告ID清理配置记录 -->
+    <delete id="deleteByNoticeId">
+        DELETE FROM biz_notice_target
+        WHERE notice_id = #{noticeId}
+    </delete>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert">
+        INSERT INTO biz_notice_target (notice_id, user_id)
+        VALUES
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{noticeId}, #{userId})
+        </foreach>
+    </insert>
+
+    <!-- 批量删除 -->
+    <delete id="deleteByNoticeIds">
+        DELETE FROM biz_notice_target
+        WHERE notice_id IN
+        <foreach collection="noticeIds" item="noticeId" open="(" separator="," close=")">
+            #{noticeId}
+        </foreach>
+    </delete>
+
+    <!-- 根据公告ID查询目标用户ID集合 -->
+    <select id="selectUserIdsByNoticeId" resultType="java.lang.Long">
+        SELECT user_id
+        FROM biz_notice_target
+        WHERE notice_id = #{noticeId}
+    </select>
+
+</mapper>

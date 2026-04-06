@@ -84,4 +84,11 @@ public interface NoticeService {
 	 * 获取所有正常状态(在职/未封禁)的用户ID
 	 */
 	List<UserSelectVO> getActiveUserSelect();
+
+	/**
+	 * 批量删除公告
+	 * @param ids 公告ID列表
+	 * @return 是否成功
+	 */
+	boolean deleteByIds(List<Long> ids);
 }

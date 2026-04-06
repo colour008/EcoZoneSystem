@@ -90,6 +90,20 @@ public class NoticeController {
         return Result.success(noticeService.getActiveUserSelect());
     }
 
+    /**
+     * B端-删除公告(支持批量)
+     * @param ids 公告ID集合，逗号分隔 (例: /notice/1,2,3)
+     * @return
+     */
+    @DeleteMapping("/{ids}")
+    @Operation(summary = "B端-删除公告(支持批量)", description = "逻辑删除公告，并清理关联的用户收件箱记录")
+    public Result<String> delete(@PathVariable List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.sysError("参数错误，未选中任何记录");
+        }
+        return noticeService.deleteByIds(ids) ? Result.success("删除成功") : Result.sysError("删除失败");
+    }
+
     // ================== C端：企业用户接口 ==================
 
     /**

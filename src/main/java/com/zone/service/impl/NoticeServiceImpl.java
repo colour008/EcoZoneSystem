@@ -12,6 +12,7 @@ import com.zone.domain.entity.Notice;
 import com.zone.domain.vo.NoticeVO;
 import com.zone.domain.vo.UserSelectVO;
 import com.zone.mapper.NoticeMapper;
+import com.zone.mapper.NoticeTargetMapper;
 import com.zone.mapper.NoticeUserMapper;
 import com.zone.mapper.UserMapper;
 import com.zone.service.NoticeService;
@@ -41,11 +42,14 @@ public class NoticeServiceImpl implements NoticeService {
 	private NoticeUserMapper noticeUserMapper;
 	@Autowired
 	private UserMapper userMapper; // 引入用户Mapper用于全量分发
-
+	@Autowired
+	private NoticeTargetMapper noticeTargetMapper; // 专门负责 biz_notice_target 表
 
 	// ================== B端：园区管理接口 ==================
+
 	/**
 	 * B端-新增或修改公告(草稿)
+	 *
 	 * @param dto
 	 * @return
 	 */
@@ -56,13 +60,26 @@ public class NoticeServiceImpl implements NoticeService {
 		BeanUtils.copyProperties(dto, notice);
 		notice.setPublisherId(SecurityUtils.getUserId());
 
+		boolean success;
 		if (dto.getId() == null) {
-			notice.setStatus(0); // 默认为草稿态
-			return noticeMapper.insert(notice) > 0;
+			notice.setStatus(0);
+			success = noticeMapper.insert(notice) > 0;
 		} else {
-			// 校验：已发布的公告若要修改，建议先撤回，或者直接更新（大厂通常允许直接更新内容）
-			return noticeMapper.updateById(notice) > 0;
+			success = noticeMapper.updateById(notice) > 0;
 		}
+
+		// 维护定向推送配置
+		if (success) {
+			// 无论何种情况，先清理旧的配置（针对修改场景）
+			noticeTargetMapper.deleteByNoticeId(notice.getId());
+
+			// 如果是指定用户范围，且传了 ID 集合
+			if (dto.getTargetScope() == 1 && dto.getTargetUserIds() != null && !dto.getTargetUserIds().isEmpty()) {
+				// 批量插入到 biz_notice_target 表
+				noticeTargetMapper.batchInsert(notice.getId(), dto.getTargetUserIds());
+			}
+		}
+		return success;
 	}
 
 	/**
@@ -97,7 +114,7 @@ public class NoticeServiceImpl implements NoticeService {
 			targetUserIds = userMapper.selectAllActiveUserIds();
 		} else {
 			// 定向分发：从关联业务表或 DTO 缓存中获取已选定的用户
-			targetUserIds = noticeMapper.getSelectedUserIds(notice.getId());
+			targetUserIds = noticeTargetMapper.selectUserIdsByNoticeId(notice.getId());
 		}
 
 		if (targetUserIds != null && !targetUserIds.isEmpty()) {
@@ -144,7 +161,46 @@ public class NoticeServiceImpl implements NoticeService {
 		return new PageResult<>(page.getTotal(), page.getResult());
 	}
 
+	/**
+	 * 批量删除公告
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean deleteByIds(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return false;
+		}
+
+		// 1. 查出所有要删除的公告进行状态校验
+		List<Notice> notices = noticeMapper.selectByIds(ids);
+		if (notices == null || notices.isEmpty()) {
+			return false;
+		}
+
+		// 校验：不能直接删除处于“已发布(1)”状态的公告
+		boolean hasPublished = notices.stream().anyMatch(n -> n.getStatus() != null && n.getStatus() == 1);
+		if (hasPublished) {
+			throw new BusinessException("已发布的公告不能直接删除，请先撤回！");
+		}
+
+		// 2. 主表逻辑删除 (设置 is_deleted = 1)
+		int rows = noticeMapper.logicalDeleteByIds(ids);
+
+		// 3. 物理删除关联的 C端收件箱记录
+		// 既然公告都被删除了，用户也没必要看到这条数据的未读状态了
+		if (rows > 0) {
+			// 物理删除收件箱记录 (biz_notice_user)
+			noticeUserMapper.deleteByNoticeIds(ids);
+
+			// 物理删除目标配置记录 (biz_notice_target)
+			noticeTargetMapper.deleteByNoticeIds(ids);
+		}
+
+		return rows > 0;
+	}
+
 	// ================== C端：企业用户接口 ==================
+
 	/**
 	 * C端-获取政策/动态/公告列表
 	 */
@@ -171,6 +227,12 @@ public class NoticeServiceImpl implements NoticeService {
 		// 2. 判空处理（XML 中的 SQL 已经带了 is_deleted = 0 的条件，所以这里通常只需判 null）
 		if (vo == null) {
 			throw new BusinessException("公告不存在或已被删除");
+		}
+
+		// 如果是指定用户模式，查询并封装选中的 ID 列表
+		if (vo.getTargetScope() == 1) {
+			List<Long> targetUserIds = noticeTargetMapper.selectUserIdsByNoticeId(id);
+			vo.setTargetUserIds(targetUserIds);
 		}
 
 		// 3. 增加阅读量（操作数据库）

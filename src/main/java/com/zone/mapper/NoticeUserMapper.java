@@ -33,4 +33,9 @@ public interface NoticeUserMapper {
 	 * 统计当前用户的未读消息总数
 	 */
 	int countUnreadByUserId(Long userId);
+
+	/**
+	 * 批量删除公告对应的用户接收记录
+	 */
+	int deleteByNoticeIds(@Param("noticeIds") List<Long> noticeIds);
 }

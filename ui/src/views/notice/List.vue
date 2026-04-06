@@ -84,6 +84,11 @@
                 <el-tag :type="typeMap[item.type]?.type" size="small" effect="dark" class="type-tag">
                   {{ typeMap[item.type]?.label }}
                 </el-tag>
+
+                <el-tag :type="item.visibility === 1 ? 'success' : 'info'" size="small" effect="light">
+                  {{ visibilityMap[item.visibility]?.label }}
+                </el-tag>
+
                 <el-tag :type="statusMap[item.status]?.type" size="small" effect="plain">
                   {{ statusMap[item.status]?.label }}
                 </el-tag>
@@ -99,6 +104,20 @@
                   </el-icon>
                   <span>{{ item.publisherName || '未知' }}</span>
                 </div>
+
+                <div class="meta-item">
+                  <el-icon ><Avatar /></el-icon>
+                  <template v-if="item.targetScope === 1">
+                    <span class="target-count">
+                      {{ targetScopeMap[1].label }}
+                      ({{ item.targetUserCount || (item.targetUserIds ? item.targetUserIds.length : 0) }}人)
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span >{{ targetScopeMap[0]?.label || '全员' }}</span>
+                  </template>
+                </div>
+
                 <div class="meta-item">
                   <el-icon>
                     <View/>
@@ -116,8 +135,9 @@
               <div class="card-actions">
                 <el-button link type="primary" size="small" @click="handleDetail(item)">详情</el-button>
 
-                <template v-if="item.status === 0 || item.status === 2">
+                <template v-if="item.status === 0 || item.status === 2 || item.status === 3">
                   <el-button link type="warning" size="small" @click="handleEdit(item)">编辑</el-button>
+                  <el-button link type="danger" size="small" @click="handleDelete(item)">删除</el-button>
                 </template>
 
                 <template v-if="item.status === 0">
@@ -358,7 +378,7 @@
 import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
-  Search, Refresh, Plus, View, User, Calendar, Document, ZoomIn, Delete
+  Search, Refresh, Plus, View, User, Calendar, Document, ZoomIn, Delete, Monitor, Avatar
 } from '@element-plus/icons-vue'
 import noticeApi from '@/api/notice'
 import Editor from '@/components/WangEditor/index.vue'
@@ -439,7 +459,8 @@ const form = ref({
   type: 3,
   visibility: 0,
   targetScope: 0,
-  targetUserIds: []
+  targetUserIds: [],
+  targetUserCount: 0
 })
 
 // 校验规则
@@ -494,15 +515,16 @@ const handleEdit = async (row) => {
   try {
     const res = await noticeApi.getDetail(row.id)
     if (res.data) {
-      // 确保如果是字符串则转为数组，如果是 null 则转为空数组
-      if (typeof res.data.targetUserIds === 'string') {
-        res.data.targetUserIds = res.data.targetUserIds.split(',').map(Number)
-      }
-      form.value = {...res.data}
+      // 后端 NoticeVO 已经直接返回 List<Long> targetUserIds，无需再用 split(',')
+      // 只需要确保即使后端返回 null，前端也要初始化为空数组以适配 el-select
+      const data = res.data
+      data.targetUserIds = data.targetUserIds || []
+
+      form.value = {...data}
       dialogVisible.value = true
     }
   } catch (e) {
-    ElMessage.error('获取详情失败')
+    ElMessage.error('加载公告详情失败')
   } finally {
     loading.value = false
   }
@@ -597,14 +619,56 @@ const submitForm = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
     if (!valid) return
+
     submitLoading.value = true
     try {
-      await noticeApi.save(form.value)
-      ElMessage.success('保存成功')
+      // 深度拷贝一份表单数据，避免修改原始 form 导致 UI 闪烁
+      const postData = JSON.parse(JSON.stringify(form.value))
+
+      // 优化：如果推送范围不是“指定用户”，则清空 targetUserIds，减少传输压力
+      if (postData.targetScope !== 1) {
+        postData.targetUserIds = []
+      }
+
+      await noticeApi.save(postData)
+      ElMessage.success(postData.id ? '修改成功' : '草稿保存成功')
       dialogVisible.value = false
       getList()
+    } catch (e) {
+      console.error(e)
     } finally {
       submitLoading.value = false
+    }
+  })
+}
+
+// 删除逻辑实现
+const handleDelete = (row) => {
+  // 业务校验：后端 NoticeServiceImpl 规定 status=1 (已发布) 不可删除
+  if (row.status === 1) {
+    return ElMessage.warning('“已发布”状态的公告不可删除，请先撤回为草稿。')
+  }
+
+  ElMessageBox.confirm(
+      `确定要永久删除公告「${row.title}」吗？该操作将同步清理所有用户的收件箱记录。`,
+      '极其重要提示',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'error',
+        confirmButtonClass: 'el-button--danger' // 让按钮变红，警示作用
+      }
+  ).then(async () => {
+    loading.value = true
+    try {
+      // 后端支持批量，这里传入数组 [row.id]
+      await noticeApi.deleteNotice([row.id])
+      ElMessage.success('公告已彻底删除')
+      getList()
+    } catch (e) {
+      // 异常由拦截器处理，或在此处理 BusinessException
+    } finally {
+      loading.value = false
     }
   })
 }
@@ -656,7 +720,7 @@ onMounted(() => {
 
 .card-cover {
   width: 100%;
-  height: 160px; /* ✅ 微调封面高度，适配5列布局 */
+  height: 160px;
   overflow: hidden;
   position: relative;
 }
@@ -708,8 +772,9 @@ onMounted(() => {
 
 .card-header {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .type-tag {
@@ -748,19 +813,31 @@ onMounted(() => {
 
 .card-meta {
   display: flex;
-  gap: 10px;
+  gap: 8px; /* 稍微缩小间距 */
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #f0f0f0;
-  flex-wrap: wrap; /* ✅ 允许换行，避免内容溢出 */
+  flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 11px; /* ✅ 微调字体大小 */
+  font-size: 11px;
   color: #909399;
+  white-space: nowrap;
+}
+
+/* 针对指定人数的文字加一点色差，使其更易读 */
+.target-count {
+  color: #e6a23c;
+  font-weight: 500;
+}
+
+/* 确保日期在小屏幕或多列时能优雅处理 */
+.date-item {
+  color: #c0c4cc;
 }
 
 .card-actions {
