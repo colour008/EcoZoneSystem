@@ -7,9 +7,9 @@
         <p>电话：0512-88888888</p>
       </div>
       <div class="footer-links">
-        <el-link :underline="false">政策法规</el-link>
-        <el-link :underline="false">办事指南</el-link>
-        <el-link :underline="false">联系我们</el-link>
+        <el-link underline="never">政策法规</el-link>
+        <el-link underline="never">办事指南</el-link>
+        <el-link underline="never">联系我们</el-link>
       </div>
     </div>
     <div class="footer-bottom">

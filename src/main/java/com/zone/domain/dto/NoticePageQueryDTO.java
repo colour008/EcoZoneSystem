@@ -41,4 +41,7 @@ public class NoticePageQueryDTO extends PageQuery {
 	private Integer status;
 
 	private String publisherName; // 冗余字段--发布人名称
+
+	// 推送目标人数统计（用于列表展示）
+	private Integer targetUserCount;
 }

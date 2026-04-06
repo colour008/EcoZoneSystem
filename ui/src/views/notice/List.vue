@@ -85,7 +85,7 @@
                   {{ typeMap[item.type]?.label }}
                 </el-tag>
 
-                <el-tag :type="item.visibility === 1 ? 'success' : 'info'" size="small" effect="light">
+                <el-tag :type="item.visibility === 1 ? 'success' : 'danger'" size="small" effect="light">
                   {{ visibilityMap[item.visibility]?.label }}
                 </el-tag>
 

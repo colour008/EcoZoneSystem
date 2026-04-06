@@ -56,7 +56,7 @@ const noticeApi = {
     },
 
     /**
-     * 批量逻辑删除公告
+     * B端-批量逻辑删除公告
      * @param {Array} ids ID数组，如 [1, 2]
      */
     deleteNotice(ids) {
@@ -68,7 +68,7 @@ const noticeApi = {
     },
 
     /**
-     * 获取激活用户列表
+     * B端-获取激活用户列表
      * @returns {*}
      */
     getActiveUsers() {
@@ -79,14 +79,38 @@ const noticeApi = {
     },
 
     /**
-     * 通用-获取公告详情
+     * 通用-获取公告详情（C端调用会自动标记已读）
      */
     getDetail(id) {
         return request({
             url: `/notice/detail/${id}`,
             method: 'get'
         })
-    }
+    },
+
+    // ================== C 端：门户/移动端接口 ==================
+
+    /**
+     * C端-获取公开列表（政策/动态/公告）
+     * @param {Object} params { type: 1, pageNum: 1, pageSize: 10, title: '' }
+     */
+    getPublicList(params) {
+        return request({
+            url: '/notice/list/public',
+            method: 'get',
+            params
+        })
+    },
+
+    /**
+     * C端-获取当前用户未读消息数
+     */
+    getUnreadCount() {
+        return request({
+            url: '/notice/unread-count',
+            method: 'get'
+        })
+    },
 }
 
 export default noticeApi

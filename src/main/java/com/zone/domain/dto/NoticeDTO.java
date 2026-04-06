@@ -25,4 +25,6 @@ public class NoticeDTO {
 	private Integer visibility;
 	private Integer targetScope;
 	private List<Long> targetUserIds; // 仅当 targetScope=1 时有效
+	// 推送目标人数统计（用于列表展示）
+	private Integer targetUserCount;
 }

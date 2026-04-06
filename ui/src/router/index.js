@@ -37,22 +37,28 @@ const routes = [
                 meta: {title: '园区首页'}
             },
             {
+                path: 'news',
+                name: 'PortalNews',
+                component: () => import('@/views/portal/News.vue'),
+                meta: {title: '园区动态'}
+            },
+            {
                 path: 'policy',
                 name: 'PortalPolicy',
                 component: () => import('@/views/portal/Policy.vue'),
                 meta: {title: '政策中心'}
             },
             {
-                path: 'news',
-                name: 'PortalNews',
-                component: () => import('@/views/portal/News.vue'),
-                meta: {title: '要闻导读'}
-            },
-            {
                 path: 'notice',
                 name: 'PortalNotice',
                 component: () => import('@/views/portal/Notice.vue'),
                 meta: {title: '通知公告'}
+            },
+            {
+                path: 'portal/detail',
+                name: 'PortalNoticeDetail',
+                component: () => import('@/views/portal/Detail.vue'),
+                meta: {title: '详情'}
             },
             {
                 path: 'enterprise',

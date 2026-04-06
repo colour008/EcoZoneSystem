@@ -17,6 +17,7 @@ public interface AuthConstant {
 			"/swagger-ui/**",
 			"/v3/api-docs/**",
 			"/favicon.ico",
-			"/enterprise/show/page"
+			"/enterprise/show/page",
+			"/notice/list/public",
 	};
 }

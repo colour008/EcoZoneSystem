@@ -1,149 +1,251 @@
 <template>
-  <div class="article-container">
-    <div class="article-box">
-      <el-breadcrumb separator="/" class="breadcrumb">
-        <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item>园区动态</el-breadcrumb-item>
-        <el-breadcrumb-item>正文</el-breadcrumb-item>
-      </el-breadcrumb>
+  <div class="news-container">
+    <div class="breadcrumb-section">
+      <div class="container">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+          <el-breadcrumb-item>园区动态</el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
+    </div>
 
-      <div class="article-header" v-if="article">
-        <h1 class="title">{{ article.title }}</h1>
-        <div class="meta-info">
-          <span>发布时间：{{ article.publishTime }}</span>
-          <span>来源：经济开发区管委会</span>
-          <span>浏览量：{{ article.viewCount }} 次</span>
+    <div class="main-content container">
+      <div class="filter-wrapper">
+        <h2 class="page-title">园区动态</h2>
+        <div class="search-box">
+          <el-input
+              v-model="queryParams.title"
+              placeholder="搜索标题..."
+              clearable
+              @keyup.enter="handleSearch"
+              @clear="handleSearch"
+          >
+            <template #append>
+              <el-button @click="handleSearch">
+                <el-icon>
+                  <Search/>
+                </el-icon>
+              </el-button>
+            </template>
+          </el-input>
         </div>
       </div>
 
-      <div v-if="loading" class="loading-box" v-loading="true"></div>
+      <div class="list-wrapper">
+        <el-skeleton :loading="loading" animated :count="3">
+          <template #template>
+            <div style="padding: 20px; display: flex; gap: 20px">
+              <div style="flex: 1">
+                <el-skeleton-item variant="h3" style="width: 50%"/>
+                <el-skeleton-item variant="text" style="margin-top: 15px"/>
+                <el-skeleton-item variant="text" style="width: 30%; margin-top: 15px"/>
+              </div>
+              <el-skeleton-item variant="image" style="width: 160px; height: 100px"/>
+            </div>
+          </template>
 
-      <div
-          v-else-if="article"
-          class="article-content"
-          v-html="article.content"
-      ></div>
+          <template #default>
+            <div v-if="noticeList && noticeList.length > 0">
+              <NoticeItem
+                  v-for="item in noticeList"
+                  :key="item.id"
+                  :item="item"
+                  @click="goDetail"
+              />
+            </div>
 
-      <el-empty v-else description="文章不存在或已删除"/>
+            <el-empty
+                v-else
+                description="暂无相关动态信息"
+                :image-size="200"
+            />
+          </template>
+        </el-skeleton>
+      </div>
+
+      <div class="pagination-wrapper" v-if="total > 0">
+        <el-pagination
+            v-model:current-page="queryParams.pageNum"
+            v-model:page-size="queryParams.pageSize"
+            :total="total"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            background
+            @current-change="getList"
+            @size-change="handleSizeChange"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
-import {useRoute} from 'vue-router'
-import request from '@/api/request.js'
+import {ref, onMounted, reactive} from 'vue'
+import {useRouter} from 'vue-router'
+import {Search} from '@element-plus/icons-vue'
+import noticeApi from '@/api/notice'
+import NoticeItem from '@/components/NoticeItem.vue'
 
+const router = useRouter()
 
-const route = useRoute()
-const article = ref(null)
-const loading = ref(true)
+// 状态变量
+const loading = ref(false)
+const total = ref(0)
+const noticeList = ref([])
 
-// 获取文章数据
-const fetchArticleDetail = async () => {
-  const articleId = route.params.id // 从 URL 中获取 /article/1 里的 1
+// 查询参数 (Type: 2 代表园区动态)
+const queryParams = reactive({
+  type: 2,
+  title: '',
+  pageNum: 1,
+  pageSize: 10
+})
+
+/**
+ * 获取列表数据
+ */
+const getList = async () => {
+  loading.value = true
   try {
-    loading.value = true
-    // 模拟接口调用，实际开发中放开下面的注释
-    const res = await request.get(`/portal/notice/${articleId}`)
-    article.value = res.data
+    const res = await noticeApi.getPublicList({...queryParams})
 
-    // 模拟数据注入
-    article.value = {
-      id: articleId,
-      title: '关于启动2026年度“园区之星”评选的通知',
-      publishTime: '2026-03-21 09:00:00',
-      viewCount: 157,
-      content: `
-        <p style="text-indent: 2em; line-height: 2;">各入驻企业：</p>
-        <p style="text-indent: 2em; line-height: 2;">为进一步激发园区企业创新活力，树立优秀企业标杆，经研究决定，正式启动2026年度“园区之星”评选活动。现将有关事项通知如下：</p>
-        <p style="text-indent: 2em; line-height: 2;"><strong>一、评选对象</strong><br/>在园区内注册并实际运营的各类企业。</p>
-        <p style="text-indent: 2em; line-height: 2;"><strong>二、评选标准</strong><br/>涵盖经济效益、科技创新、社会责任等多个维度...</p>
-        <div style="text-align: center; margin: 20px 0;">
-          <img src="https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=600" style="max-width: 100%; border-radius: 4px;" alt="会议图片"/>
-        </div>
-        <p style="text-align: right; margin-top: 50px;">经济开发区管理委员会<br/>2026年3月21日</p>
-      `
+    if (res && res.data) {
+      noticeList.value = res.data.records || []
+      total.value = res.data.total || 0
+
+      console.log('数据加载成功，条数:', noticeList.value.length)
     }
   } catch (error) {
-    console.error('获取文章失败', error)
+    console.error('获取动态列表失败:', error)
+    noticeList.value = []
   } finally {
     loading.value = false
   }
 }
 
+/**
+ * 搜索处理
+ */
+const handleSearch = () => {
+  queryParams.pageNum = 1
+  getList()
+}
+
+/**
+ * 每页条数切换
+ */
+const handleSizeChange = (val) => {
+  queryParams.pageSize = val
+  getList()
+}
+
+/**
+ * 跳转详情
+ */
+const goDetail = (item) => {
+  item.isRead = true;
+  router.push({
+    path: '/portal/detail',
+    query: {id: item.id}
+  })
+}
+
 onMounted(() => {
-  fetchArticleDetail()
+  getList()
 })
 </script>
 
 <style scoped>
-.article-container {
-  background-color: #f5f7fa;
-  padding: 40px 0;
-  min-height: calc(100vh - 120px);
+.news-container {
+  min-height: 80vh;
+  background-color: #f8f9fa;
+  padding-bottom: 40px;
 }
 
-.article-box {
-  max-width: 1000px;
+/* 容器限宽 */
+.container {
+  max-width: 1200px;
   margin: 0 auto;
-  background: #fff;
-  padding: 40px 60px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
+  padding: 0 15px;
 }
 
-.breadcrumb {
-  margin-bottom: 30px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
-}
-
-.article-header {
-  text-align: center;
-  margin-bottom: 40px;
-  border-bottom: 1px dashed #ddd;
-  padding-bottom: 20px;
-}
-
-.title {
-  font-size: 28px;
-  color: #333;
+/* 面包屑部分 */
+.breadcrumb-section {
+  background-color: #fff;
+  padding: 15px 0;
+  border-bottom: 1px solid #ebeef5;
   margin-bottom: 20px;
-  letter-spacing: 1px;
 }
 
-.meta-info {
-  color: #999;
-  font-size: 14px;
+/* 标题与搜索过滤栏 */
+.filter-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.meta-info span {
-  margin: 0 15px;
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  color: #303133;
+  position: relative;
+  padding-left: 15px;
 }
 
-.loading-box {
-  height: 300px;
+.page-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  background-color: #409eff; /* 政务蓝主色调 */
+  border-radius: 2px;
 }
 
-/* 核心：为 v-html 注入的富文本提供默认样式 */
-.article-content {
-  font-size: 16px;
-  color: #444;
-  line-height: 2;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+.search-box {
+  width: 300px;
 }
 
-/* 使用 :deep() 穿透 scoped，作用于 v-html 生成的标签 */
-.article-content :deep(p) {
-  margin-bottom: 15px;
-  text-align: justify;
+/* 列表容器 */
+.list-wrapper {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-height: 400px;
 }
 
-.article-content :deep(img) {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 10px auto;
+/* 分页 */
+.pagination-wrapper {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 深度适配 Element Plus 搜索框圆角 */
+:deep(.el-input-group__append) {
+  background-color: #409eff;
+  color: #fff;
+  box-shadow: none;
+}
+
+:deep(.el-input-group__append:hover) {
+  background-color: #66b1ff;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .filter-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
 }
 </style>

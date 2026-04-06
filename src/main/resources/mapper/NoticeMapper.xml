@@ -6,7 +6,7 @@
 
     <sql id="Base_Column_List">
         id, title, summary, cover_url, content, type, visibility, target_scope, status,
-        publisher_id, publish_time, view_count, is_deleted, create_time, update_time, target_user_count
+        publisher_id, publish_time, view_count, is_deleted, create_time, update_time
     </sql>
 
     <resultMap id="NoticeResultMap" type="com.zone.domain.entity.Notice">
@@ -127,13 +127,22 @@
     <select id="getPublicNoticePage" resultMap="NoticeVOResultMap">
         SELECT
         <include refid="Brief_Column_List"/>,
-        IFNULL(nu.is_read, 0) AS is_read
+        <choose>
+            <when test="currentUserId != null">
+                IFNULL(nu.is_read, 0) AS is_read
+            </when>
+            <otherwise>
+                1 AS is_read
+            </otherwise>
+        </choose>
         FROM biz_notice n
         LEFT JOIN sys_user u ON n.publisher_id = u.id
-        LEFT JOIN biz_notice_user nu ON n.id = nu.notice_id
         <choose>
-            <when test="currentUserId != null">AND nu.user_id = #{currentUserId}</when>
-            <otherwise>AND 1 = 0</otherwise>
+            <when test="currentUserId != null">
+                LEFT JOIN biz_notice_user nu ON n.id = nu.notice_id AND nu.user_id = #{currentUserId}
+            </when>
+            <otherwise>
+            </otherwise>
         </choose>
         <where>
             n.is_deleted = 0
