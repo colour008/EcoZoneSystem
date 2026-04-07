@@ -277,7 +277,6 @@ public class NoticeServiceImpl implements NoticeService {
 	 */
 	@Override
 	public List<UserSelectVO> getActiveUserSelect() {
-		List<UserSelectVO> users = userMapper.selectActiveUserVOs();
-		return users;
+		return userMapper.selectActiveUserVOs();
 	}
 }
