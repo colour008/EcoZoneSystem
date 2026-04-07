@@ -82,6 +82,35 @@
                   返回上一页
                 </el-button>
               </div>
+
+              <div class="article-nav-cards" v-if="detail.prevNotice || detail.nextNotice">
+                <div class="nav-card prev" :class="{ 'empty': !detail.prevNotice }"
+                     @click="detail.prevNotice && goToArticle(detail.prevNotice.id)">
+                  <div class="nav-bg" v-if="detail.prevNotice"
+                       :style="{ backgroundImage: `url(${detail.prevNotice.coverUrl || detail.prevNotice.cover_url || ''})` }"></div>
+                  <div class="nav-mask"></div>
+                  <div class="nav-content">
+                    <span class="nav-label">上一篇</span>
+                    <span class="nav-title" :title="detail.prevNotice?.title || '已经是第一篇了'">
+                      {{ detail.prevNotice?.title || '已经是第一篇了' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="nav-card next" :class="{ 'empty': !detail.nextNotice }"
+                     @click="detail.nextNotice && goToArticle(detail.nextNotice.id)">
+                  <div class="nav-bg" v-if="detail.nextNotice"
+                       :style="{ backgroundImage: `url(${detail.nextNotice.coverUrl || detail.nextNotice.cover_url || ''})` }"></div>
+                  <div class="nav-mask"></div>
+                  <div class="nav-content">
+                    <span class="nav-label">下一篇</span>
+                    <span class="nav-title" :title="detail.nextNotice?.title || '已经是最后一篇了'">
+                      {{ detail.nextNotice?.title || '已经是最后一篇了' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             <el-empty v-else description="未能获取到内容信息，该信息可能已被撤回或删除"/>
@@ -93,7 +122,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {User, Clock, View, Printer, Back} from '@element-plus/icons-vue'
 import noticeApi from '@/api/notice'
@@ -132,9 +161,9 @@ const getDetail = async () => {
 // 字典翻译辅助函数
 const getTypeName = (type) => {
   const map = {
-    1: '通知公告',
+    1: '政策文件',
     2: '园区动态',
-    3: '政策文件'
+    3: '通知公告'
   }
   return map[type] || '其他'
 }
@@ -153,6 +182,20 @@ const handlePrint = () => {
   window.print()
 }
 
+// 跳转到指定文章
+const goToArticle = (id) => {
+  if (!id) return;
+  router.push({path: route.path, query: {id}})
+}
+
+// 监听路由参数变化
+watch(() => route.query.id, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    getDetail()
+    window.scrollTo({top: 0, behavior: 'smooth'})
+  }
+})
+
 onMounted(() => {
   getDetail()
 })
@@ -161,7 +204,7 @@ onMounted(() => {
 <style scoped>
 .detail-container {
   min-height: 80vh;
-  background-color: #f5f7fa; /* 更柔和的政务灰底色 */
+  background-color: #f5f7fa;
   padding-bottom: 60px;
 }
 
@@ -179,7 +222,7 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-/* 文章容器：控制最大宽度以提升阅读体验 */
+/* 文章容器 */
 .article-wrapper {
   max-width: 900px;
   margin: 0 auto;
@@ -202,7 +245,7 @@ onMounted(() => {
   color: #303133;
   line-height: 1.4;
   margin: 0 0 20px 0;
-  text-align: center; /* 政务公文通常居中 */
+  text-align: center;
   font-weight: 600;
 }
 
@@ -225,10 +268,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.type-tag {
-  margin-right: 5px;
 }
 
 /* 交互按钮区 */
@@ -279,7 +318,7 @@ onMounted(() => {
   border-left: 4px solid #909399;
 }
 
-/* --- 富文本正文深度样式控制 --- */
+/* 富文本正文 */
 .article-content {
   color: #333;
   line-height: 2;
@@ -287,7 +326,6 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* 字号控制类 */
 .font-size-small {
   font-size: 14px;
 }
@@ -300,10 +338,9 @@ onMounted(() => {
   font-size: 18px;
 }
 
-/* 深度拦截后端传来的 HTML 标签 */
 :deep(.article-content p) {
   margin-bottom: 1.2em;
-  text-indent: 2em; /* 首行缩进，符合中文公文规范 */
+  text-indent: 2em;
 }
 
 :deep(.article-content img) {
@@ -315,28 +352,123 @@ onMounted(() => {
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.article-content table) {
-  width: 100% !important;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-:deep(.article-content table th),
-:deep(.article-content table td) {
-  border: 1px solid #dcdfe6;
-  padding: 10px;
-}
-
-:deep(.article-content table th) {
-  background-color: #f5f7fa;
-}
-
-/* 底部 */
+/* 底部返回按钮 */
 .article-footer {
   margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px dashed #ebeef5;
+  padding-bottom: 30px;
   text-align: center;
+}
+
+/* --- 上一篇/下一篇 背景卡片版样式 --- */
+.article-nav-cards {
+  display: flex;
+  gap: 20px;
+  border-top: 1px dashed #ebeef5;
+  padding-top: 30px;
+  margin-top: 10px;
+}
+
+.nav-card {
+  flex: 1;
+  position: relative;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+  transition: transform 0.3s ease;
+  width: 50%;
+  box-sizing: border-box;
+  background-color: #f4f4f5; /* 无图时的背景色 */
+}
+
+/* 背景图片层 */
+.nav-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.6s ease;
+  z-index: 1;
+}
+
+/* 渐变遮罩层：确保文字清晰 */
+.nav-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.89) 0%, rgba(39, 39, 39, 0.85) 100%);
+  z-index: 2;
+  transition: background 0.3s;
+}
+
+.nav-card.next .nav-mask {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.89) 0%, rgba(39, 39, 39, 0.85) 100%);
+}
+
+/* 文字内容层 */
+.nav-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.nav-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.nav-title {
+  font-size: 15px;
+  color: #ffffff;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 悬停特效 */
+.nav-card:hover:not(.empty) {
+  transform: translateY(-4px);
+}
+
+.nav-card:hover:not(.empty) .nav-bg {
+  transform: scale(1.1);
+}
+
+.nav-card:hover:not(.empty) .nav-mask {
+  background: rgba(0, 0, 0, 0.5); /* 悬停时遮罩变均匀，高亮图片 */
+}
+
+.nav-card.empty {
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.nav-card.empty .nav-mask {
+  background: none;
+}
+
+.nav-card.empty .nav-title,
+.nav-card.empty .nav-label {
+  color: #909399;
+}
+
+.nav-card.next {
+  text-align: right;
 }
 
 /* 响应式适配 */
@@ -345,38 +477,65 @@ onMounted(() => {
     padding: 20px 15px;
   }
 
-  .article-title {
-    font-size: 22px;
-    text-align: left;
-  }
-
-  .article-meta {
+  .article-nav-cards {
     flex-direction: column;
-    align-items: flex-start;
     gap: 15px;
   }
 
-  /* 移动端隐藏打印区域 */
-  .hidden-xs-only {
-    display: none;
+  .nav-card {
+    width: 100%;
+    height: 80px;
   }
 }
 
-/* 打印时专有样式 */
 @media print {
-  .breadcrumb-section,
-  .meta-right,
+  /* 隐藏页头 */
+  .portal-header {
+    display: none !important;
+  }
+
+  /* 隐藏页脚 */
+  .footer {
+    display: none !important;
+  }
+
+  /* 调整打印时的边距，让内容占满纸张 */
+  @page {
+    margin: 1cm;
+  }
+
+  /* 详情页容器去掉背景色和阴影，确保打印清晰 */
+  .detail-container {
+    background-color: #fff !important;
+    padding: 0 !important;
+  }
+
+  .article-wrapper {
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 隐藏面包屑 */
+  .breadcrumb-section {
+    display: none !important;
+  }
+
+  /* 隐藏底部返回按钮 */
   .article-footer {
     display: none !important;
   }
 
-  .article-wrapper {
-    box-shadow: none;
-    padding: 0;
+  /* 隐藏上一篇和下一篇卡片*/
+  .article-nav-cards {
+    display: none !important;
   }
 
-  .detail-container {
-    background-color: #fff;
+  /* 隐藏打印字号信息 */
+  .meta-right{
+    display: none !important;
   }
 }
 </style>

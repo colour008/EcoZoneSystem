@@ -18,6 +18,5 @@ public interface AuthConstant {
 			"/v3/api-docs/**",
 			"/favicon.ico",
 			"/enterprise/show/page",
-			"/notice/list/public",
 	};
 }

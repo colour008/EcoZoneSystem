@@ -110,4 +110,10 @@
     gap: 20px;
   }
 }
+
+@media print {
+  .footer {
+    display: none !important;
+  }
+}
 </style>

@@ -193,4 +193,28 @@
         </foreach>
     </update>
 
+    <!-- 获取上一篇公告 -->
+    <select id="selectPrevNotice" resultType="com.zone.domain.entity.Notice">
+        SELECT id, title, cover_url
+        FROM biz_notice
+        WHERE type = #{type}
+          AND status = 1
+          AND is_deleted = 0
+          AND publish_time &lt; #{publishTime}
+        ORDER BY publish_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 获取下一篇公告 -->
+    <select id="selectNextNotice" resultType="com.zone.domain.entity.Notice">
+        SELECT id, title, cover_url
+        FROM biz_notice
+        WHERE type = #{type}
+          AND status = 1
+          AND is_deleted = 0
+          AND publish_time &gt; #{publishTime}
+        ORDER BY publish_time ASC
+        LIMIT 1
+    </select>
+
 </mapper>

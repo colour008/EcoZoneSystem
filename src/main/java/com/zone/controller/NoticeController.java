@@ -1,5 +1,6 @@
 package com.zone.controller;
 
+import com.zone.common.annotation.Anonymous;
 import com.zone.common.response.Result;
 import com.zone.domain.base.PageResult;
 import com.zone.domain.dto.NoticeDTO;
@@ -111,6 +112,7 @@ public class NoticeController {
      * @param dto
      * @return
      */
+    @Anonymous
     @GetMapping("/list/public")
     @Operation(summary = "C端-获取政策/动态/公告列表", description = "仅查询 status=1 且 visibility=1 的数据")
     public Result<PageResult<NoticeVO>> getPublicList(NoticePageQueryDTO dto) {
@@ -122,6 +124,7 @@ public class NoticeController {
      * @param id
      * @return
      */
+    @Anonymous
     @GetMapping("/detail/{id}")
     @Operation(summary = "通用-获取公告详情", description = "调用详情时，如果是C端用户则自动标记为已读")
     public Result<NoticeVO> getDetail(@PathVariable Long id) {
@@ -132,6 +135,7 @@ public class NoticeController {
      * C端-获取当前用户未读消息数
      * @return
      */
+    @Anonymous
     @GetMapping("/unread-count")
     @Operation(summary = "C端-获取当前用户未读消息数")
     public Result<Integer> getUnreadCount() {

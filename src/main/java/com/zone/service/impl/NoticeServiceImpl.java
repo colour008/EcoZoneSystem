@@ -221,32 +221,47 @@ public class NoticeServiceImpl implements NoticeService {
 	 */
 	@Override
 	public NoticeVO getDetail(Long id) {
-		// 1. 直接用 NoticeVO 接收，MyBatis 会根据 XML 中的 NoticeVOResultMap 自动封装
+		// 1. 获取当前文章详情
 		NoticeVO vo = noticeMapper.getDetailById(id);
 
-		// 2. 判空处理（XML 中的 SQL 已经带了 is_deleted = 0 的条件，所以这里通常只需判 null）
 		if (vo == null) {
 			throw new BusinessException("公告不存在或已被删除");
 		}
 
-		// 如果是指定用户模式，查询并封装选中的 ID 列表
+		// 2.获取同类型的上一篇和下一篇，传入当前文章的 type 和 publishTime
+		vo.setPrevNotice(noticeMapper.selectPrevNotice(vo.getType(), vo.getPublishTime()));
+		vo.setNextNotice(noticeMapper.selectNextNotice(vo.getType(), vo.getPublishTime()));
+
+		// 3. 原有逻辑：处理指定用户范围
 		if (vo.getTargetScope() == 1) {
 			List<Long> targetUserIds = noticeTargetMapper.selectUserIdsByNoticeId(id);
 			vo.setTargetUserIds(targetUserIds);
 		}
 
-		// 3. 增加阅读量（操作数据库）
+		// 4. 原有逻辑：增加阅读量
 		noticeMapper.incrementViewCount(id);
 
-		// 4. 如果是登录用户查看，标记为已读
+		// 5. 原有逻辑：标记已读
 		Long currentUserId = SecurityUtils.getUserId();
+		System.out.println("currentUserId:"+currentUserId);
 		if (currentUserId != null) {
-			noticeUserMapper.markAsRead(id, currentUserId, LocalDateTime.now());
-			// 既然当前正在看，手动设置 vo 状态为已读，省去再次查询
+			// 尝试更新已读状态
+			int rows = noticeUserMapper.markAsRead(id, currentUserId, LocalDateTime.now());
+
+			// 如果更新行数为0，说明该用户在 biz_notice_user 中还没有记录
+			if (rows == 0) {
+				// 检查是否是因为已经是已读（所以is_read=0的条件不满足），还是因为没记录
+				// 这里可以直接尝试插入一条记录（注意处理唯一索引冲突）
+				try {
+					// 在 NoticeUserMapper 插入已读记录
+					noticeUserMapper.insertReadRecord(id, currentUserId, LocalDateTime.now());
+				} catch (Exception e) {
+					// 可能是并发下别人刚插入成功，忽略即可
+				}
+			}
 			vo.setIsRead(true);
 		}
 
-		// 5. 直接返回 vo，不需要 BeanUtils.copyProperties 了
 		return vo;
 	}
 

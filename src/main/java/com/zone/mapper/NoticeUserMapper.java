@@ -38,4 +38,15 @@ public interface NoticeUserMapper {
 	 * 批量删除公告对应的用户接收记录
 	 */
 	int deleteByNoticeIds(@Param("noticeIds") List<Long> noticeIds);
+
+	/**
+	 * 插入或更新用户阅读记录
+	 * @param noticeId 通知ID
+	 * @param userId   用户ID
+	 * @param readTime 阅读时间
+	 * @return 影响行数
+	 */
+	int insertReadRecord(@Param("noticeId") Long noticeId,
+	                     @Param("userId") Long userId,
+	                     @Param("readTime") LocalDateTime readTime);
 }

@@ -45,4 +45,24 @@
         </foreach>
     </delete>
 
+    <!-- 插入已读记录 -->
+    <insert id="insertReadRecord">
+        INSERT INTO biz_notice_user (
+            notice_id,
+            user_id,
+            is_read,
+            read_time,
+            create_time
+        )
+        VALUES (
+                   #{noticeId},
+                   #{userId},
+                   1,
+                   #{readTime},
+                   NOW()
+               )
+        ON DUPLICATE KEY UPDATE
+                             is_read = 1,
+                             read_time = #{readTime}
+    </insert>
 </mapper>

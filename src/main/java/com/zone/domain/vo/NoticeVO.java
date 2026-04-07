@@ -2,6 +2,7 @@ package com.zone.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.zone.domain.entity.Notice;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -71,4 +72,10 @@ public class NoticeVO {
 
 	// 推送目标人数统计（用于列表展示）
 	private Integer targetUserCount;
+
+	/** 上一篇 */
+	private Notice prevNotice;
+
+	/** 下一篇 */
+	private Notice nextNotice;
 }

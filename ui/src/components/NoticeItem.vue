@@ -1,7 +1,7 @@
 <template>
   <div
       class="notice-item"
-      :class="{ 'is-read': item.isRead == 1 }"
+      :class="{ 'is-read': item.isRead === 1 }"
       @click="$emit('click', item)"
   >
     <div class="content-wrapper">
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import {computed} from 'vue' // 引入 computed 保证响应式
+import {computed} from 'vue'
 import {Calendar, View, Picture} from '@element-plus/icons-vue'
 import {formatDate} from '@/utils/date'
 import {useUserStore} from "@/store/user.js"
@@ -65,7 +65,6 @@ const isLoggedIn = computed(() => !!userStore.token)
 </script>
 
 <style scoped>
-/* 样式部分保持不变，确保 flex 布局和已读置灰效果 */
 .notice-item {
   display: flex;
   padding: 20px;

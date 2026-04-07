@@ -7,6 +7,7 @@ import com.zone.domain.vo.NoticeVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -63,5 +64,15 @@ public interface NoticeMapper {
 	 * 批量逻辑删除公告
 	 */
 	int logicalDeleteByIds(@Param("ids") List<Long> ids);
+
+	/**
+	 * 获取上一篇（同类型、已发布、发布时间更早的第一条）
+	 */
+	Notice selectPrevNotice(@Param("type") Integer type, @Param("publishTime") LocalDateTime publishTime);
+
+	/**
+	 * 获取下一篇（同类型、已发布、发布时间更晚的第一条）
+	 */
+	Notice selectNextNotice(@Param("type") Integer type, @Param("publishTime") LocalDateTime publishTime);
 
 }

@@ -638,7 +638,7 @@ onUnmounted(() => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   cursor: pointer;
   margin-right: 40px;
 }
@@ -646,9 +646,7 @@ onUnmounted(() => {
 .logo-text {
   font-size: 20px;
   font-weight: bold;
-  background: linear-gradient(45deg, #1677ff, #409eff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #409EFF;
   white-space: nowrap;
 }
 
@@ -1124,6 +1122,12 @@ onUnmounted(() => {
   .el-menu-item:hover {
     background: rgba(22, 119, 255, 0.05) !important;
     color: #1677ff !important;
+  }
+}
+
+@media print {
+  .portal-header {
+    display: none !important;
   }
 }
 </style>
