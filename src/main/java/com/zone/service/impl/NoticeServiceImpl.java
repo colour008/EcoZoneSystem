@@ -251,7 +251,6 @@ public class NoticeServiceImpl implements NoticeService {
 			// 如果更新行数为0，说明该用户在 biz_notice_user 中还没有记录
 			if (rows == 0) {
 				// 检查是否是因为已经是已读（所以is_read=0的条件不满足），还是因为没记录
-				// 这里可以直接尝试插入一条记录（注意处理唯一索引冲突）
 				try {
 					// 在 NoticeUserMapper 插入已读记录
 					noticeUserMapper.insertReadRecord(id, currentUserId, LocalDateTime.now());
