@@ -17,6 +17,12 @@
             <el-option v-for="(val, key) in statusMap" :key="key" :label="val.label" :value="Number(key)"/>
           </el-select>
         </el-form-item>
+        <el-form-item label="阅读状态">
+          <el-select v-model="queryParams.isRead" placeholder="请选择" clearable style="width: 120px">
+            <el-option label="未读" :value="0"/>
+            <el-option label="已读" :value="1"/>
+          </el-select>
+        </el-form-item>
         <el-form-item label="可见性">
           <el-select v-model="queryParams.visibility" placeholder="请选择" clearable style="width: 130px">
             <el-option v-for="(val, key) in visibilityMap" :key="key" :label="val.label" :value="Number(key)"/>
@@ -63,7 +69,15 @@
             :xs="24" :sm="12" :md="8" :lg="6" :xl="6"
             class="card-col"
         >
-          <el-card class="notice-card" shadow="hover" :body-style="{ padding: '0px' }">
+          <el-card
+              class="notice-card"
+              shadow="hover"
+              :class="{
+                'is-unread-card': ([3, 4].includes(item.type)) && (!item.isRead || String(item.isRead) === '0'),
+                'is-read-card': ([3, 4].includes(item.type)) && (String(item.isRead) === '1')
+              }"
+              :body-style="{ padding: '0px' }"
+          >
             <!-- 封面图 -->
             <div v-if="item.coverUrl" class="card-cover">
               <el-image :src="item.coverUrl" fit="cover" class="cover-img"/>
@@ -81,6 +95,17 @@
             <!-- 卡片内容 -->
             <div class="card-content">
               <div class="card-header">
+                <!-- 原代码位置：card-header 里的 read-status-tag -->
+                <el-tag
+                    v-if="[3,4].includes(item.type)"
+                    :type="readStatusMap[item.isRead && String(item.isRead) !== '0' ? 1 : 0]?.type"
+                    size="small"
+                    effect="plain"
+                    class="read-status-tag"
+                >
+                  {{ readStatusMap[item.isRead && String(item.isRead) !== '0' ? 1 : 0]?.label }}
+                </el-tag>
+
                 <el-tag :type="typeMap[item.type]?.type" size="small" effect="dark" class="type-tag">
                   {{ typeMap[item.type]?.label }}
                 </el-tag>
@@ -94,7 +119,11 @@
                 </el-tag>
               </div>
 
-              <div class="card-title" :title="item.title">{{ item.title }}</div>
+              <div class="card-title" :title="item.title">
+                <span v-if="!item.isRead || String(item.isRead) === '0'" class="unread-badge-dot"></span>
+                {{ item.title }}
+              </div>
+
               <div class="card-summary" :title="item.summary">{{ item.summary || '暂无摘要' }}</div>
 
               <div class="card-meta">
@@ -106,7 +135,9 @@
                 </div>
 
                 <div class="meta-item">
-                  <el-icon ><Avatar /></el-icon>
+                  <el-icon>
+                    <Avatar/>
+                  </el-icon>
                   <template v-if="item.targetScope === 1">
                     <span class="target-count">
                       {{ targetScopeMap[1].label }}
@@ -114,7 +145,7 @@
                     </span>
                   </template>
                   <template v-else>
-                    <span >{{ targetScopeMap[0]?.label || '全员' }}</span>
+                    <span>{{ targetScopeMap[0]?.label || '全员' }}</span>
                   </template>
                 </div>
 
@@ -325,6 +356,7 @@
         size="700px"
         direction="rtl"
         destroy-on-close
+        @close="() => eventBus.emit('refreshNoticeCount')"
     >
       <div v-if="noticeDetail.id" class="detail-content drawer-detail">
         <div class="detail-header">
@@ -383,6 +415,7 @@ import {
 import noticeApi from '@/api/notice'
 import Editor from '@/components/WangEditor/index.vue'
 import {uploadFile} from "@/utils/upload.js";
+import { eventBus } from '@/utils/eventBus'
 
 // 存储用户列表
 const userOptions = ref([])
@@ -401,6 +434,12 @@ const getUserList = async () => {
     console.error('获取用户列表失败', e)
     ElMessage.error('加载用户列表失败')
   }
+}
+
+// 已读状态映射
+const readStatusMap = {
+  0: {label: '未读', type: 'danger', dotClass: 'unread-dot'},
+  1: {label: '已读', type: 'info', dotClass: 'read-dot'}
 }
 
 // 状态映射
@@ -446,7 +485,8 @@ const queryParams = ref({
   type: null,
   status: null,
   visibility: null,
-  publisherName: ''
+  publisherName: '',
+  isRead: null
 })
 
 // 表单模型
@@ -474,7 +514,11 @@ const rules = {
 const getList = async () => {
   loading.value = true
   try {
-    const res = await noticeApi.page(queryParams.value)
+    // 过滤掉空字符串或 null 的参数，避免传给后端导致查询异常
+    const params = Object.fromEntries(
+        Object.entries(queryParams.value).filter(([_, v]) => v !== '' && v !== null)
+    )
+    const res = await noticeApi.page(params)
     noticeList.value = res.data.records || []
     total.value = res.data.total || 0
   } finally {
@@ -488,9 +532,16 @@ const handleQuery = () => {
 }
 
 const resetQuery = () => {
-  queryParams.value = {
-    pageNum: 1, pageSize: 8, title: '', type: null, status: null, visibility: null, publisherName: ''
-  }
+  Object.assign(queryParams.value, {
+    pageNum: 1,
+    pageSize: 8,
+    title: '',
+    type: null,
+    status: null,
+    visibility: null,
+    publisherName: '',
+    isRead: null
+  })
   handleQuery()
 }
 
@@ -535,6 +586,13 @@ const handleDetail = async (row) => {
     const res = await noticeApi.getDetail(row.id)
     noticeDetail.value = res.data
     detailVisible.value = true
+
+    // 仅3/4类型更新已读状态
+    if ([3,4].includes(row.type) && row.isRead === 0) {
+      row.isRead = 1
+      eventBus.emit('refreshNoticeCount')
+    }
+    await getList()
   } catch (e) {
     ElMessage.error('获取详情失败')
   }
@@ -714,8 +772,8 @@ onMounted(() => {
 }
 
 .notice-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px 4px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .card-cover {
@@ -1153,5 +1211,61 @@ onMounted(() => {
 /* 5. 隐藏多选自带的对勾图标，腾出空间给文字 */
 .user-grid-popper .el-select-dropdown__item.selected::after {
   display: none !important;
+}
+
+/* 未读卡片的微妙背景区分 */
+.is-unread-card {
+  border-left: 4px solid #f56c6c !important; /* 左侧醒目红边 */
+  background: rgba(253, 246, 236, 0.3); /* 极浅的暖色背景衬托 */
+}
+
+/* 阅读状态标签间距 */
+.read-status-tag {
+  margin-right: 6px;
+  font-weight: 500;
+  border-radius: 4px; /* 更贴近现代化文档 UI */
+}
+
+/* 标题前的红点指示器 */
+.unread-badge-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #f56c6c;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+}
+
+/* 仅针对 3和4类型的已读状态卡片文字降噪，体现视觉层级。1和2类型保持原样不受影响 */
+.is-read-card .card-title {
+  color: #606266 !important;
+  font-weight: 500 !important;
+}
+.is-read-card .card-summary {
+  color: #a8abb2 !important;
+}
+.is-read-card .cover-img {
+  filter: brightness(0.9) !important;
+}
+
+/* type1/2 强制恢复正常样式，屏蔽已读效果 */
+.notice-card:not(.is-read-card):not(.is-unread-card) .card-title {
+  color: #303133 !important;
+  font-weight: 600 !important;
+}
+.notice-card:not(.is-read-card):not(.is-unread-card) .card-summary {
+  color: #909399 !important;
+}
+.notice-card:not(.is-read-card):not(.is-unread-card) .cover-img {
+  filter: none !important;
+}
+
+/* 鼠标悬停未读卡片时，红边加亮 */
+.is-unread-card:hover {
+  border-left-color: #ff4d4f;
 }
 </style>

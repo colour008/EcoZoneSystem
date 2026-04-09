@@ -113,6 +113,24 @@
               </div>
 
               <div class="notice-panel-body">
+                <template v-if="unreadNoticeCount > 0">
+                  <div class="group-label">系统消息</div>
+                  <div class="notice-card" @click="handleNav('/business/notice/list')">
+                    <div class="card-icon notice-bg">
+                      <el-icon>
+                        <ChatDotRound/>
+                      </el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">通知公告</div>
+                      <div class="value">{{ unreadNoticeCount }} <small>条新消息</small></div>
+                    </div>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
+                  <el-divider style="margin: 8px 0"/>
+                </template>
                 <template v-if="isAdmin || userStore.roles.includes('ROLE_STAFF')">
                   <div class="group-label">园区行政</div>
                   <div class="notice-card" @click="handleNav('/business/enterprise/list')">
@@ -339,12 +357,13 @@ import {
   ArrowRight,
   Loading,
   Tools,
-  Monitor, Bell, Warning, Timer
+  Monitor, Bell, Warning, Timer, ChatDotRound
 } from '@element-plus/icons-vue'
 import {ElMessageBox, ElMessage} from 'element-plus'
 import userApi from '@/api/user'
 import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from '@/utils/upload'
+import noticeApi from '@/api/notice'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -353,6 +372,7 @@ const route = useRoute()
 // 定义统计数据响应式变量
 const enterprisePendingCount = ref(0)
 const myEnterpriseNoticeCount = ref(0)
+const unreadNoticeCount = ref(0) //系统通知未读数
 const orderStats = ref({
   pendingCount: 0,
   processingCount: 0
@@ -364,14 +384,17 @@ const totalNoticeCount = computed(() => {
   if (!userStore.token) return 0
   let count = 0
 
-  // 管理员/职员逻辑
+  // 1. 基础系统通知（所有登录用户可见）
+  count += (unreadNoticeCount.value || 0)
+
+  // 2. 管理员/职员额外待办
   if (isAdmin.value || isStaff.value) {
     count += (enterprisePendingCount.value || 0)
     count += (orderStats.value.pendingCount || 0)
     count += (orderStats.value.processingCount || 0)
   }
 
-  // 企业用户逻辑 (加上新接口的返回数)
+  // 3. 企业用户进度通知
   if (isEnterprise.value) {
     count += (myEnterpriseNoticeCount.value || 0)
   }
@@ -382,38 +405,41 @@ const totalNoticeCount = computed(() => {
 // 获取数据的核心方法
 const fetchAllNotifications = async () => {
   if (!userStore.token) return
-  const roles = userStore.roles || []
-  const isAdminOrStaff = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
-  const isEnterpriseUser = roles.includes('ROLE_ENTERPRISE')
 
   try {
-    // 准备请求列表
-    const requests = [workOrderApi.getStatistics()]
+    const requests = [
+      workOrderApi.getStatistics(),
+      // 无论什么角色，通常都需要获取系统公告未读数
+      noticeApi.getUnreadCount()
+    ]
 
-    // 如果是管理层，查全量待审核
-    if (isAdminOrStaff) {
+    // 管理层/企业用户原有的逻辑保持不变
+    if (isAdmin.value || isStaff.value) {
       requests.push(enterpriseApi.getPendingCount())
     } else {
       requests.push(Promise.resolve(null))
     }
 
-    // 如果是企业用户，查个人通知数
-    if (isEnterpriseUser) {
+    if (isEnterprise.value) {
       requests.push(enterpriseApi.getMyNoticeCount())
     } else {
       requests.push(Promise.resolve(null))
     }
 
-    const [orderRes, entPendingRes, myNoticeRes] = await Promise.all(requests)
+    // 注意解构赋值的顺序
+    const [orderRes, noticeRes, entPendingRes, myNoticeRes] = await Promise.all(requests)
 
     if (orderRes.code === 200) orderStats.value = orderRes.data
 
-    // 管理端：更新全量待办
+    // 赋值系统通知未读数
+    if (noticeRes && noticeRes.code === 200) {
+      unreadNoticeCount.value = noticeRes.data
+    }
+
     if (entPendingRes && entPendingRes.code === 200) {
       enterprisePendingCount.value = entPendingRes.data
     }
 
-    // 企业端：更新个人通知
     if (myNoticeRes && myNoticeRes.code === 200) {
       myEnterpriseNoticeCount.value = myNoticeRes.data
     }
@@ -920,6 +946,10 @@ onUnmounted(() => {
 
 .order-processing-bg {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.notice-bg {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
 }
 
 .card-info .label {

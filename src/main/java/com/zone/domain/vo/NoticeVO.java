@@ -47,7 +47,7 @@ public class NoticeVO {
 	private Long publisherId;      // 发布人ID
 	private Integer viewCount;
 	private Integer isDeleted;     // 逻辑删除
-	private Boolean isRead; // C端展示时，标识当前用户是否已读
+	private Boolean isRead; // B端和C端展示时，标识当前用户是否已读
 	/**
 	 * 创建时间
 	 */

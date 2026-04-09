@@ -132,12 +132,12 @@ public class NoticeController {
     }
 
     /**
-     * C端-获取当前用户未读消息数
+     * B端和C端-获取当前用户未读消息数
      * @return
      */
     @Anonymous
     @GetMapping("/unread-count")
-    @Operation(summary = "C端-获取当前用户未读消息数")
+    @Operation(summary = "B端和C端-获取当前用户未读消息数")
     public Result<Integer> getUnreadCount() {
         return Result.success(noticeService.getUnreadCount());
     }

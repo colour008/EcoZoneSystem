@@ -33,7 +33,9 @@
                  INNER JOIN biz_notice n ON nu.notice_id = n.id
         WHERE nu.user_id = #{userId}
           AND nu.is_read = 0
-          AND n.status = 1 AND n.is_deleted = 0
+          AND n.status = 1
+          AND n.is_deleted = 0
+          AND n.type IN (3, 4)
     </select>
 
     <!-- 批量删除 -->

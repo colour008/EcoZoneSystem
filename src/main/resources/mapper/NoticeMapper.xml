@@ -9,6 +9,11 @@
         publisher_id, publish_time, view_count, is_deleted, create_time, update_time
     </sql>
 
+    <sql id="Brief_Column_List">
+        n.id, n.title, n.summary, n.cover_url, n.type, n.visibility, n.target_scope,
+        n.publish_time, n.view_count, u.real_name AS publisher_name
+    </sql>
+
     <resultMap id="NoticeResultMap" type="com.zone.domain.entity.Notice">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
@@ -91,17 +96,14 @@
     </update>
 
     <!-- B端-全量分页查询 -->
-    <sql id="Brief_Column_List">
-        n.id, n.title, n.summary, n.cover_url, n.type, n.status,
-        n.visibility, n.target_scope, n.publish_time, n.view_count,
-        u.real_name AS publisher_name,
-        (SELECT COUNT(*) FROM biz_notice_target nt WHERE nt.notice_id = n.id) AS target_user_count
-    </sql>
     <select id="getAdminNoticePage" resultMap="NoticeVOResultMap">
         SELECT
-        <include refid="Brief_Column_List"/>
+        n.*,
+        IFNULL(nu.is_read, 0) AS is_read,
+        u.real_name AS publisher_name
         FROM biz_notice n
         LEFT JOIN sys_user u ON n.publisher_id = u.id
+        LEFT JOIN biz_notice_user nu ON n.id = nu.notice_id AND nu.user_id = #{currentUserId}
         <where>
             n.is_deleted = 0
             <if test="title != null and title != ''">
@@ -116,11 +118,17 @@
             <if test="visibility != null">
                 AND n.visibility = #{visibility}
             </if>
+
+            <if test="isRead != null">
+                AND IFNULL(nu.is_read, 0) = #{isRead}
+                AND n.type IN (3, 4)
+            </if>
+
             <if test="publisherName != null and publisherName != ''">
                 AND u.real_name LIKE CONCAT('%', #{publisherName}, '%')
             </if>
         </where>
-        ORDER BY n.create_time DESC
+        ORDER BY (n.type IN (3, 4) AND (nu.is_read = 0 OR nu.is_read IS NULL)) DESC, n.publish_time DESC, n.create_time DESC
     </select>
 
     <!-- C端-获取公开分页列表，并关联当前用户的已读状态 -->

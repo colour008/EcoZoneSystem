@@ -88,6 +88,16 @@ const noticeApi = {
         })
     },
 
+    /**
+     * B端和C端-获取当前用户未读消息数
+     */
+    getUnreadCount() {
+        return request({
+            url: '/notice/unread-count',
+            method: 'get'
+        })
+    },
+
     // ================== C 端：门户/移动端接口 ==================
 
     /**
@@ -102,15 +112,6 @@ const noticeApi = {
         })
     },
 
-    /**
-     * C端-获取当前用户未读消息数
-     */
-    getUnreadCount() {
-        return request({
-            url: '/notice/unread-count',
-            method: 'get'
-        })
-    },
 }
 
 export default noticeApi

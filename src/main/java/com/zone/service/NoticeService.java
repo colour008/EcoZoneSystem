@@ -75,7 +75,7 @@ public interface NoticeService {
 	NoticeVO getDetail(Long id);
 
 	/**
-	 * C端-获取当前用户未读消息数
+	 * B端和C端-获取当前用户未读消息数
 	 * @return
 	 */
 	int getUnreadCount();

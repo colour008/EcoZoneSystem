@@ -156,6 +156,7 @@ public class NoticeServiceImpl implements NoticeService {
 	 */
 	@Override
 	public PageResult<NoticeVO> getAdminPage(NoticePageQueryDTO dto) {
+		dto.setCurrentUserId(SecurityUtils.getUserId());
 		PageHelper.startPage(dto.getPageNum(), dto.getPageSize());
 		Page<NoticeVO> page = noticeMapper.getAdminNoticePage(dto);
 		return new PageResult<>(page.getTotal(), page.getResult());
@@ -243,7 +244,7 @@ public class NoticeServiceImpl implements NoticeService {
 
 		// 5. 原有逻辑：标记已读
 		Long currentUserId = SecurityUtils.getUserId();
-		System.out.println("currentUserId:"+currentUserId);
+		System.out.println("currentUserId:" + currentUserId);
 		if (currentUserId != null) {
 			// 尝试更新已读状态
 			int rows = noticeUserMapper.markAsRead(id, currentUserId, LocalDateTime.now());
@@ -265,7 +266,7 @@ public class NoticeServiceImpl implements NoticeService {
 	}
 
 	/**
-	 * C端-获取当前用户未读消息数
+	 * B端和C端-获取当前用户未读消息数
 	 */
 	@Override
 	public int getUnreadCount() {

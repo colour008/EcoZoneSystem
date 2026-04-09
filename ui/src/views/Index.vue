@@ -78,6 +78,23 @@
 
               <div class="notice-panel-body">
                 <template v-if="userStore.roles.includes('ROLE_ADMIN') || userStore.roles.includes('ROLE_STAFF')">
+                  <div class="group-label">系统消息</div>
+                  <div class="notice-card" @click="handleNav('/business/notice/list')">
+                    <div class="card-icon notice-bg">
+                      <el-icon>
+                        <ChatDotRound/>
+                      </el-icon>
+                    </div>
+                    <div class="card-info">
+                      <div class="label">未读通知公告</div>
+                      <div class="value">{{ unreadNoticeCount }} <small>条未读</small></div>
+                    </div>
+                    <el-icon class="arrow-right">
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
+                  <el-divider style="margin: 8px 0"/>
+
                   <div class="group-label">园区行政</div>
                   <div class="notice-card" @click="handleNav('/business/enterprise/list')">
                     <div class="card-icon ent-bg">
@@ -277,17 +294,33 @@ import {useRoute, useRouter} from 'vue-router'
 import {useUserStore} from '@/store/user'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
-  Fold, Expand, ArrowDown, FullScreen, Bell, User, SwitchButton, Aim, Plus, Monitor, ArrowRight, Tools, Loading, Refresh
+  Fold,
+  Expand,
+  ArrowDown,
+  FullScreen,
+  Bell,
+  User,
+  SwitchButton,
+  Aim,
+  Plus,
+  Monitor,
+  ArrowRight,
+  Tools,
+  Loading,
+  Refresh,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 import userApi from '@/api/user'
 import {uploadFile} from '@/utils/upload'
 import {resolvePath} from '@/utils/path'
 import enterpriseApi from '@/api/enterprise'
 import workOrderApi from '@/api/workOrder'
-
+import noticeApi from '@/api/notice'
+import { eventBus } from '@/utils/eventBus'
 
 // 1. 响应式数据
-const enterprisePendingCount = ref(0) // 原有的企业审核数
+const enterprisePendingCount = ref(0) // 企业审核数
+const unreadNoticeCount = ref(0) // 未读通知公告数
 const orderStats = ref({
   pendingCount: 0,   // 待受理
   processingCount: 0 // 处理中
@@ -301,12 +334,14 @@ const totalNoticeCount = computed(() => {
   const isAdmin = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
 
   let total = 0
-  // 管理员累加：企业审核 + 待受理工单 + 处理中工单
   if (isAdmin) {
-    total = enterprisePendingCount.value + orderStats.value.pendingCount + orderStats.value.processingCount
+    // 总数 = 企业审核 + 工单待办 + 工单处理中 + 未读通知公告
+    total = enterprisePendingCount.value +
+        orderStats.value.pendingCount +
+        orderStats.value.processingCount +
+        unreadNoticeCount.value; // 3. 累加未读通知
   } else if (roles.includes('ROLE_WORKER')) {
-    // 工人仅累加：分配给自己的处理中工单
-    total = orderStats.value.processingCount
+    total = orderStats.value.processingCount + unreadNoticeCount.value;
   }
   return total
 })
@@ -317,10 +352,11 @@ const fetchAllNotifications = async () => {
   const isAdmin = roles.includes('ROLE_ADMIN') || roles.includes('ROLE_STAFF')
 
   try {
-    // 并行请求：企业审核数 + 工单统计数
-    const [orderRes, entRes] = await Promise.all([
+    // 4. 并行请求加入 noticeApi.getUnreadCount()
+    const [orderRes, entRes, noticeRes] = await Promise.all([
       workOrderApi.getStatistics(),
-      isAdmin ? enterpriseApi.getPendingCount() : Promise.resolve({data: 0})
+      isAdmin ? enterpriseApi.getPendingCount() : Promise.resolve({data: 0}),
+      noticeApi.getUnreadCount() // 获取当前用户在 biz_notice_user 中的未读数
     ])
 
     if (orderRes.code === 200) {
@@ -328,6 +364,10 @@ const fetchAllNotifications = async () => {
     }
     if (entRes && entRes.code === 200) {
       enterprisePendingCount.value = entRes.data
+    }
+    // 5. 赋值未读通知数
+    if (noticeRes && noticeRes.code === 200) {
+      unreadNoticeCount.value = noticeRes.data
     }
   } catch (error) {
     console.error('同步通知数据失败', error)
@@ -553,6 +593,11 @@ onMounted(() => {
 
   // 每隔 1 分钟轮询一次
   timer = setInterval(fetchAllNotifications, 60000)
+
+  // 监听公告已读事件，自动刷新顶部小红点
+  eventBus.on('refreshNoticeCount', () => {
+    fetchAllNotifications()
+  })
 })
 
 // 新增：组件卸载时清理定时器
@@ -561,6 +606,8 @@ onUnmounted(() => {
     clearInterval(timer)
     timer = null
   }
+  // 清理事件监听
+  eventBus.off('refreshNoticeCount')
 })
 </script>
 
@@ -887,6 +934,10 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+.notice-bg {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
 .card-info .label {
   font-size: 13px;
   color: #4e5969;
@@ -937,10 +988,10 @@ onUnmounted(() => {
 }
 
 :deep(.el-badge__content.is-fixed) {
-  top: 4px !important;      /* 距离顶部的距离，数值越小越靠上 */
-  right: 6px !important;    /* 距离右侧的距离，数值越小越靠右 */
+  top: 4px !important; /* 距离顶部的距离，数值越小越靠上 */
+  right: 6px !important; /* 距离右侧的距离，数值越小越靠右 */
   transform: translateY(-50%) translateX(50%) scale(0.85);
-  border: none;             /* 去掉白色边框，更高级 */
+  border: none; /* 去掉白色边框，更高级 */
   box-shadow: 0 0 4px rgba(255, 77, 79, 0.3); /* 淡淡的红光阴影 */
   z-index: 10;
 }
