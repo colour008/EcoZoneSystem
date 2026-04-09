@@ -120,7 +120,7 @@
               </div>
 
               <div class="card-title" :title="item.title">
-                <span v-if="!item.isRead || String(item.isRead) === '0'" class="unread-badge-dot"></span>
+                <span v-if="[3,4].includes(item.type) && (!item.isRead || String(item.isRead) === '0')" class="unread-badge-dot"></span>
                 {{ item.title }}
               </div>
 
