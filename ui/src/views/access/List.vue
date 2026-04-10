@@ -46,8 +46,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="orderNum" label="排序" align="center" width="80"/>
-        <el-table-column prop="perms" label="权限标识" min-width="150" show-overflow-tooltip/>
+        <el-table-column prop="path" label="路由地址" min-width="150" show-overflow-tooltip/>
         <el-table-column prop="component" label="组件路径" min-width="150" show-overflow-tooltip/>
+        <el-table-column prop="perms" label="权限标识" min-width="150" show-overflow-tooltip/>
         <el-table-column label="状态" align="center" width="80">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'" effect="dark">
@@ -95,9 +96,9 @@
           <el-col :span="24">
             <el-form-item label="菜单类型" prop="type">
               <el-radio-group v-model="form.type">
-                <el-radio label="M">目录</el-radio>
-                <el-radio label="C">菜单</el-radio>
-                <el-radio label="F">按钮</el-radio>
+                <el-radio value="M">目录</el-radio>
+                <el-radio value="C">菜单</el-radio>
+                <el-radio value="F">按钮</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -153,8 +154,8 @@
           <el-col :span="12" v-if="form.type === 'C'">
             <el-form-item label="是否外链">
               <el-radio-group v-model="form.isExternal">
-                <el-radio :label="1">是</el-radio>
-                <el-radio :label="0">否</el-radio>
+                <el-radio value="1">是</el-radio>
+                <el-radio value="0">否</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -171,8 +172,8 @@
           <el-col :span="12" v-if="form.type !== 'F'">
             <el-form-item label="显示状态">
               <el-radio-group v-model="form.status">
-                <el-radio :label="1">显示</el-radio>
-                <el-radio :label="0">隐藏</el-radio>
+                <el-radio value="1">显示</el-radio>
+                <el-radio value="0">隐藏</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -197,7 +198,7 @@ import {ref, onMounted, nextTick} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import menuApi from '@/api/menu'
 import IconSelect from '@/components/IconSelect.vue'
-import {Delete, Edit, Plus} from "@element-plus/icons-vue";
+import {Delete, Edit, Plus, Refresh, Search} from "@element-plus/icons-vue";
 
 const loading = ref(false)
 const submitLoading = ref(false)

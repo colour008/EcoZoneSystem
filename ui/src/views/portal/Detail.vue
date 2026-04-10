@@ -122,11 +122,12 @@
 </template>
 
 <script setup>
-import {ref, onMounted, watch} from 'vue'
+import {ref, onMounted, watch, nextTick} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {User, Clock, View, Printer, Back} from '@element-plus/icons-vue'
 import noticeApi from '@/api/notice'
 import {ElMessage} from 'element-plus'
+import {eventBus} from "@/utils/eventBus.js";
 
 const route = useRoute()
 const router = useRouter()
@@ -193,6 +194,7 @@ const typeRouteMap = {
   1: '/policy',   // 政策文件
   2: '/news',     // 园区动态
   3: '/notice',   // 通知公告
+  4: '/notice',   // 内部通告
 }
 
 // 自定义返回方法
@@ -217,6 +219,8 @@ watch(() => route.query.id, (newId, oldId) => {
 
 onMounted(() => {
   getDetail()
+  nextTick()
+  eventBus.emit('refreshNoticeCount')
 })
 </script>
 

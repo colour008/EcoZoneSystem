@@ -624,11 +624,12 @@ onMounted(() => {
     noticeTimer = setInterval(fetchAllNotifications, 60000)
   }
   // 监听公告已读事件，自动刷新顶部小红点
-  eventBus.on('refreshNoticeCount', () => {
-    fetchAllNotifications()
-  })
+  eventBus.on('refreshNoticeCount', handleRefresh)
 })
 
+const handleRefresh = () => {
+  fetchAllNotifications()
+}
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleResize)

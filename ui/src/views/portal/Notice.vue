@@ -3,9 +3,19 @@
     <div class="main-content container">
       <div class="header-wrapper">
         <div class="title-section">
-          <h2 class="page-title">通知公告</h2>
-          <span class="sub-title">Announcements</span>
+          <div class="title-text">
+            <h2 class="page-title">通知公告</h2>
+            <span class="sub-title">Announcements</span>
+          </div>
+
+          <div class="type-filter" v-if="userStore.token">
+            <el-radio-group v-model="queryParams.type" @change="handleSearch">
+              <el-radio-button value="3">通知公告</el-radio-button>
+              <el-radio-button value="4">内部通告</el-radio-button>
+            </el-radio-group>
+          </div>
         </div>
+
         <div class="search-box">
           <el-input
               v-model="queryParams.title"
@@ -84,8 +94,10 @@ import {Search} from '@element-plus/icons-vue'
 import noticeApi from '@/api/notice'
 import NoticeItem from '@/components/NoticeItem.vue'
 import { eventBus } from '@/utils/eventBus'
+import { useUserStore } from '@/store/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 状态变量
 const loading = ref(false)
@@ -147,10 +159,16 @@ const goDetail = (item) => {
     path: '/portal/detail',
     query: {id: item.id}
   })
-  eventBus.emit('refreshNoticeCount')
+  setTimeout(() => {
+    console.log('发送刷新未读数事件...');
+    eventBus.emit('refreshNoticeCount')
+  }, 100)
 }
 
 onMounted(() => {
+  if (!userStore.token && queryParams.type === 4) {
+    queryParams.type = 3
+  }
   getList()
 })
 </script>
@@ -181,7 +199,17 @@ onMounted(() => {
 
 .title-section {
   display: flex;
+  align-items: flex-end;
+  gap: 30px;
+}
+
+.title-text {
+  display: flex;
   flex-direction: column;
+}
+
+.type-filter {
+  margin-bottom: 4px;
 }
 
 .page-title {

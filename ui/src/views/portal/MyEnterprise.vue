@@ -184,11 +184,11 @@
               </el-button>
               <div class="filter-box">
                 <el-radio-group v-model="workOrderQuery.status" @change="loadWorkOrders" size="default">
-                  <el-radio-button :label="null">全部 ({{ totalStatusCount.all }})</el-radio-button>
-                  <el-radio-button :label="0">待受理 ({{ totalStatusCount[0] }})</el-radio-button>
-                  <el-radio-button :label="1">处理中 ({{ totalStatusCount[1] }})</el-radio-button>
-                  <el-radio-button :label="2">已办结 ({{ totalStatusCount[2] }})</el-radio-button>
-                  <el-radio-button :label="3">已评价 ({{ totalStatusCount[3] }})</el-radio-button>
+                  <el-radio-button value="null">全部 ({{ totalStatusCount.all }})</el-radio-button>
+                  <el-radio-button value="0">待受理 ({{ totalStatusCount[0] }})</el-radio-button>
+                  <el-radio-button value="1">处理中 ({{ totalStatusCount[1] }})</el-radio-button>
+                  <el-radio-button value="2">已办结 ({{ totalStatusCount[2] }})</el-radio-button>
+                  <el-radio-button value="3">已评价 ({{ totalStatusCount[3] }})</el-radio-button>
                 </el-radio-group>
               </div>
             </div>
@@ -1167,9 +1167,18 @@ onMounted(() => {
   color: #334155;
 }
 
-.rich-content-view :deep(img) {
+:deep(.rich-content-view img) {
   max-width: 100%;
-  border-radius: 12px;
+  height: auto !important;
+  border-radius: 8px;
+  margin: 10px 0;
+  border: #050505 1px dotted;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.rich-content-view video) {
+  max-width: 100%;
+  border-radius: 8px;
 }
 
 .license-preview-box {
