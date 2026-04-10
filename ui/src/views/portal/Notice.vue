@@ -83,6 +83,7 @@ import {useRouter} from 'vue-router'
 import {Search} from '@element-plus/icons-vue'
 import noticeApi from '@/api/notice'
 import NoticeItem from '@/components/NoticeItem.vue'
+import { eventBus } from '@/utils/eventBus'
 
 const router = useRouter()
 
@@ -146,6 +147,7 @@ const goDetail = (item) => {
     path: '/portal/detail',
     query: {id: item.id}
   })
+  eventBus.emit('refreshNoticeCount')
 }
 
 onMounted(() => {

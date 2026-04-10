@@ -115,7 +115,7 @@
               <div class="notice-panel-body">
                 <template v-if="unreadNoticeCount > 0">
                   <div class="group-label">系统消息</div>
-                  <div class="notice-card" @click="handleNav('/business/notice/list')">
+                  <div class="notice-card" @click="handleNav((userStore.roles.includes('ROLE_ENTERPRISE')||userStore.roles.includes('ROLE_WORKER'))?'/notice':'/business/notice/list')">
                     <div class="card-icon notice-bg">
                       <el-icon>
                         <ChatDotRound/>
@@ -364,6 +364,7 @@ import userApi from '@/api/user'
 import enterpriseApi from '@/api/enterprise'
 import {uploadFile} from '@/utils/upload'
 import noticeApi from '@/api/notice'
+import { eventBus } from '@/utils/eventBus'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -622,12 +623,18 @@ onMounted(() => {
     fetchAllNotifications()
     noticeTimer = setInterval(fetchAllNotifications, 60000)
   }
+  // 监听公告已读事件，自动刷新顶部小红点
+  eventBus.on('refreshNoticeCount', () => {
+    fetchAllNotifications()
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleResize)
   if (noticeTimer) clearInterval(noticeTimer)
+  // 清理事件监听
+  eventBus.off('refreshNoticeCount')
 })
 </script>
 
