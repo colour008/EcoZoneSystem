@@ -1,6 +1,6 @@
 <template>
   <div class="portal-home">
-    <el-carousel height="500px" motion-blur class="hero-carousel">
+    <el-carousel height="450px" motion-blur class="hero-carousel">
       <el-carousel-item v-for="(item, index) in banners" :key="index">
         <div class="banner-item" :style="{ backgroundImage: `url(${item.img})` }">
           <div class="banner-mask"></div>

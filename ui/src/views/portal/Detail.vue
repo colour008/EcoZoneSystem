@@ -4,7 +4,7 @@
       <div class="container">
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item @click="$router.go(-1)" style="cursor: pointer;">返回列表</el-breadcrumb-item>
+          <el-breadcrumb-item @click="handleGoBack" style="cursor: pointer;">返回列表</el-breadcrumb-item>
           <el-breadcrumb-item>正文详情</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
@@ -12,6 +12,14 @@
 
     <div class="main-content container">
       <div class="article-wrapper">
+        <div class="article-footer">
+          <el-button type="primary" size="small" plain @click="handleGoBack">
+            <el-icon>
+              <Back/>
+            </el-icon>
+            返回
+          </el-button>
+        </div>
         <el-skeleton :loading="loading" animated>
           <template #template>
             <div style="padding: 40px;">
@@ -74,14 +82,6 @@
                   v-html="detail.content"
               ></div>
 
-              <div class="article-footer">
-                <el-button type="primary" plain @click="$router.go(-1)">
-                  <el-icon>
-                    <Back/>
-                  </el-icon>
-                  返回上一页
-                </el-button>
-              </div>
 
               <div class="article-nav-cards" v-if="detail.prevNotice || detail.nextNotice">
                 <div class="nav-card prev" :class="{ 'empty': !detail.prevNotice }"
@@ -188,6 +188,25 @@ const goToArticle = (id) => {
   router.push({path: route.path, query: {id}})
 }
 
+// 定义文章类型到路由路径的映射
+const typeRouteMap = {
+  1: '/policy',   // 政策文件
+  2: '/news',     // 园区动态
+  3: '/notice',   // 通知公告
+}
+
+// 自定义返回方法
+const handleGoBack = () => {
+  // 如果详情数据已加载，根据类型跳转
+  if (detail.value && detail.value.type) {
+    const targetPath = typeRouteMap[detail.value.type] || '/'
+    router.push(targetPath)
+  } else {
+    // 兜底：如果数据没加载出来或者没有对应类型，返回首页
+    router.push('/')
+  }
+}
+
 // 监听路由参数变化
 watch(() => route.query.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
@@ -224,13 +243,13 @@ onMounted(() => {
 
 /* 文章容器 */
 .article-wrapper {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   min-height: 500px;
-  padding: 40px 50px;
+  padding: 10px 50px 50px;
 }
 
 /* 头部样式 */
@@ -354,9 +373,8 @@ onMounted(() => {
 
 /* 底部返回按钮 */
 .article-footer {
-  margin-top: 50px;
-  padding-bottom: 30px;
-  text-align: center;
+  padding: 20px 0 30px;
+  text-align: left;
 }
 
 /* --- 上一篇/下一篇 背景卡片版样式 --- */
@@ -404,13 +422,13 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.89) 0%, rgba(39, 39, 39, 0.85) 100%);
+  background: linear-gradient(90deg, rgba(32, 32, 32, 0.5) 0%, rgba(89, 89, 89, 0.41) 100%);
   z-index: 2;
   transition: background 0.3s;
 }
 
 .nav-card.next .nav-mask {
-  background: linear-gradient(270deg, rgba(0, 0, 0, 0.89) 0%, rgba(39, 39, 39, 0.85) 100%);
+  background: linear-gradient(90deg, rgba(32, 32, 32, 0.5) 0%, rgba(89, 89, 89, 0.41) 100%);
 }
 
 /* 文字内容层 */
@@ -434,7 +452,7 @@ onMounted(() => {
 .nav-title {
   font-size: 15px;
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

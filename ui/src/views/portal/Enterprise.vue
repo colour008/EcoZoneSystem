@@ -14,7 +14,7 @@
               @clear="handleSearch"
           >
             <template #append>
-              <el-button :icon="Search" @click="handleSearch" class="search-btn"/>
+              <el-button icon="Search" @click="handleSearch" class="search-btn"/>
             </template>
           </el-input>
         </div>
@@ -141,27 +141,26 @@
         </template>
       </el-skeleton>
     </div>
-
-    <el-dialog
-        v-model="detailVisible"
-        :title="currentEnt?.companyName"
-        width="60%"
-        destroy-on-close
-        class="detail-dialog"
-        align-center
-    >
-      <div class="detail-header-info">
-        <el-tag effect="dark" type="primary" class="mr-2">{{ currentEnt?.industry }}</el-tag>
-        <span class="mr-4"><el-icon><Location/></el-icon> {{ currentEnt?.buildingNo }}</span>
-        <span class="mr-4"><el-icon><User/></el-icon> {{ currentEnt?.contactPerson }}</span>
-        <span class="text-phone"><el-icon><Phone/></el-icon> {{ currentEnt?.contactPhone }}</span>
-      </div>
-      <el-divider/>
-      <div
-          class="rich-text-container"
-          v-html="currentEnt?.introduction || '<p style=\'text-align:center;color:#999\'>暂无详细介绍</p>'"
-      ></div>
-    </el-dialog>
+      <el-dialog
+          v-model="detailVisible"
+          :title="currentEnt?.companyName"
+          width="60%"
+          destroy-on-close
+          class="detail-dialog"
+          align-center
+      >
+        <div class="detail-header-info">
+          <el-tag effect="dark" type="primary" class="mr-2">{{ currentEnt?.industry }}</el-tag>
+          <span class="mr-4"><el-icon><Location/></el-icon> {{ currentEnt?.buildingNo }}</span>
+          <span class="mr-4"><el-icon><User/></el-icon> {{ currentEnt?.contactPerson }}</span>
+          <span class="text-phone"><el-icon><Phone/></el-icon> {{ currentEnt?.contactPhone }}</span>
+        </div>
+        <el-divider/>
+        <div
+            class="rich-text-container"
+            v-html="currentEnt?.introduction || '<p style=\'text-align:center;color:#999\'>暂无详细介绍</p>'"
+        ></div>
+      </el-dialog>
   </div>
 </template>
 
@@ -497,6 +496,7 @@ onMounted(() => {
   flex-wrap: wrap;
   font-size: 14px;
   color: #606266;
+  gap: 5px;
 }
 
 .mr-2 {
@@ -509,7 +509,6 @@ onMounted(() => {
 
 .text-phone {
   color: #f56c6c;
-  font-weight: bold;
 }
 
 /* 限定富文本内部图片宽度，防止撑破弹窗 */
@@ -524,6 +523,7 @@ onMounted(() => {
   height: auto !important;
   border-radius: 8px;
   margin: 10px 0;
+  border: #050505 1px dotted;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -659,5 +659,14 @@ onMounted(() => {
   .pagination-wrapper {
     transform: scale(0.85);
   }
+}
+</style>
+
+<style>
+.detail-dialog .el-dialog__header   {
+  padding: 10px 30px !important;
+}
+.detail-dialog .el-dialog__body  {
+  padding: 0 30px  !important;
 }
 </style>

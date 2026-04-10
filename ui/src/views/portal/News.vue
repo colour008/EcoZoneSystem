@@ -163,7 +163,7 @@ onMounted(() => {
 
 /* 容器限宽与居中 */
 .container {
-  max-width: 1100px; /* 稍微收敛宽度，阅读体验更好 */
+  max-width: 1200px; /* 稍微收敛宽度，阅读体验更好 */
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -174,6 +174,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 24px;
+  padding: 0 10px;
 }
 
 .title-section {
