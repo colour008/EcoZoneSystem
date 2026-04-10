@@ -184,11 +184,11 @@
               </el-button>
               <div class="filter-box">
                 <el-radio-group v-model="workOrderQuery.status" @change="loadWorkOrders" size="default">
-                  <el-radio-button value="null">全部 ({{ totalStatusCount.all }})</el-radio-button>
-                  <el-radio-button value="0">待受理 ({{ totalStatusCount[0] }})</el-radio-button>
-                  <el-radio-button value="1">处理中 ({{ totalStatusCount[1] }})</el-radio-button>
-                  <el-radio-button value="2">已办结 ({{ totalStatusCount[2] }})</el-radio-button>
-                  <el-radio-button value="3">已评价 ({{ totalStatusCount[3] }})</el-radio-button>
+                  <el-radio-button :value="null">全部 ({{ totalStatusCount.all }})</el-radio-button>
+                  <el-radio-button :value="0">待受理 ({{ totalStatusCount[0] }})</el-radio-button>
+                  <el-radio-button :value="1">处理中 ({{ totalStatusCount[1] }})</el-radio-button>
+                  <el-radio-button :value="2">已办结 ({{ totalStatusCount[2] }})</el-radio-button>
+                  <el-radio-button :value="3">已评价 ({{ totalStatusCount[3] }})</el-radio-button>
                 </el-radio-group>
               </div>
             </div>

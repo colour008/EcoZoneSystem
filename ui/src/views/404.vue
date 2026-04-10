@@ -20,7 +20,7 @@
           {{ backButtonText }}
         </el-button>
 
-        <el-button size="large" @click="handleToLogin" plain>
+        <el-button type="success" size="large" @click="handleToLogin" >
           返回登录页
         </el-button>
       </div>

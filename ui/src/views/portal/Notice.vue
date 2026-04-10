@@ -10,8 +10,8 @@
 
           <div class="type-filter" v-if="userStore.token">
             <el-radio-group v-model="queryParams.type" @change="handleSearch">
-              <el-radio-button value="3">通知公告</el-radio-button>
-              <el-radio-button value="4">内部通告</el-radio-button>
+              <el-radio-button :value="3">通知公告</el-radio-button>
+              <el-radio-button :value="4">内部通告</el-radio-button>
             </el-radio-group>
           </div>
         </div>
