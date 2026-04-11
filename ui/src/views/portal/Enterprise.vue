@@ -141,32 +141,58 @@
         </template>
       </el-skeleton>
     </div>
-      <el-dialog
-          v-model="detailVisible"
-          :title="currentEnt?.companyName"
-          width="60%"
-          destroy-on-close
-          class="detail-dialog"
-          align-center
-      >
+    <el-dialog
+        v-model="detailVisible"
+        :title="currentEnt?.companyName"
+        width="60%"
+        destroy-on-close
+        class="detail-dialog"
+        align-center
+    >
+      <div class="dialog-header-row">
         <div class="detail-header-info">
-          <el-tag effect="dark" type="primary" class="mr-2">{{ currentEnt?.industry }}</el-tag>
-          <span class="mr-4"><el-icon><Location/></el-icon> {{ currentEnt?.buildingNo }}</span>
-          <span class="mr-4"><el-icon><User/></el-icon> {{ currentEnt?.contactPerson }}</span>
-          <span class="text-phone"><el-icon><Phone/></el-icon> {{ currentEnt?.contactPhone }}</span>
+          <span class="info-item primary"><el-icon><CollectionTag/></el-icon>{{ currentEnt?.industry }}</span>
+          <span class="info-item success">
+            <el-icon><Location/></el-icon> {{ currentEnt?.buildingNo || '暂无地址' }}
+          </span>
+          <span class="info-item info">
+            <el-icon><User/></el-icon> {{ currentEnt?.contactPerson || '暂无联系人' }}
+          </span>
+          <span class="info-item danger">
+            <el-icon><Phone/></el-icon> {{ currentEnt?.contactPhone || '暂无电话' }}
+          </span>
         </div>
-        <el-divider/>
-        <div
-            class="rich-text-container"
-            v-html="currentEnt?.introduction || '<p style=\'text-align:center;color:#999\'>暂无详细介绍</p>'"
-        ></div>
-      </el-dialog>
+
+        <div class="meta-right">
+          <span class="action-btn" @click.stop="handlePrint">
+          <el-icon><Printer/></el-icon>打印
+          </span>
+        </div>
+      </div>
+      <el-divider style="margin:10px 0 !important; "/>
+
+      <div
+          class="rich-text-container"
+          v-html="currentEnt?.introduction || '<p style=\'text-align:center;color:#999\'>暂无详细介绍</p>'"
+      ></div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
-import {Search, Location, User, Phone, Picture, OfficeBuilding, VideoPlay} from '@element-plus/icons-vue'
+import html2pdf from 'html2pdf.js'
+import {ref, onMounted, nextTick} from 'vue'
+import {
+  Search,
+  Location,
+  User,
+  Phone,
+  Picture,
+  OfficeBuilding,
+  VideoPlay,
+  Printer,
+  CollectionTag
+} from '@element-plus/icons-vue'
 import enterpriseApi from '@/api/enterprise'
 
 const loading = ref(false)
@@ -180,6 +206,127 @@ const queryParams = ref({
   pageSize: 6,
   companyName: ''
 })
+
+// 打印功能
+const handlePrint = async () => {
+  await nextTick()
+
+  const ent = currentEnt.value
+  if (!ent) return
+
+  const printContainer = document.createElement('div')
+
+  printContainer.innerHTML = `
+    <div class="print-wrapper">
+
+      <h1 class="title">${ent.companyName || ''}</h1>
+
+    <div class="meta">
+        <span class="info-item primary">行业：${ent.industry || '-'}</span>
+        <span class="info-item success">楼宇：${ent.buildingNo || '-'}</span>
+        <span class="info-item info">联系人：${ent.contactPerson || '-'}</span>
+        <span class="info-item danger">电话：${ent.contactPhone || '-'}</span>
+    </div>
+
+      <hr />
+
+     <div class="content">
+        ${ent.introduction || ''}
+     </div>
+
+    </div>
+
+    <style>
+      .print-wrapper{
+        padding:20px;
+        font-family:'PingFang SC',Arial,serif;
+        color:#333;
+      }
+
+      .title{
+        text-align:center;
+        margin-bottom:10px;
+      }
+
+      .meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+        font-size:13px;
+        margin-bottom:12px;
+      }
+
+      .content{
+        line-height:1.8;
+        font-size:14px;
+      }
+
+      .content img{
+        max-width:100%;
+        display:block;
+        margin:12px auto;
+        border-radius:6px;
+      }
+
+      .content video{
+        max-width:100%;
+        display:block;
+        margin:12px auto;
+        border-radius:6px;
+      }
+
+      .info-item{
+        display:inline-flex;
+        align-items:center;
+        padding:4px 10px;
+        border-radius:5px;
+        font-size:13px;
+      }
+
+      .info-item.primary{ background:#e8f3ff !important; color:#1989fa !important; }
+      .info-item.success{ background:#e6f7ee !important; color:#00b42a !important; }
+      .info-item.info{ background:#f4f6f8 !important; color:#4e5969 !important; }
+      .info-item.danger{ background:#fef0f0 !important; color:#f56c6c !important; }
+
+    </style>
+  `
+
+  const opt = {
+    margin: 0.4,
+
+    filename: `${ent.companyName || '企业风采'}.pdf`,
+
+    image: {
+      type: 'jpeg',
+      quality: 1
+    },
+
+    html2canvas: {
+      scale: 4,
+      dpi: 300,
+      letterRendering: true,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      scrollY: 0
+    },
+
+    jsPDF: {
+      unit: 'in',
+      format: 'a4',
+      orientation: 'portrait'
+    },
+
+    pagebreak: {
+      mode: ['css', 'legacy']
+    }
+  }
+
+  await html2pdf().set(opt).from(printContainer).toPdf().get('pdf').then(pdf => {
+    window.open(pdf.output('bloburl'))
+  })
+}
 
 // 工具函数：从 HTML 中提取视频和图片 URL 数组
 const extractMediaFromHtml = (htmlStr) => {
@@ -490,26 +637,67 @@ onMounted(() => {
 }
 
 /* ====== 详情弹窗样式 ====== */
+
+/* 弹窗头部布局：左侧信息 + 右侧打印按钮 */
+.dialog-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 15px;
+  padding: 5px 0;
+}
+
+/* 左侧信息区自动占满剩余空间 */
 .detail-header-info {
+  flex: 1;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 14px;
-  color: #606266;
-  gap: 5px;
+  gap: 18px;
 }
 
-.mr-2 {
-  margin-right: 10px;
+.info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
-.mr-4 {
-  margin-right: 20px;
+/* 标签颜色样式（还原原来的色彩） */
+.info-item.primary {
+  background: #e8f3ff;
+  color: #1989fa;
 }
 
-.text-phone {
+.info-item.success {
+  background: #e6f7ee;
+  color: #00b42a;
+}
+
+.info-item.info {
+  background: #f4f6f8;
+  color: #4e5969;
+}
+
+.info-item.danger {
+  background: #fef0f0;
   color: #f56c6c;
 }
+
+/* 图标统一大小 */
+.info-item .el-icon {
+  font-size: 13px;
+}
+
+/* 打印按钮样式优化 */
+.meta-right {
+  flex-shrink: 0; /* 防止按钮被挤压 */
+}
+
 
 /* 限定富文本内部图片宽度，防止撑破弹窗 */
 .rich-text-container {
@@ -520,7 +708,10 @@ onMounted(() => {
 
 :deep(.rich-text-container img) {
   max-width: 100%;
+  max-height: 90vh !important;
+  object-fit: contain;
   height: auto !important;
+  display: block;
   border-radius: 8px;
   margin: 10px 0;
   border: #050505 1px dotted;
@@ -561,13 +752,6 @@ onMounted(() => {
   opacity: 0; /* 鼠标移上去播放时隐藏图标 */
 }
 
-.mr-2 {
-  margin-right: 10px;
-}
-
-.mr-4 {
-  margin-right: 20px;
-}
 
 /* ===================== 统一移动端响应式适配 ===================== */
 /* 平板适配 (768px-1200px) */
@@ -660,13 +844,31 @@ onMounted(() => {
     transform: scale(0.85);
   }
 }
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #606266;
+}
+
+.action-btn:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
 </style>
 
 <style>
-.detail-dialog .el-dialog__header   {
+.detail-dialog .el-dialog__header {
   padding: 10px 30px !important;
 }
-.detail-dialog .el-dialog__body  {
-  padding: 0 30px  !important;
+
+.detail-dialog .el-dialog__body {
+  padding: 0 30px !important;
 }
 </style>

@@ -541,6 +541,7 @@ onMounted(() => {
 .ent-cover-wrap img {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
 }
 
@@ -576,7 +577,7 @@ onMounted(() => {
 /* 4. Brand Section (Park Profile) */
 .park-brand-section {
   background: #fff;
-  padding: 100px 0;
+  padding: 80px 0;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -595,8 +596,9 @@ onMounted(() => {
 
 .brand-visual img {
   width: 100%;
-  height: 400px;
+  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .play-btn-float {

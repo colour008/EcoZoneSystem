@@ -3,9 +3,7 @@
     <div class="header-container">
       <div class="logo" @click="router.push('/home')">
         <div class="logo-icon">
-          <el-icon :size="28" color="#409EFF">
-            <OfficeBuilding/>
-          </el-icon>
+          <img src="/logo.svg" alt="logo">
         </div>
         <span class="logo-text">经济开发区管理委员会</span>
       </div>
@@ -647,8 +645,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 70px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px) saturate(180%);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px) saturate(180%);
   z-index: 1000;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
@@ -656,7 +654,7 @@ onUnmounted(() => {
 
 .header-scroll {
   height: 60px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.5);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -677,10 +675,17 @@ onUnmounted(() => {
   margin-right: 40px;
 }
 
+.logo-icon{
+  display: flex;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+}
+
 .logo-text {
   font-size: 20px;
-  font-weight: bold;
-  color: #409EFF;
+  font-weight: 500;
+  color: #131313;
   white-space: nowrap;
 }
 
@@ -699,7 +704,7 @@ onUnmounted(() => {
 :deep(.el-menu-item) {
   font-size: 16px;
   font-weight: 500;
-  color: #4b5563 !important;
+  color: #131313FF !important;
   height: 70px !important;
   line-height: 70px !important;
   padding: 0 24px !important;
