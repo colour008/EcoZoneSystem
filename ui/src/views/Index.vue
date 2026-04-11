@@ -659,8 +659,8 @@ onUnmounted(() => {
 .logo-text {
   margin-left: 10px;
   font-size: 15px;
-  font-weight: 600;
-  color: #000;
+  font-weight: 500;
+  color: #1c1c1c;
 }
 
 .collapse-btn-wrapper {
