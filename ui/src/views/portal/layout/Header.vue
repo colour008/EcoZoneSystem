@@ -98,7 +98,7 @@
                   class="notice-badge"
                   style="margin-right: 20px;"
               >
-                <el-icon class="notice-bell-icon">
+                <el-icon title="通知公告" class="notice-bell-icon">
                   <Bell/>
                 </el-icon>
               </el-badge>

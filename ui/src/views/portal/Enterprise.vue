@@ -456,21 +456,38 @@ onMounted(() => {
   overflow: hidden;
 }
 
-:deep(.search-input .el-input__wrapper) {
-  padding: 8px 15px;
-  font-size: 16px;
+.search-input :deep(.el-input__wrapper) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 8px 0 0 8px;
+  padding: 4px 15px;
 }
 
-:deep(.search-input .el-input-group__append) {
-  background-color: #409EFF;
-  color: white;
+.search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #409eff inset, 0 4px 12px rgba(64, 158, 255, 0.1);
+}
+
+.search-input :deep(.el-input-group__append) {
+  background-color: #409eff;
   border: none;
-  font-size: 18px;
+  border-radius: 0 8px 8px 0;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
-:deep(.search-input .el-input-group__append:hover) {
+.search-input :deep(.search-btn) {
+  color: #ffffff;
+  border-radius: 0 8px 8px 0;
+  height: 100%;
+  border: 1px solid #ffffff;
+  margin: 0;
+  padding: 0 20px;
+  font-weight: 500;
+}
+
+.search-input :deep(.search-btn:hover) {
   background-color: #66b1ff;
 }
+
 
 /* ====== 主体内容区 ====== */
 .main-container {

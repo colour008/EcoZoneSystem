@@ -1,3 +1,6 @@
+<script setup>
+import router from "@/router/index.js";
+</script>
 <template>
   <footer class="footer">
     <div class="footer-container">
@@ -7,9 +10,10 @@
         <p>电话：0512-88888888</p>
       </div>
       <div class="footer-links">
-        <el-link underline="never">政策法规</el-link>
-        <el-link underline="never">办事指南</el-link>
-        <el-link underline="never">联系我们</el-link>
+        <el-link underline="never" @click="$router.push('/news')">园区动态</el-link>
+        <el-link underline="never" @click="$router.push('/policy')">政策中心</el-link>
+        <el-link underline="never" @click="$router.push('/notice')">通知公告</el-link>
+        <el-link underline="never" @click="$router.push('/contact')">联系我们</el-link>
       </div>
     </div>
     <div class="footer-bottom">

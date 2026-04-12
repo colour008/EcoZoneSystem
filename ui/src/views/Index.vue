@@ -64,7 +64,7 @@
                   :hidden="totalNoticeCount <= 0"
                   class="notice-badge"
               >
-                <el-icon class="notice-bell-icon">
+                <el-icon title="通知公告" class="notice-bell-icon">
                   <Bell/>
                 </el-icon>
               </el-badge>
