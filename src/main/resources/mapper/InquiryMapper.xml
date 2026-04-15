@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zone.mapper.InquiryMapper">
+
+    <!-- 插入 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_inquiry (applicant_name, company_name, contact_phone, type, remark,
+                                 status, create_ip, create_time, update_time)
+        VALUES (#{applicantName}, #{companyName}, #{contactPhone}, #{type}, #{remark},
+                #{status}, #{createIp}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新 -->
+    <update id="updateById">
+        UPDATE biz_inquiry
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="handlerId != null">handler_id = #{handlerId},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="handleResult != null and handleResult != ''">handle_result = #{handleResult},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <!-- 查询 -->
+    <select id="selectById" resultType="com.zone.domain.entity.Inquiry">
+        SELECT *
+        FROM biz_inquiry
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </select>
+
+    <!-- B端-全量分页查询 -->
+    <select id="getAdminInquiryPage" resultType="com.zone.domain.vo.InquiryVO">
+        SELECT i.*, u.real_name AS handler_name
+        FROM biz_inquiry i
+        LEFT JOIN sys_user u ON i.handler_id = u.id
+        <where>
+            i.is_deleted = 0
+            <if test="dto.applicantName != null and dto.applicantName != ''">
+                AND i.applicant_name LIKE CONCAT('%', #{dto.applicantName}, '%')
+            </if>
+            <if test="dto.companyName != null and dto.companyName != ''">
+                AND i.company_name LIKE CONCAT('%', #{dto.companyName}, '%')
+            </if>
+            <if test="dto.contactPhone != null and dto.contactPhone != ''">
+                AND i.contact_phone LIKE CONCAT('%', #{dto.contactPhone}, '%')
+            </if>
+            <if test="dto.type != null">
+                AND i.type = #{dto.type}
+            </if>
+            <if test="dto.status != null">
+                AND i.status = #{dto.status}
+            </if>
+            <if test="dto.handlerName != null and dto.handlerName != ''">
+                AND u.real_name LIKE CONCAT('%', #{dto.handlerName}, '%')
+            </if>
+        </where>
+        ORDER BY i.status ASC, i.create_time DESC
+    </select>
+</mapper>

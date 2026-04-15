@@ -62,7 +62,7 @@
       >
         <el-table-column type="selection" width="50" align="center"/>
 
-        <el-table-column label="企业基本信息" min-width="250" align="center">
+        <el-table-column label="企业名称/信用代码" min-width="250" align="center">
           <template #default="scope">
             <div style="font-weight: 200; color: #303133">{{ scope.row.companyName }}</div>
             <div
@@ -1019,15 +1019,9 @@ onMounted(() => getList())
 
 .pagination {
   margin-top: 20px;
+  padding-bottom: 20px;
   display: flex;
   justify-content: flex-end;
-}
-
-.form-tip {
-  font-size: 12px;
-  color: #909399;
-  line-height: 1;
-  margin-top: 4px;
 }
 
 :deep(.el-divider) {
