@@ -158,13 +158,14 @@
 import {ref, reactive} from 'vue'
 import {Location, PhoneFilled, Message, Promotion} from '@element-plus/icons-vue'
 import {ElMessage} from 'element-plus'
+import inquiryApi from '@/api/inquiry'
 
 // 数据模型
-const wechatQrUrl = ref('http://192.168.5.229:9000/myproject/qr_code.jpg') // 替换为真实的园区微信二维码URL
+const wechatQrUrl = ref('http://192.168.5.229:9000/myproject/mmexport1776255166853.jpg')
 const inquiryFormRef = ref(null)
 const submitting = ref(false)
 
-// 表单模型 (示例 DTO 结构)
+// 表单模型 (结构完美匹配后端的 InquirySubmitDTO)
 const inquiryForm = reactive({
   applicantName: '',
   companyName: '',
@@ -181,28 +182,31 @@ const rules = reactive({
   remark: [{required: true, message: '请输入留言内容详情', trigger: 'blur'}]
 })
 
-// 提交表单逻辑 (待对接接口)
+// 提交表单逻辑 (已对接真实后端接口)
 const submitForm = async () => {
   if (!inquiryFormRef.value) return
   await inquiryFormRef.value.validate(async (valid) => {
     if (!valid) return
     try {
       submitting.value = true
-      // TODO: 调用前端公共接口提交留言，例如 commonApi.submitInquiry(inquiryForm)
-      console.log('提交的数据:', inquiryForm)
 
-      // 模拟请求成功
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // ✅ 调用前端公共接口提交留言
+      const res = await inquiryApi.submitPublicInquiry(inquiryForm)
 
-      ElMessage({
-        message: '意向提交成功，我们将在2个工作日内联系您！',
-        type: 'success',
-        plain: true
-      })
-      // 重置表单
-      inquiryFormRef.value.resetFields()
+      if (res && res.code === 200) {
+        ElMessage({
+          message: res.data || '意向提交成功，我们将在2个工作日内联系您！',
+          type: 'success',
+          plain: true
+        })
+        // 成功后重置表单
+        inquiryFormRef.value.resetFields()
+      } else {
+        ElMessage.error(res.msg || '提交失败，请稍后再试')
+      }
     } catch (err) {
-      ElMessage.error('网络拥堵，提交失败，请重试')
+      // 异常由全局拦截器处理，例如后端限制高频提交抛出的 BusinessException
+      console.error('留言提交异常:', err)
     } finally {
       submitting.value = false
     }
