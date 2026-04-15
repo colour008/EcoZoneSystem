@@ -554,6 +554,12 @@ onMounted(() => getList())
   justify-content: center;
 }
 
+
+:deep(.round-dialog){
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 /* 详情弹窗美化 */
 :deep(.modern-dialog) {
   border-radius: 16px;
