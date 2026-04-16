@@ -499,16 +499,15 @@ onMounted(() => getList())
 
 .type-indicator {
   font-size: 12px;
-  color: #4E5969;
-  background: #F2F3F5;
+  color: #ffffff;
+  background: #6293f4;
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: 5px;
   font-weight: 500;
 }
 
 :deep(.el-tag) {
-  border-radius: 8px;
-  font-weight: 500;
+  border-radius: 5px;
   border: none;
 }
 
