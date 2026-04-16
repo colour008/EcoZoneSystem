@@ -81,7 +81,7 @@
               <div class="action-group">
                 <el-button link type="primary" @click="handleView(item)">详情</el-button>
                 <el-dropdown trigger="click">
-                  <el-button link type="primary">操作
+                  <el-button link type="danger">操作
                     <el-icon class="el-icon--right">
                       <ArrowDown/>
                     </el-icon>
@@ -543,8 +543,8 @@ onMounted(() => getList())
 /* 分割线 */
 .card-divider {
   height: 1px;
-  background: #F2F3F5;
-  margin: 0 16px;
+  background: rgba(13, 67, 117, 0.33);
+  margin: 10px 0;
 }
 
 /* 卡片底部 */
@@ -554,7 +554,7 @@ onMounted(() => getList())
   justify-content: space-between;
   align-items: center;
   background: #F7F8FA;
-  border-radius: 0 0 16px 16px;
+  border-radius: 5px;
 }
 
 .handler-box {
@@ -625,8 +625,7 @@ onMounted(() => getList())
 }
 
 .remark-content {
-  background: #F7F8FA;
-  padding: 14px;
+  padding: 14px 0;
   border-radius: 8px;
   color: #1D2129;
   line-height: 1.7;
@@ -718,5 +717,10 @@ onMounted(() => getList())
     color: #86909C;
     font-size: 14px;
   }
+}
+
+:deep(.el-dialog) {
+  border-radius: 15px;
+  overflow: hidden;
 }
 </style>
