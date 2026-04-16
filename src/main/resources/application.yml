@@ -29,7 +29,7 @@ spring:
   # 时间格式化
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: Asia/Shanghai
+    time-zone: GMT+8
     default-property-inclusion: non_null # 忽略所有null字段
 
 # MyBatis 配置

@@ -230,7 +230,7 @@
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-avatar-wrapper">
               <el-avatar :size="32" :src="userStore.userInfo?.avatar"
-                         style="background: transparent; border: rgb(250,179,1) 1px outset">
+                         style="background: rgb(250,179,1); border: rgb(250,179,1) 1px solid">
                 {{ userStore.userInfo?.realName?.charAt(0) || 'U' }}
               </el-avatar>
               <span class="nickname">{{ userStore.userInfo?.realName || '用户' }}</span>

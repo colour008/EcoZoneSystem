@@ -15,7 +15,6 @@
           <div class="sticky-side">
             <h2 class="section-title">官方联系渠道</h2>
             <div class="divider"></div>
-
             <div class="info-cards">
               <el-card shadow="hover" class="info-card">
                 <template #default>
@@ -32,7 +31,6 @@
                   </div>
                 </template>
               </el-card>
-
               <el-card shadow="hover" class="info-card">
                 <template #default>
                   <div class="card-inner">
@@ -48,7 +46,6 @@
                   </div>
                 </template>
               </el-card>
-
               <el-card shadow="hover" class="info-card">
                 <template #default>
                   <div class="card-inner">
@@ -65,7 +62,6 @@
                 </template>
               </el-card>
             </div>
-
             <div class="qr-section card-style">
               <div class="qr-content">
                 <el-image :src="wechatQrUrl" class="qr-code" fit="contain">
@@ -86,18 +82,10 @@
           <div class="form-container card-style">
             <h2 class="section-title">意向登记与留言</h2>
             <div class="divider"></div>
-            <p class="form-tip">
-              请填写您的联系方式及相关意向（入驻、求职或服务需求），我们将在 2 个工作日内安排专人与您取得联系。
-            </p>
-
-            <el-form
-                ref="inquiryFormRef"
-                :model="inquiryForm"
-                :rules="rules"
-                label-position="top"
-                size="large"
-                class="inquiry-form"
-            >
+            <p class="form-tip">请填写您的联系方式及相关意向（入驻、求职或服务需求），我们将在 2
+              个工作日内安排专人与您取得联系。</p>
+            <el-form ref="inquiryFormRef" :model="inquiryForm" :rules="rules" label-position="top" size="large"
+                     class="inquiry-form">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="您的姓名" prop="applicantName">
@@ -110,7 +98,6 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-
               <el-form-item label="意向/留言主题" prop="type">
                 <el-select v-model="inquiryForm.type" placeholder="请选择主旨意向" style="width: 100%">
                   <el-option label="企业入驻意向咨询" :value="1"/>
@@ -119,30 +106,16 @@
                   <el-option label="一般性留言反馈" :value="4"/>
                 </el-select>
               </el-form-item>
-
               <el-form-item label="联系电话" prop="contactPhone">
                 <el-input v-model="inquiryForm.contactPhone" placeholder="请填写手机或固话"/>
               </el-form-item>
-
               <el-form-item label="留言详情（请输入意向描述或留言内容）" prop="remark">
-                <el-input
-                    v-model="inquiryForm.remark"
-                    type="textarea"
-                    :rows="6"
-                    placeholder="例如：主营高性能模拟芯片研发，需租用 A 座约 800㎡ 空间..."
-                />
+                <el-input v-model="inquiryForm.remark" type="textarea" :rows="6"
+                          placeholder="例如：主营高性能模拟芯片研发，需租用 A 座约 800㎡ 空间..."/>
               </el-form-item>
-
               <div class="form-footer">
-                <el-button
-                    type="primary"
-                    :loading="submitting"
-                    @click="submitForm"
-                    round
-                    size="large"
-                    class="gradient-btn"
-                    icon="Promotion"
-                >
+                <el-button type="primary" :loading="submitting" @click="submitForm" round size="large"
+                           class="gradient-btn" icon="Promotion">
                   确认提交意向
                 </el-button>
               </div>
@@ -160,21 +133,14 @@ import {Location, PhoneFilled, Message, Promotion} from '@element-plus/icons-vue
 import {ElMessage} from 'element-plus'
 import inquiryApi from '@/api/inquiry'
 
-// 数据模型
 const wechatQrUrl = ref('http://192.168.5.229:9000/myproject/mmexport1776255166853.jpg')
 const inquiryFormRef = ref(null)
 const submitting = ref(false)
 
-// 表单模型 (结构完美匹配后端的 InquirySubmitDTO)
 const inquiryForm = reactive({
-  applicantName: '',
-  companyName: '',
-  type: null,
-  contactPhone: '',
-  remark: ''
+  applicantName: '', companyName: '', type: null, contactPhone: '', remark: ''
 })
 
-// 校验规则
 const rules = reactive({
   applicantName: [{required: true, message: '请输入您的姓名', trigger: 'blur'}],
   contactPhone: [{required: true, message: '请输入联系电话', trigger: 'blur'}],
@@ -182,31 +148,20 @@ const rules = reactive({
   remark: [{required: true, message: '请输入留言内容详情', trigger: 'blur'}]
 })
 
-// 提交表单逻辑 (已对接真实后端接口)
 const submitForm = async () => {
   if (!inquiryFormRef.value) return
   await inquiryFormRef.value.validate(async (valid) => {
     if (!valid) return
     try {
       submitting.value = true
-
-      // ✅ 调用前端公共接口提交留言
       const res = await inquiryApi.submitPublicInquiry(inquiryForm)
-
       if (res && res.code === 200) {
-        ElMessage({
-          message: res.data || '意向提交成功，我们将在2个工作日内联系您！',
-          type: 'success',
-          plain: true
-        })
-        // 成功后重置表单
+        ElMessage({message: res.data || '意向提交成功，我们将在2个工作日内联系您！', type: 'success', plain: true})
         inquiryFormRef.value.resetFields()
       } else {
         ElMessage.error(res.msg || '提交失败，请稍后再试')
       }
     } catch (err) {
-      // 异常由全局拦截器处理，例如后端限制高频提交抛出的 BusinessException
-      console.error('留言提交异常:', err)
     } finally {
       submitting.value = false
     }
@@ -215,19 +170,17 @@ const submitForm = async () => {
 </script>
 
 <style scoped>
-/* ====== 基础容器样式与背景 ====== */
 .contact-wrapper {
-  background-color: #f4f7f9; /* 极简灰背景，反衬白色卡片 */
+  background-color: #f4f7f9;
   min-height: calc(100vh - 100px);
   padding-bottom: 60px;
 }
 
-/* ====== 顶部 HeroBanner 区：商务科技设计 ====== */
 .contact-hero {
   position: relative;
   width: 100%;
   height: 280px;
-  background: url('@/assets/contact-banner.jpg') no-repeat center center; /* 替换为一张园区的全景商务图 */
+  background: url('@/assets/contact-banner.jpg') no-repeat center center;
   background-size: cover;
   display: flex;
   align-items: center;
@@ -235,7 +188,6 @@ const submitForm = async () => {
   margin-bottom: 30px;
 }
 
-/* 半透明深色遮罩 */
 .hero-bg-overlay {
   position: absolute;
   top: 0;
@@ -278,7 +230,6 @@ const submitForm = async () => {
   font-size: 13px;
 }
 
-/* ====== 主体内容区 ====== */
 .contact-main {
   max-width: 1300px;
   margin: 0 auto;
@@ -287,16 +238,14 @@ const submitForm = async () => {
   z-index: 5;
 }
 
-/* 卡片工具样式 (高级白) */
 .card-style {
   background: #ffffff;
-  border-radius: 16px; /* 圆角更大，更具现代感 */
+  border-radius: 16px;
   padding: 40px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-/* 标题工具样式 */
 .section-title {
   font-size: 22px;
   font-weight: 600;
@@ -312,13 +261,12 @@ const submitForm = async () => {
   margin-bottom: 30px;
 }
 
-/* ====== 左侧联系渠道信息区 ====== */
 .info-side {
   margin-bottom: 30px;
 }
 
 .sticky-side {
-  position: sticky; /* 粘性布局，滚动时信息栏跟随 */
+  position: sticky;
   top: 100px;
 }
 
@@ -331,7 +279,7 @@ const submitForm = async () => {
 
 .info-card {
   border-radius: 12px;
-  background: #f8fafc; /* 微灰卡片背景 */
+  background: #f8fafc;
   border: 1px solid #edf2f7;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -365,7 +313,6 @@ const submitForm = async () => {
   margin-top: 3px;
 }
 
-/* 动态颜色区分不同类型联系方式 */
 .location-icon {
   background-color: #ecf5ff;
   color: #409EFF;
@@ -401,7 +348,6 @@ const submitForm = async () => {
   color: #409EFF !important;
 }
 
-/* 微信二维码区 (现代化卡片设计) */
 .qr-section {
   padding: 30px;
 }
@@ -434,7 +380,6 @@ const submitForm = async () => {
   line-height: 1.6;
 }
 
-/* ====== 右侧留言反馈表单区 ====== */
 .form-side {
   margin-bottom: 30px;
 }
@@ -451,7 +396,6 @@ const submitForm = async () => {
   padding: 0 10px;
 }
 
-/* 针对此页面的 ElementPlus Form Item样式定制 */
 :deep(.el-form-item__label) {
   font-weight: 500 !important;
   color: #606266 !important;
@@ -460,7 +404,7 @@ const submitForm = async () => {
 }
 
 :deep(.el-input__wrapper), :deep(.el-textarea__inner) {
-  background-color: #fcfdfe; /* 微白输入框 */
+  background-color: #fcfdfe;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow: none;
@@ -481,7 +425,6 @@ const submitForm = async () => {
   text-align: right;
 }
 
-/* 现代化渐变按钮 */
 .gradient-btn {
   background: linear-gradient(90deg, #4f46e5 0%, #3b82f6 100%) !important;
   border: none !important;

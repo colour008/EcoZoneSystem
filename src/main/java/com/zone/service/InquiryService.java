@@ -47,4 +47,11 @@ public interface InquiryService {
      * @return
      */
     boolean convertToEnterprise(Long inquiryId);
+
+    /**
+     * 删除意向留言
+     * @param inquiryId
+     * @return
+     */
+    boolean deleteInquiry(Long inquiryId);
 }

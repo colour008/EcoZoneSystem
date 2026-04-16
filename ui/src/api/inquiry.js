@@ -19,7 +19,6 @@ const inquiryApi = {
 
     /**
      * B端-获取意向留言分页列表
-     * @param {Object} params { pageNum, pageSize, applicantName, type, status, ... }
      */
     getAdminPage(params) {
         return request({
@@ -31,8 +30,6 @@ const inquiryApi = {
 
     /**
      * B端-分配跟进人员
-     * @param {Number|String} id 留言ID
-     * @param {Number|String} handlerId 处理人(用户)ID
      */
     assignHandler(id, handlerId) {
         return request({
@@ -42,9 +39,8 @@ const inquiryApi = {
     },
 
     /**
-     * B端-填写跟进记录
-     * @param {Object} data { id, result, status }
-     * 注意：后端接口未加 @RequestBody，参数通过 Query String 传递
+     * B端-填写跟进记录 (会触发 biz_inquiry_record 插入)
+     * 参数通过 query 传递以匹配后端接收方式
      */
     recordFollowUp(data) {
         return request({
@@ -60,12 +56,31 @@ const inquiryApi = {
 
     /**
      * B端-一键转入驻
-     * @param {Number|String} id 留言ID
      */
     convertToEnterprise(id) {
         return request({
             url: `/inquiry/convert/${id}`,
             method: 'post'
+        })
+    },
+
+    /**
+     * B端-删除无效留言 (逻辑删除)
+     */
+    deleteInquiry(id) {
+        return request({
+            url: `/inquiry/${id}`,
+            method: 'delete'
+        })
+    },
+
+    /**
+     * B端-获取某条留言的所有历史跟进记录
+     */
+    getFollowRecords(inquiryId) {
+        return request({
+            url: `/inquiry/records/${inquiryId}`,
+            method: 'get'
         })
     }
 }
