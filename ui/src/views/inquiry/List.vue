@@ -439,30 +439,28 @@ onMounted(() => getList())
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
-  border-radius: 16px 16px 0 0;
+  height: 6px;
 }
 
+/* 待处理-暖橙渐变 */
 .status-accent-0::before {
   background: linear-gradient(90deg, #FF7D00, #FF9A2E);
 }
 
-/* 待处理-暖橙渐变 */
+/* 跟进中-主色渐变 */
 .status-accent-1::before {
   background: linear-gradient(90deg, #165DFF, #4080FF);
 }
 
-/* 跟进中-主色渐变 */
+/* 已转入驻-绿渐变 */
 .status-accent-2::before {
   background: linear-gradient(90deg, #00B42A, #36D399);
 }
 
-/* 已转入驻-绿渐变 */
+/* 完结/无效-灰渐变 */
 .status-accent-3::before, .status-accent-4::before {
   background: linear-gradient(90deg, #86909C, #C9CDD4);
 }
-
-/* 完结/无效-灰渐变 */
 
 .modern-inquiry-card:hover {
   transform: translateY(-4px) scale(1.01);
