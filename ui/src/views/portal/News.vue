@@ -4,7 +4,7 @@
       <div class="header-wrapper">
         <div class="title-section">
           <h2 class="page-title">园区动态</h2>
-          <span class="sub-title">Park News & Updates</span>
+          <span class="sub-title">Park News</span>
         </div>
         <div class="search-box">
           <el-input

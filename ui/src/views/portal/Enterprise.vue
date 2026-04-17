@@ -1,6 +1,7 @@
 <template>
   <div class="showcase-wrapper">
     <div class="hero-section">
+      <div class="hero-bg-overlay"></div>
       <div class="hero-content">
         <h1 class="title">园区企业风采</h1>
         <p class="subtitle">汇聚行业精英，共创商业价值</p>
@@ -418,8 +419,8 @@ onMounted(() => {
 /* ====== 顶部 Hero 区 ====== */
 .hero-section {
   width: 100%;
-  height: 280px;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  height: 300px;
+  background: url('@/assets/banner2.jpg') no-repeat center center;
   position: relative;
   display: flex;
   align-items: center;
@@ -427,6 +428,16 @@ onMounted(() => {
   text-align: center;
   color: white;
   margin-bottom: -40px; /* 让内容卡片向上浮动交叠 */
+}
+
+.hero-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(28, 28, 28, 0.41) 0%, rgba(0, 0, 0, 0.63) 100%);
+  z-index: 1;
 }
 
 .hero-content {

@@ -19,7 +19,6 @@
   font-display: swap;
 }
 
-/* 强制所有元素（包括 Element Plus 组件）使用该字体 */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -29,11 +28,10 @@ html, body, #app {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  /* 修正：font-family 名称必须加引号，且确保 PingFangSC 和上面声明的一致 */
   font-family: 'PingFangSC', 'Fira Code', 'Inter', -apple-system, sans-serif !important;
+  overflow-x: hidden;
 }
 
-/* 关键修复：Element Plus 的输入框和按钮默认不继承 body 字体 */
 input,
 button,
 textarea,
@@ -44,15 +42,12 @@ select,
   font-family: 'PingFangSC', 'Fira Code', 'Inter', -apple-system, sans-serif !important;
 }
 
-/* style.css */
 :root {
-  /* 统一为你的大厂蓝/紫色调 */
   --van-primary-color: #4f46e5;
   --van-success-color: #10b981;
   --van-warning-color: #f97316;
   --van-danger-color: #ef4444;
 
-  /* 也可以统一按钮的圆角风格 */
   --van-button-border-radius: 8px;
 }
 
@@ -68,18 +63,18 @@ a {
    全局滚动条美化 (适配现代感 UI)
 ========================================== */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
   border-radius: 4px;
-  background: rgba(144, 147, 153, 0.3);
+  background: rgba(144, 147, 153, 0.6);
   transition: background 0.3s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(144, 147, 153, 0.5);
+  background: rgba(71, 73, 74, 0.62);
 }
 
 ::-webkit-scrollbar-track {

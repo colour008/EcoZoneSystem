@@ -10,7 +10,7 @@
     </div>
 
     <div class="contact-main">
-      <el-row :gutter="40">
+      <el-row :gutter="24">
         <el-col :xs="24" :sm="24" :md="10" :lg="8" class="info-side">
           <div class="sticky-side">
             <h2 class="section-title">官方联系渠道</h2>
@@ -98,25 +98,31 @@
                   </el-form-item>
                 </el-col>
               </el-row>
-              <el-form-item label="意向/留言主题" prop="type">
-                <el-select v-model="inquiryForm.type" placeholder="请选择主旨意向" style="width: 100%">
-                  <el-option label="企业入驻意向咨询" :value="1"/>
-                  <el-option label="人才求职与HR对接" :value="2"/>
-                  <el-option label="园区配套服务需求" :value="3"/>
-                  <el-option label="一般性留言反馈" :value="4"/>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="联系电话" prop="contactPhone">
-                <el-input v-model="inquiryForm.contactPhone" placeholder="请填写手机或固话"/>
-              </el-form-item>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="意向/留言主题" prop="type">
+                    <el-select v-model="inquiryForm.type" placeholder="请选择主旨意向" >
+                      <el-option label="企业入驻意向咨询" :value="1"/>
+                      <el-option label="人才求职与HR对接" :value="2"/>
+                      <el-option label="园区配套服务需求" :value="3"/>
+                      <el-option label="一般性留言反馈" :value="4"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                <el-form-item label="联系电话" prop="contactPhone">
+                  <el-input v-model="inquiryForm.contactPhone" placeholder="请填写手机或固话"/>
+                </el-form-item>
+                </el-col>
+              </el-row>
               <el-form-item label="留言详情（请输入意向描述或留言内容）" prop="remark">
-                <el-input v-model="inquiryForm.remark" type="textarea" :rows="6"
+                <el-input v-model="inquiryForm.remark" type="textarea" :rows="8"
                           placeholder="例如：主营高性能模拟芯片研发，需租用 A 座约 800㎡ 空间..."/>
               </el-form-item>
               <div class="form-footer">
                 <el-button type="primary" :loading="submitting" @click="submitForm" round size="large"
                            class="gradient-btn" icon="Promotion">
-                  确认提交意向
+                  确认提交
                 </el-button>
               </div>
             </el-form>
@@ -179,8 +185,8 @@ const submitForm = async () => {
 .contact-hero {
   position: relative;
   width: 100%;
-  height: 280px;
-  background: url('@/assets/contact-banner.jpg') no-repeat center center;
+  height: 300px;
+  background: url('@/assets/banner3.webp') no-repeat center center;
   background-size: cover;
   display: flex;
   align-items: center;
@@ -194,9 +200,7 @@ const submitForm = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(29, 38, 113, 0.85) 0%, rgba(13, 13, 13, 0.7) 100%);
-  backdrop-filter: blur(2px);
-  z-index: 1;
+  background: linear-gradient(135deg, rgba(21, 21, 21, 0.36) 0%, rgba(0, 0, 0, 0.55) 100%);z-index: 1;
 }
 
 .hero-content {
@@ -231,7 +235,7 @@ const submitForm = async () => {
 }
 
 .contact-main {
-  max-width: 1300px;
+  max-width: 1350px;
   margin: 0 auto;
   padding: 0 20px;
   position: relative;
@@ -242,21 +246,20 @@ const submitForm = async () => {
   background: #ffffff;
   border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 25px -5px rgba(64, 158, 255, 0.15);
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .section-title {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 500;
   color: #1e293b;
   margin: 0 0 10px 0;
 }
 
 .divider {
-  width: 40px;
-  height: 4px;
-  background-color: #409EFF;
+  height: 2px;
+  background-color: rgba(19, 130, 246, 0.62);
   border-radius: 2px;
   margin-bottom: 30px;
 }
@@ -266,8 +269,13 @@ const submitForm = async () => {
 }
 
 .sticky-side {
+  background: #fff;
+  border-radius: 16px;
   position: sticky;
   top: 100px;
+  padding: 40px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 25px -5px rgba(64, 158, 255, 0.15);
 }
 
 .info-cards {
@@ -344,7 +352,7 @@ const submitForm = async () => {
 
 .highlight-text {
   font-size: 20px !important;
-  font-weight: 700;
+  font-weight: 600;
   color: #409EFF !important;
 }
 
@@ -355,7 +363,7 @@ const submitForm = async () => {
 .qr-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
 }
 
 .qr-code {
@@ -367,7 +375,7 @@ const submitForm = async () => {
 }
 
 .qr-text h5 {
-  font-size: 16px;
+  font-size: 15px;
   color: #1e293b;
   margin: 0 0 8px 0;
   font-weight: 600;
@@ -388,7 +396,7 @@ const submitForm = async () => {
   font-size: 15px;
   color: #64748b;
   line-height: 1.8;
-  margin-bottom: 35px;
+  margin-bottom: 20px;
   margin-top: -10px;
 }
 

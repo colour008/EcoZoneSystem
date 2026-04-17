@@ -6,7 +6,8 @@ import NProgress from 'nprogress'
 import {ElMessage} from "element-plus";
 
 // 1. 白名单配置
-const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact', '/notice']
+const whiteList = ['/login', '/register', '/404', '/home', '/policy', '/enterprise', '/news', '/contact', '/notice',
+    '/portal/detail']
 const modules = import.meta.glob('../views/**/*.vue')
 
 // 移除 next 参数，改用 return 返回值
