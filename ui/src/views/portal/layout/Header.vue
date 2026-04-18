@@ -21,7 +21,8 @@
           <el-menu-item index="/policy">政策中心</el-menu-item>
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
-          <el-menu-item v-if="isEnterprise" index="/my-enterprise">企业服务中心</el-menu-item>
+          <el-menu-item index="/contact">联系我们</el-menu-item>
+          <el-menu-item v-if="isEnterprise" index="/my-enterprise" style="color: #2f91f4 !important; font-weight: normal !important;">服务中心</el-menu-item>
         </el-menu>
       </nav>
 
@@ -659,7 +660,7 @@ onUnmounted(() => {
 }
 
 .header-container {
-  max-width: 1280px;
+  max-width: 1560px;
   margin: 0 auto;
   height: 100%;
   display: flex;
@@ -670,9 +671,10 @@ onUnmounted(() => {
 .logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   cursor: pointer;
-  margin-right: 40px;
+  margin-right: 80px;
 }
 
 .logo-icon{
@@ -757,9 +759,17 @@ onUnmounted(() => {
 }
 
 /* ====== 右侧用户区与状态引导美化 ====== */
+.header-right{
+  display: flex;
+  align-items: center;
+}
+
 .user-info {
   display: flex;
   align-items: center;
+  cursor: pointer;
+  height: 48px;
+  transition: background 0.3s;
 }
 
 .guide-btn {
@@ -787,6 +797,7 @@ onUnmounted(() => {
 }
 
 .user-avatar-wrapper {
+  min-width: 128px !important;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -799,7 +810,7 @@ onUnmounted(() => {
 
 .user-avatar-wrapper:hover {
   background: rgba(22, 119, 255, 0.05);
-  border-color: rgba(22, 119, 255, 0.1);
+  border-color: rgba(38, 105, 174, 0.54);
 }
 
 .nickname {
@@ -1042,23 +1053,11 @@ onUnmounted(() => {
   }
 
   .logo {
-    gap: 1px;
-  }
-
-  .logo-text {
-    display: none;
-  }
-
-  .status-guide-area {
-    display: none !important;
-  }
-
-  .nickname {
     display: none;
   }
 
   .user-avatar-wrapper {
-    padding: 4px;
+    padding: 15px;
   }
 
   .auth-btns {
@@ -1119,7 +1118,7 @@ onUnmounted(() => {
     gap: 10px;
   }
 
-  .logo-text {
+  .logo {
     display: none;
   }
 
