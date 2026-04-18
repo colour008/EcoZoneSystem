@@ -1,12 +1,12 @@
 <template>
   <div class="inquiry-manage-container">
     <div class="glass-search-card">
-      <el-form :model="queryParams" inline class="modern-form">
+      <el-form :model="queryParams" inline class="search-form">
         <el-form-item label="申请人">
           <el-input v-model="queryParams.applicantName" placeholder="姓名" clearable @keyup.enter="handleQuery"/>
         </el-form-item>
         <el-form-item label="企业名称">
-          <el-input v-model="queryParams.companyName" placeholder="搜索企业关键词" clearable
+          <el-input v-model="queryParams.companyName" placeholder="企业关键词" clearable
                     @keyup.enter="handleQuery"/>
         </el-form-item>
         <el-form-item label="状态">
@@ -14,15 +14,15 @@
             <el-option v-for="(val, key) in statusMap" :key="key" :label="val.label" :value="Number(key)"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="处理人">
+        <el-form-item label="跟进人">
           <el-input v-model="queryParams.handlerName" placeholder="跟进人姓名" clearable @keyup.enter="handleQuery"/>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">
-            <el-icon>
+            <el-icon style="color: rgb(255,255,255)">
               <Search/>
             </el-icon>
-            查询
+            搜索
           </el-button>
           <el-button @click="resetQuery">
             <el-icon>
@@ -371,55 +371,16 @@ onMounted(() => getList())
 /* ===== 顶部搜索卡片 ===== */
 .glass-search-card {
   background: #FFFFFF;
-  padding: 20px 24px;
+  padding: 20px 20px 0 20px;
   border-radius: 10px;
   border: 1px solid #E5E6EB;
   margin-bottom: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
 }
 
-.modern-form {
-  :deep(.el-form-item) {
-    margin-bottom: 0;
-    margin-right: 16px;
-  }
-
-  :deep(.el-input__wrapper) {
-    border-radius: 8px;
-    box-shadow: 0 0 0 1px #E5E6EB inset;
-    transition: all 0.2s ease;
-
-    &:hover {
-      box-shadow: 0 0 0 1px #165DFF inset;
-    }
-  }
-
-  :deep(.el-select__wrapper) {
-    border-radius: 8px;
-    box-shadow: 0 0 0 1px #E5E6EB inset;
-    transition: all 0.2s ease;
-
-    &:hover {
-      box-shadow: 0 0 0 1px #165DFF inset;
-    }
-  }
-
-  :deep(.el-button--primary) {
-    background: #165DFF;
-    border-color: #165DFF;
-    border-radius: 8px;
-    font-weight: 500;
-
-    &:hover {
-      background: #4080FF;
-      border-color: #4080FF;
-    }
-  }
-
-  :deep(.el-button) {
-    border-radius: 8px;
-    font-weight: 500;
-  }
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .modern-inquiry-card {

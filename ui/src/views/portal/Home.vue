@@ -7,8 +7,6 @@
           <div class="banner-content">
             <h2 class="animate-title">{{ item.title }}</h2>
             <p class="animate-subtitle">{{ item.subtitle }}</p>
-            <el-button type="primary" size="large" round class="banner-btn" @click="goTo('/enterprise')">立即入驻
-            </el-button>
           </div>
         </div>
       </el-carousel-item>
@@ -16,14 +14,14 @@
 
     <div class="service-hall">
       <div class="hall-inner">
-        <div class="service-card" @click="goTo('/enterprise')">
+        <div class="service-card" @click="goTo('/my-enterprise')">
           <div class="icon-wrapper">
             <el-icon>
               <OfficeBuilding/>
             </el-icon>
           </div>
           <h3>企业入驻</h3>
-          <p>一键提交资料，快速审批</p>
+          <p>在线审批，快速入驻</p>
         </div>
         <div class="service-card" @click="goTo('/policy')">
           <div class="icon-wrapper">
@@ -31,17 +29,17 @@
               <Document/>
             </el-icon>
           </div>
-          <h3>政策申报</h3>
+          <h3>政策中心</h3>
           <p>精准匹配，直达企业</p>
         </div>
-        <div class="service-card" @click="goTo('/contact')">
+        <div class="service-card" @click="goTo('/my-enterprise')">
           <div class="icon-wrapper">
             <el-icon>
               <Service/>
             </el-icon>
           </div>
           <h3>园区服务</h3>
-          <p>在线提单，极速响应</p>
+          <p>一键报单，极速响应</p>
         </div>
         <div class="service-card" @click="goTo('/contact')">
           <div class="icon-wrapper">
@@ -49,8 +47,8 @@
               <ChatLineSquare/>
             </el-icon>
           </div>
-          <h3>办事咨询</h3>
-          <p>全天候管家贴心服务</p>
+          <h3>留言咨询</h3>
+          <p>便捷留言，贴心解答</p>
         </div>
       </div>
     </div>
@@ -339,12 +337,6 @@ onMounted(() => {
   margin-bottom: 40px;
   font-weight: 300;
   line-height: 1.6;
-}
-
-.banner-btn {
-  padding: 12px 40px;
-  font-size: 16px;
-  transition: 0.3s;
 }
 
 /* 2. Service Hall */

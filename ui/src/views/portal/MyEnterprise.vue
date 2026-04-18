@@ -2,10 +2,6 @@
   <div class="my-enterprise-container">
     <header class="page-header">
       <div class="header-content">
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>企业服务中心</el-breadcrumb-item>
-        </el-breadcrumb>
         <div class="title-row">
           <div class="title-left">
             <div class="company-icon">
@@ -26,7 +22,7 @@
           <div class="title-right">
             <el-button v-if="enterpriseInfo.status === null" type="primary" size="large" icon="Plus"
                        @click="handleOpenApply" class="gradient-btn">
-              立即申请入驻
+              提交入驻申请
             </el-button>
 
             <el-button v-else-if="enterpriseInfo.status === 2 || enterpriseInfo.status === 3" type="warning"
@@ -36,9 +32,6 @@
             </el-button>
 
             <template v-else-if="enterpriseInfo.status === 1">
-              <el-button type="primary" size="large" icon="Edit" @click="handleOpenUpdateInfo">
-                修改企业资料
-              </el-button>
               <el-button
                   type="danger"
                   plain
@@ -94,7 +87,7 @@
                 <el-button v-if="enterpriseInfo.status === 1" link type="primary" icon="Edit"
                            @click="handleOpenUpdateInfo"
                            class="edit-link">
-                  修改基本资料
+                  修改企业信息
                 </el-button>
               </div>
               <div class="info-dashboard">
@@ -180,7 +173,7 @@
           <div class="work-order-section">
             <div class="work-order-actions card-style shadow-sm">
               <el-button type="primary" size="large" icon="Plus" @click="handleOpenWorkOrder" class="gradient-btn">
-                发起服务诉求
+                提报工单
               </el-button>
               <div class="filter-box">
                 <el-radio-group v-model="workOrderQuery.status" @change="loadWorkOrders" size="default">
@@ -353,7 +346,7 @@
       </div>
     </el-drawer>
 
-    <el-dialog v-model="infoDialogVisible" :title="isEdit ? '修改企业资料' : '填报入驻申请'" width="900px"
+    <el-dialog v-model="infoDialogVisible" :title="isEdit ? '修改企业信息' : '填报入驻申请'" width="900px"
                top="5vh" destroy-on-close>
       <el-form ref="infoFormRef" :model="infoForm" :rules="rules" label-position="top">
         <el-divider content-position="left">基础工商信息</el-divider>
@@ -1003,14 +996,10 @@ onMounted(() => {
 }
 
 .page-header {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: linear-gradient(135deg, #131a25 0%, #334155 100%);
   padding: 40px 10% 60px;
   color: #fff;
   margin-bottom: -40px;
-}
-
-.header-content :deep(.el-breadcrumb__inner) {
-  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .title-row {
@@ -1029,7 +1018,7 @@ onMounted(() => {
 .company-icon {
   width: 64px;
   height: 64px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   display: flex;
@@ -1283,11 +1272,14 @@ onMounted(() => {
 
 :deep(.el-divider__text) {
   background-color: #fff;
-  font-weight: bold;
-  color: #4e84e8;
+  color: #2d6add;
 }
 
 /* ================= 新增：工单专属样式 ================= */
+.work-order-section{
+  padding: 0 10px;
+  background: transparent !important;
+}
 
 .custom-tabs {
   background: transparent;
@@ -1296,13 +1288,12 @@ onMounted(() => {
 
 /* 1. 调整 Tabs 头部容器：深色胶囊背景 */
 .custom-tabs :deep(.el-tabs__header) {
-  background: #1e293b;
-  padding: 6px 10px;
-  border-radius: 24px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  border-bottom: none;
+  backdrop-filter: blur(8px);
+  border: rgba(5, 5, 5, 0.18) solid 1px;
+  padding: 10px 10px;
+  border-radius: 30px;
   margin-bottom: 30px;
-  display: inline-flex; /* 使容器宽度随内容变化 */
+  display: inline-flex;
   position: relative;
   left: 20px; /* 靠左对齐，如需居中请改为 margin: 0 auto; display: flex; width: fit-content; */
 }
@@ -1324,28 +1315,25 @@ onMounted(() => {
 .custom-tabs :deep(.el-tabs__item) {
   height: 40px !important;
   line-height: 1 !important;
-
-  padding: 0 28px !important;
+  padding: 0 25px !important;
   border-radius: 20px;
-  color: #94a3b8;
+  color: #ffffff;
   font-size: 15px;
-  font-weight: 500;
   transition: all 0.2s ease;
-  margin: 0 4px;
-
-  /* 居中布局逻辑 */
+  margin: 0 8px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0%, rgba(67, 67, 67, 0.31) 100%) !important;
+  border: rgba(30, 30, 30, 0.24) solid 1px;
+  backdrop-filter: blur(8px);
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  border: rgba(83, 83, 83, 0.85) 1px solid !important;
 }
 
 /* 激活状态：文字深蓝色，背景纯白 */
 .custom-tabs :deep(.el-tabs__item.is-active) {
-  color: #3b82f6 !important;
-  background: #ffffff !important;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #ffffff !important;
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.86) 0%, rgba(59, 130, 246, 0.79) 100%) !important;
+  border: rgba(255, 255, 255, 0.7) solid 1px;
 }
 
 .custom-tabs :deep(.el-tabs__item:hover:not(.is-active)) {
@@ -1588,6 +1576,12 @@ onMounted(() => {
   color: #94a3b8;
   font-size: 12px;
   font-weight: 400;
+}
+
+:deep(.el-dialog) {
+  padding: 25px;
+  border-radius: 15px;
+  overflow: hidden;
 }
 
 /* ===================== 统一移动端响应式适配 ===================== */

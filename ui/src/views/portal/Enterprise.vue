@@ -669,6 +669,12 @@ onMounted(() => {
 
 /* ====== 详情弹窗样式 ====== */
 
+:deep(.el-dialog) {
+  border-radius: 0;
+  padding: 25px;
+  overflow: hidden;
+}
+
 /* 弹窗头部布局：左侧信息 + 右侧打印按钮 */
 .dialog-header-row {
   display: flex;
