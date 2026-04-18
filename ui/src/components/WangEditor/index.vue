@@ -118,7 +118,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .editor-wrapper {
-  border: 1px solid #dcdfe6;
   border-radius: 4px;
   background-color: #fff;
   display: flex;
@@ -130,7 +129,6 @@ onBeforeUnmount(() => {
 }
 
 .editor-content {
-  /* 使用 props 动态设置高度 */
   height: v-bind(height) !important;
   overflow-y: hidden;
 }

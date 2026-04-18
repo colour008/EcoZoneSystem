@@ -80,7 +80,7 @@
 
         <el-col :xs="24" :sm="24" :md="14" :lg="16" class="form-side">
           <div class="form-container card-style">
-            <h2 class="section-title">意向登记与留言</h2>
+            <h2 class="section-title">意向登记或留言</h2>
             <div class="divider"></div>
             <p class="form-tip">请填写您的联系方式及相关意向（入驻、求职或服务需求），我们将在 2
               个工作日内安排专人与您取得联系。</p>
@@ -115,7 +115,7 @@
                 </el-form-item>
                 </el-col>
               </el-row>
-              <el-form-item label="留言详情（请输入意向描述或留言内容）" prop="remark">
+              <el-form-item label="详情（请输入意向描述或留言内容）" prop="remark">
                 <el-input v-model="inquiryForm.remark" type="textarea" :rows="8"
                           placeholder="例如：主营高性能模拟芯片研发，需租用 A 座约 800㎡ 空间..."/>
               </el-form-item>

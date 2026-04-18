@@ -709,7 +709,7 @@ onUnmounted(() => {
   color: #131313FF !important;
   height: 70px !important;
   line-height: 70px !important;
-  padding: 0 24px !important;
+  padding: 0 25px !important;
   transition: all 0.3s ease !important;
   position: relative;
   background: transparent !important;

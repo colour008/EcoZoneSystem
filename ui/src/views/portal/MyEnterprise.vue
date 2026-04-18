@@ -469,7 +469,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="workOrderVisible" title="发起服务诉求" width="650px" destroy-on-close>
+    <el-dialog v-model="workOrderVisible" title="提报工单" width="650px" destroy-on-close>
       <el-form ref="orderFormRef" :model="orderForm" :rules="orderRules" label-position="top">
         <el-row :gutter="20">
           <el-col :span="12">
