@@ -22,7 +22,7 @@
           <el-menu-item index="/notice">通知公告</el-menu-item>
           <el-menu-item index="/enterprise">企业风采</el-menu-item>
           <el-menu-item index="/contact">联系我们</el-menu-item>
-          <el-menu-item v-if="isEnterprise" index="/my-enterprise" style="color: #2f91f4 !important; font-weight: normal !important;">服务中心</el-menu-item>
+          <el-menu-item v-if="isEnterprise" index="/my-enterprise">服务中心</el-menu-item>
         </el-menu>
       </nav>
 
@@ -660,7 +660,7 @@ onUnmounted(() => {
 }
 
 .header-container {
-  max-width: 1560px;
+  max-width: 1500px;
   margin: 0 auto;
   height: 100%;
   display: flex;
@@ -674,7 +674,6 @@ onUnmounted(() => {
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  margin-right: 80px;
 }
 
 .logo-icon{
@@ -698,8 +697,8 @@ onUnmounted(() => {
 :deep(.el-menu--horizontal) {
   border-bottom: none !important;
   background: transparent !important;
+  justify-content: center;
   display: flex;
-  justify-content: flex-start;
   height: 100%;
 }
 
