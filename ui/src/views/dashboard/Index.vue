@@ -1,6 +1,6 @@
 <template>
   <div class="analytics-container" v-loading="loading">
-    <!-- 顶部卡片第一行（3个，统一布局） -->
+    <!-- 顶部卡片第一行（3个，统一布局，完全保留） -->
     <el-row :gutter="16" class="panel-group">
       <el-col :xs="24" :sm="12" :md="8" :lg="8" v-for="(card, index) in firstLinePanel" :key="index">
         <div class="card-panel" @click="handleCardClick(card.route)">
@@ -26,27 +26,73 @@
       </el-col>
     </el-row>
 
-    <!-- 顶部卡片第二行（4个，新增待处理工单，统一布局） -->
+    <!-- 顶部卡片第二行（修改为：投诉工单 + 意向留言 + 弹幕评价） -->
     <el-row :gutter="16" class="panel-group">
-      <el-col :xs="24" :sm="12" :md="6" :lg="6" v-for="(card, index) in secondLinePanel" :key="index">
-        <div class="card-panel" @click="handleCardClick(card.route)">
+      <!-- 第二行第一个卡片：投诉工单总计 -->
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <div class="card-panel" @click="handleCardClick('/business/workorder/list')">
           <div class="card-panel-header">
-            <span class="card-panel-text">{{ card.title }}</span>
-            <el-tag :type="card.tagType" effect="light" size="small" class="card-tag">{{ card.tagText }}</el-tag>
+            <span class="card-panel-text">投诉工单</span>
+            <el-tag type="danger" effect="light" size="small" class="card-tag">总计</el-tag>
           </div>
           <div class="card-panel-body">
             <div class="card-num-wrapper">
-              <div class="card-panel-num">{{ card.value }}</div>
+              <div class="card-panel-num">{{ complaintTotal }}</div>
             </div>
-            <div class="card-icon-wrapper" :style="{ backgroundColor: card.iconColor + '15' }">
-              <el-icon :size="24" :color="card.iconColor">
-                <component :is="card.icon"/>
+            <div class="card-icon-wrapper" style="background-color: rgba(245, 108, 108, 0.15)">
+              <el-icon :size="24" color="#f56c6c">
+               <List />
               </el-icon>
             </div>
           </div>
           <div class="card-panel-footer">
-            <span class="footer-label">{{ card.footerText }}</span>
-            <span class="footer-val" :title="card.footerValue">{{ card.footerValue }}</span>
+            <span class="footer-label">当月/当日新增</span>
+            <span class="footer-val" :title="`当月:${complaintMonth} | 当日:${complaintToday}`">当月:{{
+                complaintMonth
+              }} | 当日:{{ complaintToday }}</span>
+          </div>
+        </div>
+      </el-col>
+      <!-- 第二行第二个卡片：意向留言总计 -->
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <div class="card-panel" @click="handleCardClick('/business/inquiry/list')">
+          <div class="card-panel-header">
+            <span class="card-panel-text">意向留言</span>
+            <el-tag type="warning" effect="light" size="small" class="card-tag">总计</el-tag>
+          </div>
+          <div class="card-panel-body">
+            <div class="card-num-wrapper">
+              <div class="card-panel-num">{{ inquiryTotal }}</div>
+            </div>
+            <div class="card-icon-wrapper" style="background-color: rgba(230, 162, 60, 0.15)">
+              <el-icon :size="24" color="#e6a23c">
+                <ChatDotSquare/>
+              </el-icon>
+            </div>
+          </div>
+          <div class="card-panel-footer">
+            <span class="footer-label">当月/当日新增</span>
+            <span class="footer-val" :title="`当月:${inquiryMonth} | 当日:${inquiryToday}`">当月:{{ inquiryMonth }} | 当日:{{
+                inquiryToday
+              }}</span>
+          </div>
+        </div>
+      </el-col>
+      <!-- 第二行第三卡片：最新工单评价弹幕 -->
+      <el-col :xs="24" :sm="12" :md="8" :lg="8">
+        <div class="card-panel danmaku-card">
+          <div class="card-panel-header">
+            <span class="card-panel-text">最新工单评价</span>
+            <el-tag type="success" effect="light" size="small" class="card-tag">实时</el-tag>
+          </div>
+          <div class="danmaku-container">
+            <div class="danmaku-wrapper" :style="{ animationDuration: Math.max(latestReviews.length * 3, 15) + 's' }">
+              <div v-for="(review, index) in [...latestReviews, ...latestReviews]" :key="index" class="danmaku-item">
+                <div class="danmaku-user">{{ review.contactPerson || '匿名用户' }}</div>
+                <div class="danmaku-content">{{ review.commentText }}</div>
+                <div class="danmaku-time">{{ review.finishTime || review.createTime }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </el-col>
@@ -154,7 +200,16 @@ const router = useRouter()
 
 const loading = ref(false)
 
-// --- 卡片基础数据（完全保留原有，仅新增待处理工单项） ---
+// 新增：第二行卡片数据
+const complaintTotal = ref(0)
+const complaintMonth = ref(0)
+const complaintToday = ref(0)
+const inquiryTotal = ref(0)
+const inquiryMonth = ref(0)
+const inquiryToday = ref(0)
+const latestReviews = ref([])
+
+// --- 卡片基础数据（完全保留原有，仅用于第一行） ---
 const basePanelData = ref([
   {
     title: '园区用户', tagText: '总计', tagType: 'success',
@@ -193,9 +248,8 @@ const basePanelData = ref([
   }
 ])
 
-// 分两行展示，第一行3个，第二行4个
+// 第一行卡片（完全保留）
 const firstLinePanel = computed(() => basePanelData.value.slice(0, 3))
-const secondLinePanel = computed(() => basePanelData.value.slice(3, 7))
 
 // --- 图表 DOM 引用（完全保留原有，无修改） ---
 const lineChartRef = ref(null)
@@ -236,7 +290,7 @@ const handleCardClick = (route) => {
   if (route) router.push(route)
 }
 
-// --- 核心业务逻辑（完全保留原有，仅新增待处理工单统计） ---
+// --- 核心业务逻辑（修复投诉工单统计逻辑） ---
 const loadDashboardData = async () => {
   loading.value = true
   try {
@@ -256,7 +310,15 @@ const loadDashboardData = async () => {
       noticeApi.page({pageNum: 1, pageSize: 1000})
     ])
 
-    // ================= 1. 园区用户统计（完全保留原有，无修改） =================
+    // ================= 1. 时间范围定义（完全保留原有，无修改） =================
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentMonthStart = new Date(currentYear, currentMonth, 1);
+    const currentMonthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+    // ================= 2. 园区用户统计（完全保留原有，无修改） =================
     let totalUsers = 0;
     let roleStr = '暂无数据';
     if (userRes.status === 'fulfilled') {
@@ -273,18 +335,12 @@ const loadDashboardData = async () => {
           .join(' | ');
     }
 
-    // ================= 2. 入驻企业统计（完全保留原有，无修改） =================
+    // ================= 3. 入驻企业统计（完全保留原有，无修改） =================
     let totalEnterprises = 0;
     let monthNewEnterprises = 0;
     let monthOutEnterprises = 0;
     const enterpriseRecords = enterpriseRes.status === 'fulfilled' ? (enterpriseRes.value.data || []) : [];
     if (enterpriseRes.status === 'fulfilled') {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      const currentMonthStart = new Date(currentYear, currentMonth, 1);
-      const currentMonthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-
       totalEnterprises = enterpriseRecords.filter(e => e.status === 1).length;
 
       enterpriseRecords.forEach(e => {
@@ -303,19 +359,12 @@ const loadDashboardData = async () => {
       });
     }
 
-    // ================= 3. 通知公告统计（完全保留原有，无修改） =================
+    // ================= 4. 通知公告统计（完全保留原有，无修改） =================
     let totalNotices = 0;
     let todayNewNotices = 0;
     let monthNewNotices = 0;
     const noticeRecords = noticeRes.status === 'fulfilled' ? (noticeRes.value.data.records || []) : [];
     if (noticeRes.status === 'fulfilled') {
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      const currentMonthStart = new Date(currentYear, currentMonth, 1);
-      const currentMonthEnd = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-
       totalNotices = noticeRecords.length;
       noticeRecords.forEach(item => {
         if (item.createTime) {
@@ -326,18 +375,48 @@ const loadDashboardData = async () => {
       });
     }
 
-    // ================= 4. 工单统计（完全保留原有，仅新增待处理工单统计） =================
+    // ================= 5. 工单统计（修复投诉工单统计逻辑） =================
     const workOrderRecords = workOrderRes.status === 'fulfilled' ? (workOrderRes.value.data.records || []) : [];
     const pendingWorkOrderCount = workOrderRecords.filter(item => item.status === 0).length;
     const processingWorkOrderCount = workOrderRecords.filter(item => item.status === 1).length;
 
-    // ================= 5. 其他卡片数据（完全保留原有，无修改） =================
+    // 修复：投诉工单统计（不再筛选type=3，统计所有工单）
+    const complaintRecords = workOrderRecords;
+    complaintTotal.value = complaintRecords.length;
+    complaintMonth.value = 0;
+    complaintToday.value = 0;
+    complaintRecords.forEach(item => {
+      if (item.createTime) {
+        const createTime = new Date(item.createTime);
+        if (createTime >= todayStart) complaintToday.value++;
+        if (createTime >= currentMonthStart && createTime <= currentMonthEnd) complaintMonth.value++;
+      }
+    });
+
+    // ================= 6. 意向留言统计（完全保留原有，新增当月/当日统计） =================
     const pendingEnterprises = pendingEnterpriseRes.status === 'fulfilled' ? (pendingEnterpriseRes.value.data || 0) : 0;
     const inquiryRecords = inquiryRes.status === 'fulfilled' ? (inquiryRes.value.data.records || []) : [];
-    const totalInquiries = inquiryRes.status === 'fulfilled' ? (inquiryRes.value.data.total || inquiryRecords.length) : 0;
+    inquiryTotal.value = inquiryRes.status === 'fulfilled' ? (inquiryRes.value.data.total || inquiryRecords.length) : 0;
     const pendingInquiries = inquiryRecords.filter(item => item.status === 0).length;
 
-    // ================= 6. 卡片赋值（完全保留原有，仅新增待处理工单赋值） =================
+    // 新增：意向留言当月/当日统计
+    inquiryMonth.value = 0;
+    inquiryToday.value = 0;
+    inquiryRecords.forEach(item => {
+      if (item.createTime) {
+        const createTime = new Date(item.createTime);
+        if (createTime >= todayStart) inquiryToday.value++;
+        if (createTime >= currentMonthStart && createTime <= currentMonthEnd) inquiryMonth.value++;
+      }
+    });
+
+    // ================= 7. 最新工单评价（新增需求） =================
+    latestReviews.value = workOrderRecords
+        .filter(item => item.status === 3 && item.commentText)
+        .sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+        .slice(0, 20);
+
+    // ================= 8. 第一行卡片赋值（完全保留原有，无修改） =================
     basePanelData.value[0].value = totalUsers;
     basePanelData.value[0].footerValue = roleStr;
     basePanelData.value[1].value = totalEnterprises;
@@ -347,13 +426,13 @@ const loadDashboardData = async () => {
     basePanelData.value[3].value = pendingEnterprises;
     basePanelData.value[3].footerValue = pendingEnterprises;
     basePanelData.value[4].value = pendingInquiries;
-    basePanelData.value[4].footerValue = totalInquiries + ' 条总留言';
+    basePanelData.value[4].footerValue = inquiryTotal.value + ' 条总留言';
     basePanelData.value[5].value = pendingWorkOrderCount;
     basePanelData.value[5].footerValue = pendingWorkOrderCount;
     basePanelData.value[6].value = processingWorkOrderCount;
     basePanelData.value[6].footerValue = processingWorkOrderCount;
 
-    // ================= 7. 近30天走势数据（完全保留原有，无修改） =================
+    // ================= 9. 近30天走势数据（完全保留原有，无修改） =================
     const dateList = [];
     const workOrderCountMap = {};
     const inquiryCountMap = {};
@@ -391,7 +470,7 @@ const loadDashboardData = async () => {
     const workOrderData = dateList.map(date => workOrderCountMap[date]);
     const inquiryData = dateList.map(date => inquiryCountMap[date]);
 
-    // ================= 8. 渲染所有图表（完全保留原有，无修改） =================
+    // ================= 10. 渲染所有图表（完全保留原有，无修改） =================
     renderCharts({
       enterprises: enterpriseRecords,
       inquiries: inquiryRecords,
@@ -827,6 +906,61 @@ onBeforeUnmount(() => {
   color: #334155;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 新增：弹幕卡片样式 */
+.danmaku-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.danmaku-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  margin-top: -10px;
+}
+
+.danmaku-wrapper {
+  display: flex;
+  flex-direction: column;
+  animation: scrollUp linear infinite;
+}
+
+.danmaku-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.danmaku-user {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.danmaku-content {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.danmaku-time {
+  font-size: 11px;
+  color: #909399;
+}
+
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
 }
 
 /* 主图表卡片：完全保留原有，无修改 */

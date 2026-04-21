@@ -31,7 +31,6 @@ public class EnterpriseController {
 	@PostMapping("/apply")
 	@Operation(summary = "C端-提交入驻申请")
 	public Result<String> apply(@RequestBody EnterpriseDTO enterpriseDTO) {
-		// TODO: Service 层需从 Token 获取 currentUserId 并校验是否已存在申请
 		log.info("提交入驻申请: {}", enterpriseDTO.getCompanyName());
 		boolean success = enterpriseService.apply(enterpriseDTO);
 		return success ? Result.success("申请已提交") : Result.sysError("申请失败");
@@ -43,7 +42,6 @@ public class EnterpriseController {
 	@GetMapping("/mine")
 	@Operation(summary = "C端-获取我的企业入驻信息")
 	public Result<EnterpriseVO> getMyEnterprise() {
-		// TODO: 从 Token 获取 currentUserId，查询关联的企业信息
 		log.info("查询当前登录用户的企业信息");
 		EnterpriseVO enterprise = enterpriseService.getMyEnterprise();
 		return Result.success(enterprise);

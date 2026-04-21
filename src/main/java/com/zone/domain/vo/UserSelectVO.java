@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * @Author: JamHoo
- * @Description: TODO
+ * @Description: 用户下拉选择项
  * @Date: 2026/4/4 11:34
  * @Version: 1.0
  */

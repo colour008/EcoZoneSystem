@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * @Author: JamHoo
- * @Description: TODO
+ * @Description: 公告分页查询参数
  * @Date: 2026/4/3 21:02
  * @Version: 1.0
  */
